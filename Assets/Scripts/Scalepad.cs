@@ -11,7 +11,9 @@ public class Scalepad : MonoBehaviour
         GenericUtils.SetListenerOnClick(oneperone_btn, OnOnePerOneClick);
         GenericUtils.SetListenerOnClick(autofit_btn, OnAutoFit);
         slider.onValueChanged.AddListener(OnValueChanged);
-        text.text = "1x";
+        // 저장된 스케일 값으로 초기 표시
+        var saved = PlayerPrefs.GetFloat("ScaleValue", 1f);
+        text.text = string.Format("{0:F1}x", saved > 0f ? saved : 1f);
     }
     public bool IsShow { get { return gameObject.activeSelf; } }
 

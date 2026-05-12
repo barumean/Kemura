@@ -41,6 +41,7 @@ public class OptionWindow : MonoBehaviour
         GenericUtils.SetListenerOnClick(language_zhcn, OnSelectLanguage);
         GenericUtils.SetListenerOnClick(language_jp, OnSelectLanguage);
         GenericUtils.SetListenerOnClick(language_enus, OnSelectLanguage);
+        AddKoreanLanguageButton();
 
         GenericUtils.SetListenerOnClick(intentbox_L_left, OnIntentLLeft);
         GenericUtils.SetListenerOnClick(intentbox_L_right, OnIntentLRight);
@@ -386,6 +387,32 @@ public class OptionWindow : MonoBehaviour
         HideMessageBox();
     }
 
+    void AddKoreanLanguageButton()
+    {
+        if(language_enus == null)
+            return;
+        // 한국어 버튼이 이미 있으면 스킵
+        var existing = GenericUtils.Get("Options.LanguageBox.border.ko");
+        if(existing != null)
+        {
+            GenericUtils.SetListenerOnClick(existing, OnSelectLanguage);
+            return;
+        }
+        var ko_btn = GameObject.Instantiate(language_enus, language_enus.transform.parent);
+        ko_btn.name = "ko";
+        // 텍스트 변경
+        var text = ko_btn.GetComponentInChildren<UnityEngine.UI.Text>();
+        if(text != null)
+            text.text = "한국어";
+        // 위치: 기존 버튼들 아래에 배치
+        var rt = ko_btn.transform as RectTransform;
+        var src_rt = language_enus.transform as RectTransform;
+        if(rt != null && src_rt != null)
+            rt.anchoredPosition = src_rt.anchoredPosition + new Vector2(0, -src_rt.sizeDelta.y - 4);
+        GenericUtils.SetListenerOnClick(ko_btn, OnSelectLanguage);
+        language_ko = ko_btn;
+    }
+
     public void ShowLanguageBox()
     {
         HideMenu();
@@ -523,6 +550,7 @@ public class OptionWindow : MonoBehaviour
     public GameObject language_zhcn;
     public GameObject language_jp;
     public GameObject language_enus;
+    GameObject language_ko;
 
     public GameObject intentbox;
     public GameObject intentbox_L_left;

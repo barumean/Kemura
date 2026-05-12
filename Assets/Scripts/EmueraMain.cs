@@ -84,7 +84,14 @@ public class EmueraMain : MonoBehaviour
         float h = size_delta_.y;
         size_delta_.x = Mathf.Max(w, h);
         size_delta_.y = Mathf.Min(w, h);
+
+        // 저장된 글자 크기 복원
+        var saved = PlayerPrefs.GetFloat(kScaleKey, 1f);
+        if(saved > 0f)
+            next_scale_value_ = saved;
     }
+
+    static readonly string kScaleKey = "ScaleValue";
 
     public bool restart = false;
     void Update()
@@ -171,6 +178,10 @@ public class EmueraMain : MonoBehaviour
 
         canvas_scaler_.referenceResolution = default_resolution_ / last_scale_value_;
         dirty_flag_ = true;
+
+        // 변경된 글자 크기 저장
+        PlayerPrefs.SetFloat(kScaleKey, last_scale_value_);
+        PlayerPrefs.Save();
     }
     public float scale_value { get { return next_scale_value_; } }
     bool dirty_flag_ = false;

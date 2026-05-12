@@ -34,9 +34,31 @@ public static class MultiLanguage
     {
         var lang = PlayerPrefs.GetString("language", "");
         if(string.IsNullOrEmpty(lang))
+        {
+            // 저장된 언어 없으면 시스템 언어로 자동 감지
+            lang = DetectSystemLanguage();
+            if(!string.IsNullOrEmpty(lang))
+            {
+                SetLanguage(lang);
+                return true;
+            }
             return false;
+        }
         SetLanguage(lang);
         return true;
+    }
+
+    static string DetectSystemLanguage()
+    {
+        switch(Application.systemLanguage)
+        {
+            case SystemLanguage.Korean:   return "ko";
+            case SystemLanguage.Japanese: return "jp";
+            case SystemLanguage.ChineseSimplified:
+            case SystemLanguage.Chinese:  return "zh_cn";
+            case SystemLanguage.English:  return "en_us";
+            default:                      return "en_us";
+        }
     }
     public static void SetLanguage(string lang)
     {
