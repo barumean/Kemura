@@ -14,15 +14,25 @@ public class MainEntry : MonoBehaviour
     void Awake()
     {
         Application.targetFrameRate = 24;
-        ResolutionHelper.Apply();
     }
 
     void Start()
     {
-        LoadConfigMaps();
-        if(!MultiLanguage.SetLanguage())
+        ResolutionHelper.Apply();
+
+        try
         {
-            Object.FindObjectOfType<OptionWindow>().ShowLanguageBox();
+            LoadConfigMaps();
+            if(!MultiLanguage.SetLanguage())
+            {
+                var ow = Object.FindObjectOfType<OptionWindow>();
+                if(ow != null)
+                    ow.ShowLanguageBox();
+            }
+        }
+        catch(System.Exception e)
+        {
+            UnityEngine.Debug.LogError("Initialization error: " + e);
         }
 
         FirstWindow.Show();

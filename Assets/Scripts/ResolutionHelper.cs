@@ -34,12 +34,18 @@ public static class ResolutionHelper
 
     static void ApplyResolution()
     {
+        if(Screen.width <= 0 || Screen.height <= 0)
+            return;
+
         var height = resolutions[resolution_index];
         var width = (int)Mathf.Ceil(height * aspect);
+        if(width <= 0 || height <= 0)
+            return;
+
         if(Screen.width > Screen.height)
-            Screen.SetResolution(width, height, true, 24);
+            Screen.SetResolution(width, height, true);
         else
-            Screen.SetResolution(height, width, true, 24);
+            Screen.SetResolution(height, width, true);
     }
 
     static float aspect {
@@ -47,9 +53,13 @@ public static class ResolutionHelper
         {
             if(_aspect < 0.0f)
             {
+                if(Screen.height <= 0)
+                    return 16.0f / 9.0f;
                 _aspect = Screen.width * 1.0f / Screen.height;
                 if(_aspect < 1)
                     _aspect = 1 / _aspect;
+                if(_aspect <= 0)
+                    _aspect = 16.0f / 9.0f;
             }
             return _aspect;
         }
