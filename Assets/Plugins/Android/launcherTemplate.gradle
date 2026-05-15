@@ -1,8 +1,9 @@
 apply plugin: 'com.android.application'
+**APPLY_PLUGINS**
 
 dependencies {
     implementation project(':unityLibrary')
-}
+**DEPS**}
 
 android {
     compileSdkVersion **APIVERSION**
@@ -29,17 +30,20 @@ android {
     }
 
     aaptOptions {
-        noCompress = ['.unity3d', '.ress', '.resource', '.obb'**STREAMING_ASSETS_NON_COMPRESSED**]
+        noCompress = ['.unity3d', '.ress', '.resource', '.obb'**STREAMING_ASSETS_NON_COMPRESSED**] + (unityStreamingAssets.tokenize(', ') as List)
         ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~"
     }**SIGN**
 
     buildTypes {
         debug {
-            minifyEnabled false
+            minifyEnabled **MINIFY_DEBUG**
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-unity.txt'**USER_PROGUARD**
+            **SIGNCONFIG_DEBUG**
         }
         release {
-            minifyEnabled false
+            minifyEnabled **MINIFY_RELEASE**
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-unity.txt'**USER_PROGUARD**
             **SIGNCONFIG**
         }
-    }
+    }**PACKAGING_OPTIONS****PLAY_ASSET_PACKS**
 }
