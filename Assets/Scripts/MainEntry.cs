@@ -25,6 +25,8 @@ public class MainEntry : MonoBehaviour
             Object.FindObjectOfType<OptionWindow>().ShowLanguageBox();
         }
 
+        FirstWindow.Show();
+
 #if UNITY_EDITOR
         uEmuera.Logger.info = GenericUtils.Info;
         uEmuera.Logger.warn = GenericUtils.Warn;
