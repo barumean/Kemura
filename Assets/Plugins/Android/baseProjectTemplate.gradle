@@ -6,8 +6,6 @@ buildscript {
     }
 
     dependencies {
-        // Unity 2022.3 기본 Gradle 플러그인 버전
-        // Gradle 버전 호환표: https://developer.android.com/studio/releases/gradle-plugin#updating-gradle
         classpath 'com.android.tools.build:gradle:7.1.2'
 **BUILD_SCRIPT_DEPS**
     }
