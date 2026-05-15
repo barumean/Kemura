@@ -395,7 +395,7 @@ public class OptionWindow : MonoBehaviour
         var existing = GenericUtils.Get("Options.LanguageBox.border.ko");
         if(existing != null)
         {
-            GenericUtils.SetListenerOnClick(existing, OnSelectLanguage);
+            GenericUtils.SetListenerOnClick(existing.gameObject, OnSelectLanguage);
             return;
         }
         var ko_btn = GameObject.Instantiate(language_enus, language_enus.transform.parent);
