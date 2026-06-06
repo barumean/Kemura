@@ -299,8 +299,9 @@ namespace MinorShift.Emuera.GameView
 			cbgList.Sort();
 			return true;
 		}
-		public int ClientWidth { get { return (int)DisplayServer.WindowGetSize().X; } }
-		public int ClientHeight { get { return (int)DisplayServer.WindowGetSize().Y; } }
+		// 메인 스레드 전용 DisplayServer 대신 GameState 캐시 사용 (스레드 안전)
+		public int ClientWidth { get { return GameState.ScreenWidth; } }
+		public int ClientHeight { get { return GameState.ScreenHeight; } }
 #endregion
 
 		const string ErrorButtonsText = "__openFileWithDebug__";

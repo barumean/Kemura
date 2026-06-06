@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://kemura_fw"]
+[gd_scene load_steps=2 format=3 uid="uid://kemura_fw"]
 
 [ext_resource type="Script" path="res://Scripts/FirstWindow.cs" id="1_fw"]
 
@@ -18,22 +18,27 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "KEMURA - Emuera for Android"
+text = "KEMURA — Emuera for Android"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.91, 0.27, 0.37, 1)
 
 [node name="PathLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "경로: ..."
+text = "경로: 스캔 중..."
 theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "스캔 중..."
 theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
 autowrap_mode = 3
 
 [node name="GameList" type="ItemList" parent="VBoxContainer"]
@@ -43,9 +48,15 @@ theme_override_font_sizes/font_size = 20
 
 [node name="HBox" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
 [node name="StartButton" type="Button" parent="VBoxContainer/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "게임 시작"
 theme_override_font_sizes/font_size = 24
+
+[node name="RefreshButton" type="Button" parent="VBoxContainer/HBox"]
+layout_mode = 2
+text = "새로고침"
+theme_override_font_sizes/font_size = 20

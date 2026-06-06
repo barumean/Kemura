@@ -183,8 +183,21 @@ namespace MinorShift.Emuera
 			DrawingParam_ShapePositionShift = 0;
 			if (TextDrawingMode != TextDrawingMode.WINAPI)
 				DrawingParam_ShapePositionShift = Math.Max(2, FontSize / 6);
+
+			// eramaerc: Android에서는 WindowX를 emuera.config 값 대신
+			// 실제 화면 폭으로 override (GameState에 메인 스레드 캐시됨)
+#if GODOT_ANDROID
+			WindowX = GameState.ScreenWidth;
+			WindowY = GameState.ScreenHeight;
+			// Android에서 MS Gothic 미사용 시 빌트인 폰트로 fallback
+			if (FontName == "ＭＳ ゴシック" || FontName == "MS Gothic" ||
+			    FontName == "ＭＳ Ｐゴシック" || FontName == "MS PGothic")
+				FontName = "Noto Sans CJK JP";
+#endif
 			DrawableWidth = WindowX - DrawingParam_ShapePositionShift;
-			ForceSavDir = Program.ExeDir + "sav\\";
+
+			// Windows 경로 구분자 → 크로스플랫폼 호환 (Android/Linux)
+			ForceSavDir = Program.ExeDir + "sav/";
 			if (UseSaveFolder)
 				SavDir = Program.ExeDir + "sav/";
 			else

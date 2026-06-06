@@ -10,17 +10,29 @@ public class EmueraThread
 
     EmueraThread() { }
 
-    public void Start(bool debug, bool useCoroutine)
+    public void Start(bool debug)
     {
+        if (thread != null && thread.IsAlive)
+        {
+            GD.PushWarning("[EmueraThread] Already running — ignoring duplicate Start()");
+            return;
+        }
         debugmode = debug;
         running = true;
-        thread = new Thread(Work) { IsBackground = true };
+        thread = new Thread(Work) { IsBackground = true, Name = "EmueraWorker" };
         thread.Start();
     }
 
+    /// <summary>running=false 후 스레드 완전 종료까지 대기 (최대 3초)</summary>
     public void End()
     {
         running = false;
+        var t = thread;
+        if (t != null && t.IsAlive)
+        {
+            if (!t.Join(TimeSpan.FromSeconds(3)))
+                GD.PushWarning("[EmueraThread] Worker did not stop in time");
+        }
         thread = null;
     }
 
@@ -35,7 +47,7 @@ public class EmueraThread
         var console = GlobalStatic.Console;
         if (console == null) return;
         if (!fromButton && console.IsWaitingInputSomething) return;
-        input = c;
+        Volatile.Write(ref input, c);
         skipflag = skip;
     }
 
@@ -49,31 +61,36 @@ public class EmueraThread
         uEmuera.Utils.ResourceClear();
         GC.Collect();
 
-        input = null;
+        string? localInput = null;
         var console = GlobalStatic.Console;
+        if (console == null) return;
+
         while (running)
         {
             skipflag = false;
-            while (input == null)
+
+            // 입력 대기
+            while ((localInput = Volatile.Read(ref input)) == null)
             {
                 Thread.Sleep(1);
                 if (!running) return;
                 uEmuera.Forms.Timer.Update();
             }
+
             if (console.IsWaitingInput)
             {
                 if (console.IsWaitingEnterKey)
-                    input = "";
-                console.PressEnterKey(skipflag, input, false);
+                    localInput = "";
+                console.PressEnterKey(skipflag, localInput, false);
             }
             Thread.Sleep(10);
-            input = null;
+            Volatile.Write(ref input, null);
         }
     }
 
     Thread? thread;
     bool debugmode;
-    bool running;
+    volatile bool running;
     string? input;
-    bool skipflag;
+    volatile bool skipflag;
 }

@@ -1,37 +1,34 @@
 using Godot;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using MinorShift.Emuera.GameView;
 
+/// <summary>
+/// Window.cs (uEmuera.Window.MainWindow)와 EmueraContent 간의 브릿지
+/// 원본 Unity 버전의 static 유틸리티 메서드 시그니처와 호환 유지
+/// </summary>
 public static class GenericUtils
 {
-    // --- Logging ---
-    public static void Info(object content) => GD.Print(content);
-    public static void Warn(object content) => GD.PushWarning(content?.ToString() ?? "");
+    // ── 로깅 ────────────────────────────────────────────────────
+    public static void Info(object content)  => GD.Print(content);
+    public static void Warn(object content)  => GD.PushWarning(content?.ToString() ?? "");
     public static void Error(object content) => GD.PushError(content?.ToString() ?? "");
 
-    // --- Path helpers ---
-    public static string GetFilename(string path)
+    // ── 경로 헬퍼 ───────────────────────────────────────────────
+    public static string GetFilename(string? path)
     {
         if (string.IsNullOrEmpty(path)) return "";
-        return Path.GetFileName(path);
+        return Path.GetFileName(path) ?? "";
     }
 
-    public static string GetBaseDir()
-    {
-#if GODOT_ANDROID
-        return "/storage/emulated/0/emuera/";
-#else
-        return OS.GetExecutablePath().GetBaseDir().PathJoin("emuera") + "/";
-#endif
-    }
-
-    // --- Display helpers (delegated to EmueraContent) ---
+    // ── EmueraContent 참조 ──────────────────────────────────────
     static EmueraContent? _content;
     public static void SetContent(EmueraContent c) => _content = c;
 
-    public static void AddText(DisplayLine line, bool old)
+    // ── Window.cs가 호출하는 디스플레이 브릿지 메서드 ──────────
+    // Window.cs:171  GenericUtils.AddText(line, line.LineNo <= prev)
+    // 원본은 object 타입이었으나 Godot 버전에서는 ConsoleDisplayLine 직접 사용
+    public static void AddText(ConsoleDisplayLine line, bool old)
         => _content?.AddLine(line, old);
 
     public static void ClearText()
@@ -55,20 +52,11 @@ public static class GenericUtils
     public static int GetTextMinLineNo()
         => _content?.GetMinLineNo() ?? 0;
 
-    public static DisplayLine? GetText(int lineNo)
+    // Window.cs:153  var tl = GenericUtils.GetText(dis_lineno);
+    // 원본 Unity는 object 반환 → ConsoleDisplayLine과 == 비교
+    public static ConsoleDisplayLine? GetText(int lineNo)
         => _content?.GetLine(lineNo);
 
     public static void RemoveTextCount(int count)
         => _content?.RemoveLines(count);
-
-    // --- Sprite/texture rect helpers ---
-    public static Rect2 ToGodotRect(uEmuera.Drawing.Rectangle src, float texW, float texH)
-    {
-        return new Rect2(
-            src.X / texW,
-            src.Y / texH,
-            src.Width / texW,
-            src.Height / texH
-        );
-    }
 }

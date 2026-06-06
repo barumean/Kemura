@@ -8,36 +8,39 @@ public partial class FirstWindow : Control
     ItemList? gameList;
     Label? statusLabel;
     Button? startButton;
+    Button? refreshButton;
     Label? pathLabel;
 
     readonly List<string> gamePaths = new();
-
     string eraBaseDir = "";
 
     public override void _Ready()
     {
-        gameList = GetNodeOrNull<ItemList>("VBoxContainer/GameList");
+        gameList    = GetNodeOrNull<ItemList>("VBoxContainer/GameList");
         statusLabel = GetNodeOrNull<Label>("VBoxContainer/StatusLabel");
         startButton = GetNodeOrNull<Button>("VBoxContainer/HBox/StartButton");
-        pathLabel = GetNodeOrNull<Label>("VBoxContainer/PathLabel");
+        refreshButton = GetNodeOrNull<Button>("VBoxContainer/HBox/RefreshButton");
+        pathLabel   = GetNodeOrNull<Label>("VBoxContainer/PathLabel");
 
         if (startButton != null)
             startButton.Pressed += OnStartPressed;
+        if (refreshButton != null)
+            refreshButton.Pressed += () => ScanGames();
 
         RequestPermissionsAndScan();
     }
 
+    // ── 권한 요청 + 기본 경로 설정 ─────────────────────────────
+
     void RequestPermissionsAndScan()
     {
 #if GODOT_ANDROID
-        if (!OS.HasFeature("MANAGE_EXTERNAL_STORAGE"))
-        {
-            // Request permissions via Android
-        }
+        OS.RequestPermissions();
         eraBaseDir = "/storage/emulated/0/emuera/";
         if (!Directory.Exists(eraBaseDir))
         {
-            Directory.CreateDirectory(eraBaseDir);
+            try { Directory.CreateDirectory(eraBaseDir); }
+            catch { eraBaseDir = OS.GetUserDataDir() + "/emuera/"; }
         }
 #else
         eraBaseDir = OS.GetExecutablePath().GetBaseDir().PathJoin("emuera") + "/";
@@ -47,14 +50,18 @@ public partial class FirstWindow : Control
         ScanGames();
     }
 
+    // ── 게임 폴더 스캔 ──────────────────────────────────────────
+    // eramaerb: 게임 폴더는 ERB/ 또는 erb/ 하위 폴더와
+    //           emuera.config 파일로 식별 (eramaerc 스펙)
+
     void ScanGames()
     {
         gamePaths.Clear();
-        if (gameList != null) gameList.Clear();
+        gameList?.Clear();
 
         if (!Directory.Exists(eraBaseDir))
         {
-            SetStatus($"게임 폴더가 없습니다: {eraBaseDir}");
+            SetStatus($"폴더 없음: {eraBaseDir}");
             return;
         }
 
@@ -71,41 +78,49 @@ public partial class FirstWindow : Control
         }
 
         if (gamePaths.Count == 0)
-            SetStatus("게임을 찾을 수 없습니다. emuera 폴더에 게임을 넣어주세요.");
+            SetStatus($"게임 없음 — {eraBaseDir} 에 게임 폴더를 넣어주세요.");
         else
             SetStatus($"{gamePaths.Count}개 게임 발견");
     }
 
+    /// eramaerc 스펙: 게임 폴더는 ERB/, CSV/ 또는 emuera.config를 포함해야 함
     bool IsValidGameDir(string dir)
     {
-        return Directory.Exists(Path.Combine(dir, "ERB")) ||
-               Directory.Exists(Path.Combine(dir, "erb")) ||
-               File.Exists(Path.Combine(dir, "emuera.config"));
+        // eramaerb: .ERB 파일을 포함하는 ERB 폴더 존재
+        if (Directory.Exists(Path.Combine(dir, "ERB")) ||
+            Directory.Exists(Path.Combine(dir, "erb")))
+            return true;
+        // eramaerc: emuera.config 파일 존재
+        if (File.Exists(Path.Combine(dir, "emuera.config")))
+            return true;
+        return false;
     }
+
+    // ── 게임 시작 ────────────────────────────────────────────────
 
     void OnStartPressed()
     {
         if (gameList == null) return;
-        var selected = gameList.GetSelectedItems();
+
+        int[] selected = gameList.GetSelectedItems();
         if (selected.Length == 0)
         {
-            SetStatus("게임을 선택해주세요.");
+            SetStatus("게임을 선택하세요.");
             return;
         }
+
         int idx = selected[0];
         if (idx < 0 || idx >= gamePaths.Count) return;
 
-        string gamePath = gamePaths[idx] + "/";
-        MinorShift._Library.Sys.ExeDir = gamePath;
+        // 경로 끝에 / 보장 (eramaerc: ExeDir는 항상 / 종료)
+        string gamePath = gamePaths[idx].TrimEnd('/', '\\') + "/";
 
-        var main = GetNodeOrNull<EmueraMain>("/root/Main/EmueraMain");
-        if (main != null)
-        {
-            Hide();
-            var content = GetNodeOrNull<EmueraContent>("/root/Main/EmueraContent");
-            GenericUtils.SetContent(content!);
-            EmueraThread.instance.Start(false, false);
-        }
+        // GameState에 저장 후 main.tscn으로 장면 전환
+        // (main.tscn의 EmueraMain._Ready()에서 이 경로를 읽어 엔진 시작)
+        GameState.SelectedGamePath = gamePath;
+        GD.Print("[FirstWindow] Selected game: " + gamePath);
+
+        GetTree().ChangeSceneToFile("res://main.tscn");
     }
 
     void SetStatus(string msg)

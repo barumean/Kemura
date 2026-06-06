@@ -150,7 +150,7 @@ namespace uEmuera.Drawing
         public bool Bold => (fontStyle & FontStyle.Bold) > 0;
         public bool Italic => (fontStyle & FontStyle.Italic) > 0;
         public bool Underline => (fontStyle & FontStyle.Underline) > 0;
-        public bool Strikeout => (fontStyle & FontStyle.Underline) > 0;
+        public bool Strikeout => (fontStyle & FontStyle.Strikeout) > 0;
         public GraphicsUnit Unit => graphicsUnit;
         GraphicsUnit graphicsUnit;
     }
