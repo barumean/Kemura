@@ -1,0 +1,28 @@
+# Godot
+.godot/
+*.import
+*.uid
+
+# .NET build output
+bin/
+obj/
+.vs/
+*.user
+
+# Android build output
+android/.gradle/
+android/build/
+android/.idea/
+build/
+
+# Unity (legacy - Assets kept for reference)
+Assets/*/Library/
+Assets/*/Temp/
+Assets/*/obj/
+Assets/*/*.csproj
+Assets/*/*.sln
+Assets/*/UserSettings/
+
+# OS
+.DS_Store
+Thumbs.db
