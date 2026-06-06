@@ -189,10 +189,12 @@ namespace MinorShift.Emuera
 #if GODOT_ANDROID
 			WindowX = GameState.ScreenWidth;
 			WindowY = GameState.ScreenHeight;
-			// Android에서 MS Gothic 미사용 시 빌트인 폰트로 fallback
+			// Android: Windows 전용 폰트(MS Gothic 등)는 사용 불가 → 한국어 지원 폰트로 fallback
+			// Fonts/ 폴더에 NotoSansKR-Regular.ttf 등을 배치하면 FontUtils가 로드함
 			if (FontName == "ＭＳ ゴシック" || FontName == "MS Gothic" ||
-			    FontName == "ＭＳ Ｐゴシック" || FontName == "MS PGothic")
-				FontName = "Noto Sans CJK JP";
+			    FontName == "ＭＳ Ｐゴシック" || FontName == "MS PGothic" ||
+			    string.IsNullOrEmpty(FontName))
+				FontName = "NotoSansKR";
 #endif
 			DrawableWidth = WindowX - DrawingParam_ShapePositionShift;
 

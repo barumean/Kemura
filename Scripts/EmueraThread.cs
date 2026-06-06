@@ -55,6 +55,12 @@ public class EmueraThread
 
     void Work()
     {
+        // .NET 9 Android: 기본 런타임에서 EUC-KR(CP949), Shift-JIS(932) 등
+        // 비유니코드 코드페이지가 비활성화됨 → 명시적 등록 필요
+        // (한국어/일본어 era 게임의 레거시 인코딩 파일 읽기 지원)
+        System.Text.Encoding.RegisterProvider(
+            System.Text.CodePagesEncodingProvider.Instance);
+
         Program.debugMode = debugmode;
         Program.Main(Array.Empty<string>());
 
