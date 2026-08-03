@@ -1,12 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://kemura_main"]
+[gd_scene load_steps=4 format=3 uid="uid://cq3n8hkxvr4wa"]
 
 [ext_resource type="Script" path="res://Scripts/EmueraMain.cs" id="1_main"]
 [ext_resource type="Script" path="res://Scripts/EmueraContent.cs" id="2_content"]
+[ext_resource type="PackedScene" uid="uid://bt7yl2m4qwpxe" path="res://first_window.tscn" id="3_first"]
 
 [node name="Main" type="Node"]
-
-[node name="EmueraMain" type="Node" parent="."]
-script = ExtResource("1_main")
 
 [node name="EmueraContent" type="Control" parent="."]
 layout_mode = 3
@@ -26,8 +24,52 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 follow_focus = false
+mouse_filter = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="EmueraContent/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 1
+
+[node name="ProcessLabel" type="Label" parent="EmueraContent"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 40.0
+grow_horizontal = 0
+text = "처리 중..."
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 18
+mouse_filter = 2
+
+[node name="InputBar" type="HBoxContainer" parent="EmueraContent"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -72.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="LineEdit" type="LineEdit" parent="EmueraContent/InputBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+placeholder_text = "입력"
+caret_blink = true
+
+[node name="SubmitButton" type="Button" parent="EmueraContent/InputBar"]
+layout_mode = 2
+text = "확인"
+theme_override_font_sizes/font_size = 22
+
+[node name="FirstWindow" parent="." instance=ExtResource("3_first")]
+
+[node name="EmueraMain" type="Node" parent="."]
+script = ExtResource("1_main")

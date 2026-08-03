@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://kemura_fw"]
+[gd_scene load_steps=2 format=3 uid="uid://bt7yl2m4qwpxe"]
 
 [ext_resource type="Script" path="res://Scripts/FirstWindow.cs" id="1_fw"]
 
@@ -29,6 +29,7 @@ theme_override_font_sizes/font_size = 28
 layout_mode = 2
 text = "경로: ..."
 theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
@@ -40,6 +41,7 @@ autowrap_mode = 3
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_font_sizes/font_size = 20
+allow_reselect = true
 
 [node name="HBox" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -48,4 +50,10 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 text = "게임 시작"
+theme_override_font_sizes/font_size = 24
+
+[node name="PermissionButton" type="Button" parent="VBoxContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "권한 설정"
 theme_override_font_sizes/font_size = 24

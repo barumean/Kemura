@@ -28,10 +28,15 @@ public static class GenericUtils
     }
 
     // --- Display helpers (delegated to EmueraContent) ---
+    //
+    // ConsoleDisplayLineはEmueraアセンブリ内のinternal型なので、これを引数や
+    // 戻り値に持つメンバはinternalでなければならない(publicにするとCS0050/
+    // CS0051 "一貫性のないアクセシビリティ"になる)。
+    // 以前は存在しない`DisplayLine`という型名を使っていたためCS0246だった。
     static EmueraContent? _content;
-    public static void SetContent(EmueraContent c) => _content = c;
+    internal static void SetContent(EmueraContent? c) => _content = c;
 
-    public static void AddText(DisplayLine line, bool old)
+    internal static void AddText(ConsoleDisplayLine line, bool old)
         => _content?.AddLine(line, old);
 
     public static void ClearText()
@@ -55,7 +60,7 @@ public static class GenericUtils
     public static int GetTextMinLineNo()
         => _content?.GetMinLineNo() ?? 0;
 
-    public static DisplayLine? GetText(int lineNo)
+    internal static ConsoleDisplayLine? GetText(int lineNo)
         => _content?.GetLine(lineNo);
 
     public static void RemoveTextCount(int count)
@@ -64,6 +69,8 @@ public static class GenericUtils
     // --- Sprite/texture rect helpers ---
     public static Rect2 ToGodotRect(uEmuera.Drawing.Rectangle src, float texW, float texH)
     {
+        if (texW <= 0f || texH <= 0f)
+            return new Rect2();
         return new Rect2(
             src.X / texW,
             src.Y / texH,

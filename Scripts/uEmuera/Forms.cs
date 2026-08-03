@@ -17,24 +17,41 @@ namespace uEmuera.Forms
         public static void Update()
         {
             var curr_tick = WinmmTimer.TickCount;
-            var iter = timers.GetEnumerator();
-            while(iter.MoveNext())
-            {
-                var timer = iter.Current;
-                if(curr_tick - timer.last_tick < timer.Interval)
-                    continue;
-                timer.last_tick = curr_tick;
 
+            // timersはEmueraスレッドとメインスレッドの双方から変更されるため、
+            // ロック下でスナップショットを取ってから列挙する。
+            // 直接列挙するとInvalidOperationExceptionとHashSet破損が起きる。
+            Timer[] snapshot;
+            lock(sync)
+            {
+                if(timers.Count == 0)
+                    return;
+                snapshot = new Timer[timers.Count];
+                timers.CopyTo(snapshot);
+            }
+
+            foreach(var timer in snapshot)
+            {
                 if(!timer.Enabled)
                     continue;
-                timer.Tick(timer, EventArgs.Empty);
+                var interval = timer.Interval;
+                if(interval <= 0)
+                    interval = 1;
+                // unchecked減算なのでTickCountのラップをまたいでも正しい差分になる
+                if(curr_tick - timer.last_tick < (uint)interval)
+                    continue;
+                timer.last_tick = curr_tick;
+                // ハンドラ未登録でもNREにならないよう?.Invokeを使う
+                timer.Tick?.Invoke(timer, EventArgs.Empty);
             }
         }
-        static HashSet<Timer> timers = new HashSet<Timer>();
+        static readonly HashSet<Timer> timers = new HashSet<Timer>();
+        static readonly object sync = new object();
 
         public Timer()
         {
-            timers.Add(this);
+            lock(sync)
+                timers.Add(this);
         }
 
         public bool Enabled { get; set; }
@@ -44,13 +61,22 @@ namespace uEmuera.Forms
         public event EventHandler Tick;
         public uint last_tick = 0;
 
+        // WinFormsのTimer.Start()/Stop()はEnabledを切り替える。
+        // 空実装にするとEmuera側のtimer.Start()が無効になる。
         public void Start()
-        {}
+        {
+            last_tick = WinmmTimer.TickCount;
+            Enabled = true;
+        }
         public void Stop()
-        {}
+        {
+            Enabled = false;
+        }
         public void Dispose()
         {
-            timers.Remove(this);
+            Enabled = false;
+            lock(sync)
+                timers.Remove(this);
         }
     }
 

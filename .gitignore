@@ -1,7 +1,14 @@
+# ---------------------------------------------------------------------------
 # Godot
+#
+# .godot/ はインポート済みキャッシュなので無視する。
+# 逆に *.import と *.uid は「無視してはいけない」。
+#   *.import : インポート設定(圧縮方式など)の実体。無視すると環境ごとに
+#              再インポートが走り、結果が揃わない。
+#   *.uid    : Godot 4.4以降のリソース識別子。無視すると .tscn の
+#              ext_resource 参照が別マシンで壊れる。
+# ---------------------------------------------------------------------------
 .godot/
-*.import
-*.uid
 
 # .NET build output
 bin/
@@ -9,19 +16,34 @@ obj/
 .vs/
 *.user
 
-# Android build output
+# Android build template / export output
+# (Godotの「Androidビルドテンプレートをインストール」で生成される)
 android/.gradle/
-android/build/
 android/.idea/
+android/build/.gradle/
+android/build/build/
 build/
+*.apk
+*.aab
+*.keystore
+*.jks
 
-# Unity (legacy - Assets kept for reference)
-Assets/*/Library/
-Assets/*/Temp/
-Assets/*/obj/
-Assets/*/*.csproj
-Assets/*/*.sln
-Assets/*/UserSettings/
+# ---------------------------------------------------------------------------
+# Unity (legacy)
+# Unityの生成物はリポジトリ直下に出る。以前の Assets/*/Library/ 等は
+# 存在しないパスを指しており、実際には何も無視できていなかった。
+# ---------------------------------------------------------------------------
+/Library/
+/Temp/
+/Obj/
+/Build/
+/Builds/
+/Logs/
+/UserSettings/
+/MemoryCaptures/
+*.csproj.user
+*.unityproj
+*.sln.DotSettings.user
 
 # OS
 .DS_Store

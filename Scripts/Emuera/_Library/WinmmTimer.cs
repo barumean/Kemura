@@ -28,11 +28,17 @@ namespace MinorShift._Library
 		/// </summary>
 		private static volatile WinmmTimer instance;
 
+		/// <summary>
+		/// 単調増加するミリ秒カウンタ。timeGetTime()と同じ意味を持つ。
+		/// DateTime.Nowは壁時計なのでDST/NTP/手動変更で逆行し、
+		/// uint減算がアンダーフローするため使用しない。
+		/// 約49.7日でラップするが、unchecked減算による差分計算は正しく動作する。
+		/// </summary>
 		public static uint TickCount
         {
             get
             {
-                return (uint)(System.DateTime.Now.Ticks / 10000);
+                return unchecked((uint)System.Environment.TickCount64);
             }
         }
 		/// <summary>

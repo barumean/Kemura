@@ -21,54 +21,54 @@ namespace uEmuera.Drawing
         public int Height => size.Height;
         public Size Size => size;
 
+        // CPU側のImageを直接使う。ImageTexture.GetImage()はGPUからの読み戻しを伴い、
+        // メインスレッド以外から呼ぶと危険なうえ非常に遅い。
         public Color GetPixel(int x, int y)
         {
-            var ti = SpriteManager.GetTextureInfo(name, path);
-            if (ti?.texture == null) return Color.Black;
-            var img = ti.texture.GetImage();
+            var img = SpriteManager.GetTextureInfo(name, path)?.Image;
+            if (img == null) return Color.Black;
+            if (x < 0 || y < 0 || x >= img.GetWidth() || y >= img.GetHeight())
+                return Color.Black;
             var gc = img.GetPixel(x, y);
             return new Color(gc.R, gc.G, gc.B, gc.A);
         }
         public void SetPixel(Color c, int x, int y)
         {
             var ti = SpriteManager.GetTextureInfo(name, path);
-            if (ti?.texture == null) return;
-            var img = ti.texture.GetImage();
+            var img = ti?.Image;
+            if (ti == null || img == null) return;
+            if (x < 0 || y < 0 || x >= img.GetWidth() || y >= img.GetHeight())
+                return;
             img.SetPixel(x, y, new Godot.Color(c.r, c.g, c.b, c.a));
-            ti.texture.Update(img);
+            ti.Invalidate();
         }
         public void Save(string savePath)
         {
-            var ti = SpriteManager.GetTextureInfo(name, path);
-            if (ti?.texture == null) return;
-            var img = ti.texture.GetImage();
+            var img = SpriteManager.GetTextureInfo(name, path)?.Image;
+            if (img == null) return;
             img.SavePng(savePath);
         }
     }
 
     public class BitmapTexture : Bitmap
     {
+        // 以前はワーカースレッドへ投げてMutexで待っていたが、呼び出し側は結果を
+        // 即座に必要とするため実質同期処理だった。加えてMutexはスレッド親和性が
+        // あり別スレッドからのReleaseMutex()がApplicationExceptionを投げていた
+        // (かつ所有スレッドでのWaitOne()は再入するため待機自体が無効だった)。
+        // ファイルI/Oとデコードは呼び出しスレッドで完結させるのが正しい。
         public BitmapTexture(string path) : base(path)
         {
             var texName = string.Concat(":FILE:", filename);
-            var tiot = SpriteManager.GetTextureInfoOtherThread(texName, path, ret =>
-            {
-                textureinfo = ret;
-                if (textureinfo == null) return;
-                size.Width = textureinfo.width;
-                size.Height = textureinfo.height;
-            });
-            while (tiot.mutex == null)
-                System.Threading.Thread.Sleep(10);
-            tiot.mutex.WaitOne();
-
-            if (textureinfo == null) return;
-            tiot.mutex.ReleaseMutex();
-            tiot.mutex.Close();
+            textureinfo = SpriteManager.GetTextureInfo(texName, path);
+            if (textureinfo == null)
+                return;
+            size.Width = textureinfo.width;
+            size.Height = textureinfo.height;
         }
 
         public ImageTexture? texture => textureinfo?.texture;
-        SpriteManager.TextureInfo? textureinfo = null;
+        internal SpriteManager.TextureInfo? textureinfo = null;
     }
 
     public class BitmapRenderTexture : Bitmap

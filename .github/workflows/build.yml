@@ -1,0 +1,69 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # C#のコンパイル。Godot.NET.SdkとGodotSharpはNuGetから取れるので、
+  # Godot本体を入れずにビルドできる。
+  #
+  # このジョブが無かったために「48,000行を追加したがそもそもコンパイルできない」
+  # 状態がmainにマージされていた。ここが最重要のゲート。
+  # ---------------------------------------------------------------------------
+  dotnet-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Restore
+        run: dotnet restore kemura.csproj
+
+      - name: Build (Debug)
+        run: dotnet build kemura.csproj -c Debug --no-restore
+
+      - name: Build (Release)
+        run: dotnet build kemura.csproj -c Release --no-restore
+
+      # 新規ブリッジコード(Scripts/*.cs)の警告はゼロを維持する。
+      # 移植済みエンジン配下の警告は .editorconfig で抑止している。
+      - name: Warnings in bridge code must be zero
+        run: |
+          dotnet build kemura.csproj -c Release --no-restore --no-incremental \
+            -v normal 2>&1 | tee build.log
+          if grep -E '^/home/runner/work/[^ ]*/Scripts/[A-Za-z0-9_]+\.cs\([0-9]+,[0-9]+\): warning' build.log; then
+            echo "::error::新規コードに警告があります"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # シーン/リソースの検証。.tscnの参照切れやスクリプト添付ミスはdotnet buildでは
+  # 検出できないため、Godotのヘッドレスインポートを走らせる。
+  # ---------------------------------------------------------------------------
+  godot-import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+          use-dotnet: true
+          include-templates: false
+
+      - name: Import project (headless)
+        run: |
+          godot --headless --import --quit-after 200 2>&1 | tee import.log || true
+          if grep -iE 'SCRIPT ERROR|Failed loading resource|Cannot open file|Parse Error' import.log; then
+            echo "::error::シーン/リソースの読み込みに失敗しています"
+            exit 1
+          fi

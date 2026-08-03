@@ -1,0 +1,92 @@
+root = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+charset = utf-8-bom
+insert_final_newline = true
+
+# ---------------------------------------------------------------------------
+# 移植された Emuera エンジン / uEmuera 互換レイヤー
+#
+# csproj では <Nullable>enable</Nullable> にしているが、移植元の約48,000行は
+# null許容注釈が一切付いていないため、そのままだと CS8618/CS8625 等が数百件
+# 出て「本当に見るべき警告」が埋もれてしまう(=nullable有効化が飾りになる)。
+#
+# 従ってエンジン側だけ nullable 診断を切り、新規に書いたブリッジコード
+# (Scripts/*.cs のトップレベル) では完全なチェックを効かせる。
+# エンジン側を実際に注釈し終えたらこのセクションを削除する。
+# ---------------------------------------------------------------------------
+[Scripts/Emuera/**/*.cs]
+dotnet_diagnostic.CS8600.severity = none
+dotnet_diagnostic.CS8601.severity = none
+dotnet_diagnostic.CS8602.severity = none
+dotnet_diagnostic.CS8603.severity = none
+dotnet_diagnostic.CS8604.severity = none
+dotnet_diagnostic.CS8605.severity = none
+dotnet_diagnostic.CS8607.severity = none
+dotnet_diagnostic.CS8608.severity = none
+dotnet_diagnostic.CS8609.severity = none
+dotnet_diagnostic.CS8610.severity = none
+dotnet_diagnostic.CS8611.severity = none
+dotnet_diagnostic.CS8612.severity = none
+dotnet_diagnostic.CS8613.severity = none
+dotnet_diagnostic.CS8614.severity = none
+dotnet_diagnostic.CS8615.severity = none
+dotnet_diagnostic.CS8616.severity = none
+dotnet_diagnostic.CS8617.severity = none
+dotnet_diagnostic.CS8618.severity = none
+dotnet_diagnostic.CS8619.severity = none
+dotnet_diagnostic.CS8620.severity = none
+dotnet_diagnostic.CS8621.severity = none
+dotnet_diagnostic.CS8622.severity = none
+dotnet_diagnostic.CS8624.severity = none
+dotnet_diagnostic.CS8625.severity = none
+dotnet_diagnostic.CS8629.severity = none
+dotnet_diagnostic.CS8631.severity = none
+dotnet_diagnostic.CS8632.severity = none
+dotnet_diagnostic.CS8633.severity = none
+dotnet_diagnostic.CS8634.severity = none
+dotnet_diagnostic.CS8643.severity = none
+dotnet_diagnostic.CS8644.severity = none
+dotnet_diagnostic.CS8645.severity = none
+dotnet_diagnostic.CS8653.severity = none
+dotnet_diagnostic.CS8654.severity = none
+dotnet_diagnostic.CS8655.severity = none
+
+[Scripts/uEmuera/**/*.cs]
+dotnet_diagnostic.CS8600.severity = none
+dotnet_diagnostic.CS8601.severity = none
+dotnet_diagnostic.CS8602.severity = none
+dotnet_diagnostic.CS8603.severity = none
+dotnet_diagnostic.CS8604.severity = none
+dotnet_diagnostic.CS8605.severity = none
+dotnet_diagnostic.CS8607.severity = none
+dotnet_diagnostic.CS8608.severity = none
+dotnet_diagnostic.CS8609.severity = none
+dotnet_diagnostic.CS8610.severity = none
+dotnet_diagnostic.CS8611.severity = none
+dotnet_diagnostic.CS8612.severity = none
+dotnet_diagnostic.CS8613.severity = none
+dotnet_diagnostic.CS8614.severity = none
+dotnet_diagnostic.CS8615.severity = none
+dotnet_diagnostic.CS8616.severity = none
+dotnet_diagnostic.CS8617.severity = none
+dotnet_diagnostic.CS8618.severity = none
+dotnet_diagnostic.CS8619.severity = none
+dotnet_diagnostic.CS8620.severity = none
+dotnet_diagnostic.CS8621.severity = none
+dotnet_diagnostic.CS8622.severity = none
+dotnet_diagnostic.CS8624.severity = none
+dotnet_diagnostic.CS8625.severity = none
+dotnet_diagnostic.CS8629.severity = none
+dotnet_diagnostic.CS8631.severity = none
+dotnet_diagnostic.CS8632.severity = none
+dotnet_diagnostic.CS8633.severity = none
+dotnet_diagnostic.CS8634.severity = none
+dotnet_diagnostic.CS8643.severity = none
+dotnet_diagnostic.CS8644.severity = none
+dotnet_diagnostic.CS8645.severity = none
+dotnet_diagnostic.CS8653.severity = none
+dotnet_diagnostic.CS8654.severity = none
+dotnet_diagnostic.CS8655.severity = none

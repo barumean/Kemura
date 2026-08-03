@@ -1,24 +1,39 @@
 # Kemura
 
-**Emuera era-script 게임 에뮬레이터 — Android 최신 버전 지원**
+**Emuera era-script 게임 에뮬레이터 (Godot 4.6 + C#)**
 
-uEmuera 포크에서 시작해 Godot 4.6 + C#/.NET 9 기반으로 완전 마이그레이션.
+uEmuera(Unity 포트)를 Godot 4.6 + .NET으로 이식한 프로젝트입니다.
 
 ---
 
-## 기술 스택 결정 이유
+## 현재 상태
 
-| 항목 | Unity 2019 (구) | Godot 4.6 (현재) |
-|------|----------------|-----------------|
-| 엔진 상태 | EOL (2022 지원 종료) | 활성 개발 중 |
-| Android NDK | r19/r21 (구버전) | 최신 지원 |
-| 16KB 페이지 정렬 | 미지원 | 지원 (Android 15+) |
-| .NET 버전 | .NET Standard 2.0 | **.NET 9.0** (Android) |
-| AGP 버전 | 7.4.2 (최대) | 8.x 지원 |
-| 라이선스 | Unity Runtime Fee | **완전 무료** |
+솔직하게 적습니다. 이전 README는 검증되지 않은 "✅ 지원"을 나열하고 있었습니다.
 
-> Unity 2019는 Android 16(2026)의 요구사항(16KB 페이지 정렬, AGP 8.x, NDK r25+)을  
-> 충족하지 못합니다. Godot 4.6 + .NET 9이 최적 선택입니다.
+| 항목 | 상태 |
+|------|------|
+| C# 컴파일 (`dotnet build`) | ✅ CI에서 검증 |
+| 씬/리소스 로딩 | ✅ CI에서 헤드리스 임포트 검증 |
+| 게임 목록 → 게임 시작 흐름 | ✅ 구현 (이전엔 버튼이 무반응이었음) |
+| 콘솔 텍스트 렌더링 | ✅ 구현 (이전엔 배경색만 그려졌음) |
+| 클릭 가능한 선택지 버튼 | ✅ 구현 (BBCode `[url]` + `meta_clicked`) |
+| 숫자/문자열 입력 | ✅ 구현 (하단 입력 바) |
+| 터치 / 마우스 / 키보드 진행 | ✅ 구현 |
+| 실기(Android) 동작 검증 | ⚠️ **미검증** — 실기 테스트가 필요합니다 |
+| 일본어 폰트 | ⚠️ 별도 배치 필요 ([Fonts/README.md](Fonts/README.md)) |
+| 이미지/스프라이트 표시 | ⚠️ 부분 구현 (텍스처 캐시는 동작, 화면 배치는 미구현) |
+| APK 서명 | ⚠️ 릴리스는 keystore 직접 설정 필요 |
+
+### 알려진 제약
+
+- **`MainWindow.Update()`의 데이터 경합**: 표시 갱신은 메인 스레드에서 돌지만,
+  읽는 대상(`EmueraConsole.displayLineList`)은 Emuera 스레드가 갱신합니다.
+  uEmuera 원본과 같은 구조로 이식했기 때문에 이 경합이 남아 있습니다.
+  근본 해결에는 엔진 측 표시 리스트에 락을 넣는 별도 작업이 필요합니다.
+- **이미지 출력**: `Graphics.DrawImage` 계열은 아직 로그만 남기는 스텁입니다.
+  텍스처 로딩/캐시(`SpriteManager`)는 동작하지만 화면에 그리는 경로가 없습니다.
+- **미구현 스텁**: `MainWindow.ShowConfigDialog` / `Reboot`, `DebugDialog`,
+  `Media.SystemSounds` 등은 로그만 남깁니다.
 
 ---
 
@@ -26,95 +41,117 @@ uEmuera 포크에서 시작해 Godot 4.6 + C#/.NET 9 기반으로 완전 마이�
 
 ```
 Kemura/
-├── project.godot          # Godot 4.6 프로젝트 설정
-├── kemura.csproj          # .NET 프로젝트 (net8.0 / net9.0 Android)
-├── kemura.sln             # Visual Studio 솔루션
-├── first_window.tscn      # 게임 선택 UI 씬
-├── main.tscn              # 메인 에뮬레이터 씬
-├── export_presets.cfg     # Android APK 내보내기 설정
-├── android/
-│   └── AndroidManifest.xml
+├── project.godot           # Godot 4.6 프로젝트 설정 (main_scene = main.tscn)
+├── kemura.csproj           # .NET (net8.0 데스크톱 / net9.0 Android)
+├── kemura.sln
+├── main.tscn               # 루트 씬: EmueraContent + FirstWindow + EmueraMain
+├── first_window.tscn       # 게임 선택 UI (main.tscn에 인스턴스로 포함)
+├── export_presets.cfg      # Android APK 내보내기 설정
+├── .editorconfig           # nullable 경고를 신규 코드에만 적용
+├── .github/workflows/      # CI (dotnet build + Godot 헤드리스 임포트)
 ├── Scripts/
-│   ├── EmueraMain.cs      # 메인 노드 (게임 라이프사이클)
-│   ├── EmueraContent.cs   # UI 렌더링 (Godot Control 기반)
-│   ├── EmueraThread.cs    # 백그라운드 스레드
-│   ├── FirstWindow.cs     # 게임 선택 화면
-│   ├── SpriteManager.cs   # 텍스처 캐시 관리
-│   ├── GenericUtils.cs    # 유틸리티
-│   ├── FontUtils.cs       # 폰트 관리
-│   ├── Emuera/            # era 스크립트 엔진 (플랫폼 독립)
-│   ├── uEmuera/           # Godot 호환 레이어
-│   └── Shaders/
-│       └── color_matrix.gdshader
-├── Fonts/                 # 폰트 파일 (MS Gothic 등 직접 추가 필요)
-└── Assets/                # 구 Unity 프로젝트 (참조용 보존)
+│   ├── EmueraMain.cs       # 라이프사이클 + 매 프레임 표시 갱신 구동
+│   ├── EmueraContent.cs    # 콘솔 렌더링 / 입력
+│   ├── EmueraThread.cs     # Emuera 엔진 스레드
+│   ├── FirstWindow.cs      # 게임 선택 + 권한 처리
+│   ├── SpriteManager.cs    # 텍스처 캐시
+│   ├── GenericUtils.cs     # 표시 계층 브리지
+│   ├── FontUtils.cs        # 폰트 탐색
+│   ├── Emuera/             # era 스크립트 엔진 (이식)
+│   ├── uEmuera/            # Godot 호환 레이어 (이식)
+│   └── Shaders/color_matrix.gdshader
+├── Fonts/                  # 폰트 직접 배치 (README 참조)
+└── Assets/                 # 구 Unity 프로젝트 (미사용 · 삭제 예정)
 ```
+
+> Android 권한은 `export_presets.cfg`의 `permissions/*` 키로 지정합니다.
+> 이전에 있던 `android/AndroidManifest.xml`은 Godot이 **읽지 않는 위치**였기
+> 때문에(gradle 빌드 시 경로는 `android/build/src/com/godot/game/`) 삭제했습니다.
 
 ---
 
-## 빌드 방법
+## 빌드
 
 ### 사전 요구사항
 
-- **Godot 4.6** (.NET 에디션): https://godotengine.org/download
-- **.NET 8.0 SDK** (데스크톱 빌드)
-- **.NET 9.0 SDK** (Android 빌드)
-- **Android SDK** (API 35+), **Android NDK** (r25+)
-- **JDK 17+**
+- **Godot 4.6 (.NET 에디션)**: https://godotengine.org/download
+- **.NET 8.0 SDK** (데스크톱), **.NET 9.0 SDK** (Android)
+- Android 내보내기: **JDK 17+**, Android SDK (Godot 에디터 설정에서 경로 지정)
 
-### 폰트 파일 추가
-
-`Fonts/` 폴더에 다음 중 하나를 배치:
-- `msgothic.ttc` (MS Gothic — 일본어/한국어 지원)
-- `NotoSansMono.ttf` (대체 폰트)
-
-### Android APK 빌드
+### 컴파일 확인
 
 ```bash
-# 1. Godot 에디터에서 Android 내보내기 프리셋 설정
-#    Project > Export > Android
-
-# 2. CLI 빌드 (옵션)
-dotnet build -p:GodotTargetPlatform=android
-
-# 3. Godot 에디터에서 Export > Export Project
+dotnet build kemura.csproj -c Release
 ```
+
+CI와 동일한 검사입니다. 여기서 실패하면 에디터에서도 실행되지 않습니다.
+
+### 폰트 배치
+
+`Fonts/NotoSansJP-Regular.ttf`를 넣으세요. 없으면 일본어가 □로 표시됩니다.
+자세한 내용은 [Fonts/README.md](Fonts/README.md).
 
 ### 데스크톱 실행
 
 ```bash
-# Godot 에디터에서 F5 또는
-godot --path /path/to/Kemura
+godot --path .
 ```
+
+### Android APK
+
+현재 프리셋은 **gradle 빌드를 끈 상태**(`gradle_build/use_gradle_build=false`)입니다.
+Godot 기본 내보내기 템플릿을 쓰므로 빌드 템플릿 설치가 필요 없습니다.
+
+```bash
+# 1. Godot 에디터에서 Android 내보내기 템플릿 다운로드
+#    Editor > Manage Export Templates
+# 2. 디버그 APK (에디터의 디버그 keystore 사용)
+godot --headless --path . --export-debug Android build/kemura.apk
+```
+
+릴리스 빌드는 `export_presets.cfg`의 `keystore/release*`를 채워야 합니다.
+(`package/signed=true`로 되어 있으므로 keystore 없이는 릴리스 내보내기가 실패합니다.
+서명되지 않은 APK는 Android에 설치할 수 없습니다.)
+
+manifest를 직접 커스터마이즈해야 한다면 gradle 빌드를 켜고
+`Project > Install Android Build Template`을 실행한 뒤
+`android/build/src/com/godot/game/AndroidManifest.xml`을 수정하세요.
 
 ---
 
 ## 게임 파일 배치
 
-Android 기기에서:
-
 ```
 /storage/emulated/0/emuera/
 └── 게임이름/
-    ├── ERB/         (스크립트 파일)
-    ├── CSV/         (데이터 파일)
+    ├── ERB/         (스크립트)
+    ├── CSV/         (데이터)
     └── emuera.config
 ```
 
-앱 첫 실행 시 `MANAGE_EXTERNAL_STORAGE` 권한을 허용해야 합니다.
+`ERB/`(또는 `erb/`) 폴더나 `emuera.config`가 있는 폴더만 목록에 표시됩니다.
+
+### 권한 (Android 11+)
+
+`MANAGE_EXTERNAL_STORAGE`는 런타임 팝업으로 받을 수 없습니다.
+앱의 **[권한 설정]** 버튼을 누른 뒤,
+**설정 → 앱 → Kemura → 권한 → 모든 파일 접근**을 허용하세요.
+앱으로 돌아오면 자동으로 다시 검색합니다.
 
 ---
 
-## Android 호환성
+## Android 대응
 
-| Android 버전 | API | 상태 |
-|-------------|-----|------|
-| Android 5.0+ | API 21+ | ✅ 최소 지원 |
-| Android 10 | API 29 | ✅ |
-| Android 11 | API 30 | ✅ (MANAGE_EXTERNAL_STORAGE) |
-| Android 13 | API 33 | ✅ (Media 권한) |
-| Android 15 | API 35 | ✅ (16KB 페이지 정렬) |
-| Android 16 | API 36 | ✅ (Godot 4.6 지원) |
+| Android | API | 처리 방식 |
+|---------|-----|-----------|
+| 6 ~ 10 | 23~29 | `READ/WRITE_EXTERNAL_STORAGE` 런타임 권한 |
+| 11+ | 30+ | `MANAGE_EXTERNAL_STORAGE` (설정에서 수동 허용) |
+| 13+ | 33+ | `READ_MEDIA_IMAGES/VIDEO/AUDIO` 추가 |
+| 15+ | 35+ | Godot 4.6 기본 템플릿이 16KB 페이지 정렬을 만족 |
+
+빌드 대상 아키텍처는 `arm64-v8a` 단독입니다(`export_presets.cfg`).
+
+> 위 표는 **설정상 대응**을 의미합니다. 실기 검증은 아직 수행되지 않았습니다.
 
 ---
 

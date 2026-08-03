@@ -115,7 +115,8 @@ namespace uEmuera.Window
                 return;
             }
 
-            uEmuera.Logger.Info("MainWindow.Update Dirty");
+            // ここは毎フレーム通る経路なのでログを出さない
+            // (logcatが埋まるうえGD.Printのコストが実測で効く)
             dirty_ = false;
 
             GenericUtils.SetBackgroundColor(console_.bgColor);
@@ -213,6 +214,6 @@ namespace uEmuera.Window
             }
         }
         uint last_process_tic = 0;
-        bool wait_process = true;
+        const bool wait_process = true;
     }
 }

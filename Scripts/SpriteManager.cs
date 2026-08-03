@@ -6,87 +6,133 @@ using MinorShift.Emuera.Content;
 
 internal static class SpriteManager
 {
-    internal class TextureInfo : IDisposable
+    /// <summary>
+    /// テクスチャ1枚の情報。
+    /// Image(CPU側)はどのスレッドからでも安全に生成できるが、
+    /// ImageTexture(GPU側)はRenderingServerに触るためメインスレッド専用。
+    /// 従ってImageをロードして保持し、ImageTextureは初回アクセス時に遅延生成する。
+    /// </summary>
+    internal sealed class TextureInfo : IDisposable
     {
-        internal TextureInfo(string name, ImageTexture tex, int w, int h)
+        internal TextureInfo(string name, Image img)
         {
             imagename = name;
-            texture = tex;
-            width = w;
-            height = h;
+            image = img;
+            width = img.GetWidth();
+            height = img.GetHeight();
         }
+
+        internal readonly string imagename;
+        internal readonly int width;
+        internal readonly int height;
+
+        Image? image;
+        ImageTexture? texture_;
+
+        internal Image? Image => image;
+
+        /// <summary>メインスレッドからのみアクセスすること。</summary>
+        internal ImageTexture? texture
+        {
+            get
+            {
+                if (texture_ == null && image != null)
+                    texture_ = ImageTexture.CreateFromImage(image);
+                return texture_;
+            }
+        }
+
+        /// <summary>Imageを書き換えた後にGPU側へ反映する。</summary>
+        internal void Invalidate()
+        {
+            if (texture_ != null && image != null)
+                texture_.Update(image);
+        }
+
         public void Dispose()
         {
-            texture = null!;
+            // ImageTexture/ImageはRefCountedなネイティブオブジェクトなので、
+            // 参照をnullにするだけではGPU/ネイティブメモリが解放されない。
+            texture_?.Dispose();
+            texture_ = null;
+            image?.Dispose();
+            image = null;
         }
-        internal string imagename;
-        internal ImageTexture? texture;
-        internal int width;
-        internal int height;
-    }
-
-    class TextureInfoOtherThread
-    {
-        public System.Threading.Mutex? mutex;
     }
 
     static readonly Dictionary<string, TextureInfo> textureCache = new();
     static readonly Dictionary<string, string[]> resourceCsvCache = new();
+    // 両キャッシュはEmueraスレッドとメインスレッドの双方から触られるため必ずロックする。
+    static readonly object sync = new object();
 
     internal static TextureInfo? GetTextureInfo(string name, string path)
     {
         if (string.IsNullOrEmpty(path)) return null;
         string key = name ?? path;
-        if (textureCache.TryGetValue(key, out var ti)) return ti;
+
+        lock (sync)
+        {
+            if (textureCache.TryGetValue(key, out var cached))
+                return cached;
+        }
 
         if (!File.Exists(path)) return null;
 
+        // ロックの外でファイルI/Oとデコードを行う(重い処理中にロックを保持しない)
         var img = new Image();
         var err = img.Load(path);
-        if (err != Error.Ok) return null;
-
-        var tex = ImageTexture.CreateFromImage(img);
-        ti = new TextureInfo(key, tex, img.GetWidth(), img.GetHeight());
-        textureCache[key] = ti;
-        return ti;
-    }
-
-    internal static TextureInfoOtherThread GetTextureInfoOtherThread(
-        string name, string path, Action<TextureInfo?> callback)
-    {
-        var tiot = new TextureInfoOtherThread();
-        tiot.mutex = new System.Threading.Mutex();
-        tiot.mutex.WaitOne();
-
-        System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+        if (err != Error.Ok)
         {
-            var ti = GetTextureInfo(name, path);
-            callback(ti);
-            tiot.mutex!.ReleaseMutex();
-        });
+            img.Dispose();
+            return null;
+        }
 
-        return tiot;
+        var ti = new TextureInfo(key, img);
+
+        lock (sync)
+        {
+            // 別スレッドが先に同じキーを入れていた場合は自分の分を捨てる
+            if (textureCache.TryGetValue(key, out var raced))
+            {
+                ti.Dispose();
+                return raced;
+            }
+            textureCache[key] = ti;
+        }
+        return ti;
     }
 
     internal static void ForceClear()
     {
-        foreach (var ti in textureCache.Values) ti.Dispose();
-        textureCache.Clear();
+        TextureInfo[] snapshot;
+        lock (sync)
+        {
+            snapshot = new TextureInfo[textureCache.Count];
+            textureCache.Values.CopyTo(snapshot, 0);
+            textureCache.Clear();
+        }
+        foreach (var ti in snapshot)
+            ti.Dispose();
     }
 
     internal static string[]? GetResourceCSVLines(string path)
     {
-        resourceCsvCache.TryGetValue(path, out var lines);
-        return lines;
+        lock (sync)
+        {
+            resourceCsvCache.TryGetValue(path, out var lines);
+            return lines;
+        }
     }
 
     internal static void SetResourceCSVLine(string path, string[] lines)
     {
-        resourceCsvCache[path] = lines;
+        lock (sync)
+            resourceCsvCache[path] = lines;
     }
 
     internal static void ClearResourceCSVLines(string path)
     {
-        resourceCsvCache.Remove(path);
+        lock (sync)
+            resourceCsvCache.Remove(path);
     }
 }
