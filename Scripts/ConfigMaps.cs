@@ -129,6 +129,52 @@ internal static class ConfigMaps
         return md5s;
     }
 
+    /// <summary>
+    /// 実際の emuera.config 側のMD5リスト。各行の ':' より前(キー名部分)の
+    /// 生バイト列からハッシュを取る。テーブル側(CalcMd5List)はキー名のみの
+    /// 行をハッシュするので、両者の値が一致することで対応付けられる。
+    ///
+    /// 移植元(Unity版 GenericUtils)は ':' を探すループに境界チェックが無く、
+    /// ':' を含まない行(コメントや末尾行)で IndexOutOfRangeException になった。
+    /// ここでは範囲外を防ぎ、':' の無い行は対応表を引けないのでスキップせず
+    /// 行数合わせのために空文字を積む(呼び出し側が行番号で添字を取るため)。
+    /// </summary>
+    internal static List<string> CalcMd5ListForConfig(byte[] data)
+    {
+        var md5s = new List<string>();
+        if (data == null || data.Length == 0) return md5s;
+
+        int pos = 0;
+        while (pos < data.Length)
+        {
+            // 行末を探す
+            int lineEnd = pos;
+            while (lineEnd < data.Length && data[lineEnd] != 0x0d && data[lineEnd] != 0x0a)
+                ++lineEnd;
+
+            // 行内の最初の ':' を探す
+            int colon = pos;
+            while (colon < lineEnd && data[colon] != (byte)':')
+                ++colon;
+
+            if (colon > pos && colon < lineEnd)
+                md5s.Add(CalcMd5(data, pos, colon - pos));
+            else
+                md5s.Add("");   // ':' 無し(空行・コメント等)。行番号との対応を保つ
+
+            if (lineEnd >= data.Length)
+                break;
+
+            // 改行を「1つだけ」消費する。StreamReader.ReadLine() は空行も
+            // 1行として返すため、連続改行をまとめて飛ばすと添字がずれる。
+            if (data[lineEnd] == 0x0d && lineEnd + 1 < data.Length && data[lineEnd + 1] == 0x0a)
+                pos = lineEnd + 2;      // CRLF
+            else
+                pos = lineEnd + 1;      // CR or LF
+        }
+        return md5s;
+    }
+
     static string CalcMd5(byte[] data, int offset, int count)
     {
         var hash = MD5.HashData(new ReadOnlySpan<byte>(data, offset, count));

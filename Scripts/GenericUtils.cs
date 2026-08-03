@@ -66,6 +66,14 @@ public static class GenericUtils
     public static void RemoveTextCount(int count)
         => _content?.RemoveLines(count);
 
+    // --- Config key MD5 (emuera.config のキー名解決用) ---
+    //
+    // Emueraエンジン(ConfigData.cs)がこの名前で呼ぶ。Unity版のGenericUtilsに
+    // あったが移植されておらず、Assets/削除でCS0117になった。
+    // 実装はConfigMapsに置いてある(テーブル側のMD5計算と対になるため)。
+    internal static List<string> CalcMd5ListForConfig(byte[] data)
+        => ConfigMaps.CalcMd5ListForConfig(data);
+
     // --- Sprite/texture rect helpers ---
     public static Rect2 ToGodotRect(uEmuera.Drawing.Rectangle src, float texW, float texH)
     {

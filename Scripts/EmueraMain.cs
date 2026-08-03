@@ -20,7 +20,9 @@ public partial class EmueraMain : Node
     public override void _Ready()
     {
         // Loggerは何よりも先に差しておく(以降のログを落とさないため)
-        uEmuera.Logger.info = GD.Print;
+        // GD.Print は Print(params object[]) なので Action<object> に
+        // メソッドグループのまま代入できない (CS0123)。ラムダで包む。
+        uEmuera.Logger.info = s => GD.Print(s?.ToString() ?? "");
         uEmuera.Logger.warn = s => GD.PushWarning(s?.ToString() ?? "");
         uEmuera.Logger.error = s => GD.PushError(s?.ToString() ?? "");
 

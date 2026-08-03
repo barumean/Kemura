@@ -469,7 +469,11 @@ static ConfigData() { }
 				//bool defineIgnoreWarningFiles = false;
 				while ((line = eReader.ReadLine()) != null)
 				{
-					var md5 = md5s[md5i++];
+					// md5sは物理行と1対1で作るが、改行の扱いや文字コードで
+					// ずれた場合に IndexOutOfRangeException で設定読み込み全体が
+					// 落ちるのを防ぐ。ずれた場合はSHIFT-JIS名の解決だけ諦める。
+					var md5 = md5i < md5s.Count ? md5s[md5i] : "";
+					md5i++;
 					if ((line.Length == 0) || (line[0] == ';'))
 						continue;
 					pos = new ScriptPosition(eReader.Filename, eReader.LineNo);
