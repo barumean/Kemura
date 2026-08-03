@@ -45,35 +45,6 @@ text = "찾아보기"
 layout_mode = 2
 text = "새로고침"
 
-[node name="FontRow" type="HBoxContainer" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="FontLabel" type="Label" parent="VBoxContainer/FontRow"]
-layout_mode = 2
-text = "글자 크기"
-
-[node name="FontSmaller" type="Button" parent="VBoxContainer/FontRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(56, 44)
-text = "A-"
-
-[node name="FontValue" type="Label" parent="VBoxContainer/FontRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(56, 0)
-text = "28"
-horizontal_alignment = 1
-
-[node name="FontLarger" type="Button" parent="VBoxContainer/FontRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(56, 44)
-text = "A+"
-
-[node name="FontSample" type="Label" parent="VBoxContainer/FontRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "본문 미리보기 テキスト"
-clip_text = true
-
 [node name="StatusLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "스캔 중..."

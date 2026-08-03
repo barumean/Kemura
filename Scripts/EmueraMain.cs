@@ -1,12 +1,12 @@
-using Godot;
+﻿using Godot;
 using System;
 using MinorShift.Emuera;
 
 /// <summary>
-/// ゲーム本体の制御。main.tscnの Main/EmueraMain に付く。
+/// 게임 본체 제어. main.tscn 의 Main/EmueraMain 에 붙는다.
 ///
-/// 起動時にゲームを開始してはいけない(まずFirstWindowでゲームを選ばせる)。
-/// ゲーム開始はFirstWindow.StartGame()から呼ばれる。
+/// 시작 시 게임을 바로 시작하면 안 된다(먼저 FirstWindow에서 게임을 선택하게 한다).
+/// 게임 시작은 FirstWindow에서 StartGame()을 호출해 이뤄진다.
 /// </summary>
 public partial class EmueraMain : Node
 {
@@ -19,35 +19,35 @@ public partial class EmueraMain : Node
 
     public override void _Ready()
     {
-        // Loggerは何よりも先に差しておく(以降のログを落とさないため)
-        // GD.Print は Print(params object[]) なので Action<object> に
-        // メソッドグループのまま代入できない (CS0123)。ラムダで包む。
+        // Logger를 가장 먼저 연결한다(이후 로그를 놓치지 않기 위해)
+        // GD.Print 는 Print(params object[]) 이므로 Action<object> 에
+        // 메서드 그룹 그대로 대입할 수 없다 (CS0123). 람다로 감싼다.
         uEmuera.Logger.info = s => GD.Print(s?.ToString() ?? "");
         uEmuera.Logger.warn = s => GD.PushWarning(s?.ToString() ?? "");
         uEmuera.Logger.error = s => GD.PushError(s?.ToString() ?? "");
 
-        // SHIFT-JIS製 emuera.config のキー名を解決するための変換テーブル。
-        // ゲーム読み込みより前に入れておく必要がある。
+        // SHIFT-JIS로 만든 emuera.config 의 키 이름을 해석하기 위한 변환 테이블.
+        // 게임 로드보다 먼저 넣어둬야 한다.
         ConfigMaps.Load();
 
-        // 絶対パス("/root/Main/...")を埋め込むと、このシーンを子として
-        // インスタンス化した瞬間に壊れる。兄弟ノードは相対パスで引く。
+        // 절대 경로("/root/Main/...")를 박으면 이 씬을 자식으로
+        // 인스턴스화하는 순간 깨진다. 형제 노드는 상대 경로로 참조한다.
         content = GetNodeOrNull<EmueraContent>("../EmueraContent");
         firstWindow = GetNodeOrNull<FirstWindow>("../FirstWindow");
 
         if (content == null)
-            GD.PushError("EmueraMain: EmueraContent が見つかりません (../EmueraContent)");
+            GD.PushError("EmueraMain: EmueraContent 를 찾을 수 없습니다 (../EmueraContent)");
         if (firstWindow == null)
-            GD.PushError("EmueraMain: FirstWindow が見つかりません (../FirstWindow)");
+            GD.PushError("EmueraMain: FirstWindow 를 찾을 수 없습니다 (../FirstWindow)");
 
         GenericUtils.SetContent(content);
 
-        // 起動直後はゲーム選択画面のみを見せる
+        // 시작 직후에는 게임 선택 화면만 보여준다
         content?.Hide();
         firstWindow?.Show();
     }
 
-    /// <summary>FirstWindowから呼ばれる。gamePathはゲームフォルダの絶対パス。</summary>
+    /// <summary>FirstWindow에서 호출된다. gamePath는 게임 폴더의 절대 경로.</summary>
     internal bool StartGame(string gamePath)
     {
         if (working)
@@ -58,15 +58,15 @@ public partial class EmueraMain : Node
         if (string.IsNullOrEmpty(gamePath))
             return false;
 
-        // Sys.ExeDirはprivate setなので直接代入できない(CS0272)。
-        // 正しい入口は SetWorkFolder(親) + SetSourceFolder(フォルダ名) で、
-        // これがExeDirを正規化して組み立てる。
+        // Sys.ExeDir 는 private set 이라 직접 대입할 수 없다(CS0272).
+        // 올바른 진입점은 SetWorkFolder(부모) + SetSourceFolder(폴더명) 이며,
+        // 이 조합이 ExeDir 를 정규화해 조립한다.
         var full = gamePath.TrimEnd('/', '\\');
         var parent = System.IO.Path.GetDirectoryName(full);
         var name = System.IO.Path.GetFileName(full);
         if (string.IsNullOrEmpty(parent) || string.IsNullOrEmpty(name))
         {
-            GD.PushError($"EmueraMain.StartGame: 不正なゲームパス '{gamePath}'");
+            GD.PushError($"EmueraMain.StartGame: 잘못된 게임 경로 '{gamePath}'");
             return false;
         }
         MinorShift._Library.Sys.SetWorkFolder(parent);
@@ -92,8 +92,8 @@ public partial class EmueraMain : Node
     {
         if (pendingRestart)
         {
-            // ClearとRestartが同一フレームで立つとDoClearが二重に走るため、
-            // Restartを優先して1回だけ処理する
+            // Clear와 Restart가 같은 프레임에 켜지면 DoClear가 두 번 실행되므로,
+            // Restart를 우선해 한 번만 처리한다
             pendingRestart = false;
             pendingClear = false;
             DoRestart();
@@ -109,16 +109,16 @@ public partial class EmueraMain : Node
         if (!working)
             return;
 
-        // uEmueraの設計ではMainWindow.Update()が表示更新の駆動源だが、
-        // 移植時に呼び出し元が存在しなかった(=画面が一切更新されなかった)。
-        // Godotノードを触るのでメインスレッドであるここから毎フレーム呼ぶ。
+        // uEmuera 설계에서는 MainWindow.Update() 가 화면 갱신의 구동원이지만,
+        // 이식 시 호출자가 존재하지 않았다(= 화면이 전혀 갱신되지 않았다).
+        // Godot 노드를 다루므로 메인 스레드인 여기서 매 프레임 호출한다.
         GlobalStatic.MainWindow?.Update();
         content?.SyncInputBar();
     }
 
     void DoClear()
     {
-        // Endはスレッドの終了をJoinで待つ。待たずに次を開始するとエンジンが二重に走る。
+        // End 는 Join 으로 스레드 종료를 기다린다. 기다리지 않고 다음을 시작하면 엔진이 두 번 돈다.
         EmueraThread.instance.End();
 
         content?.Clear();
@@ -151,7 +151,7 @@ public partial class EmueraMain : Node
 
     public override void _Notification(int what)
     {
-        // アプリ終了時にエンジンスレッドを確実に畳む
+        // 앱 종료 시 엔진 스레드를 확실히 정리한다
         if (what == NotificationWMCloseRequest || what == NotificationPredelete)
             EmueraThread.instance.End(1000);
     }
