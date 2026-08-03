@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,9 +39,24 @@ public partial class EmueraContent : Control
 
     Button? fontSmaller;
     Button? fontLarger;
+    Label? fontValue;
+    Label? fontSample;
+
+    // メニューは PopupPanel(=Window派生)ではなく通常のControlオーバーレイで作る。
+    // Windowノードは環境によって埋め込み(embed subwindow)の扱いが異なり、
+    // Androidで生成に失敗すると起動時にそのまま落ちる。Visibleの切替だけで
+    // 済むControlなら、その経路のリスクが無い。
+    Control? menuLayer;
+    Control? fontLayer;
 
     // 表示に使う文字サイズ。Settings経由で永続化される。
     int fontSize = Settings.DefaultFontSize;
+
+    // 内容が変わった後、何フレーム最下部へ追従させるか。
+    // RichTextLabel(FitContent)の高さは追加されたフレームでは確定せず、
+    // スクロールバーの最大値も古いままなので、1回だけでは途中で止まる。
+    int scrollFramesLeft;
+    const int ScrollFollowFrames = 4;
 
     public override void _Ready()
     {
@@ -56,13 +71,31 @@ public partial class EmueraContent : Control
         inputSubmit = GetNodeOrNull<Button>("Layout/InputBar/SubmitButton");
 
         processLabel = GetNodeOrNull<Label>("ProcessLabel");
-        fontSmaller = GetNodeOrNull<Button>("FontBar/SmallerButton");
-        fontLarger = GetNodeOrNull<Button>("FontBar/LargerButton");
+
+        menuLayer = GetNodeOrNull<Control>("MenuLayer");
+        fontLayer = GetNodeOrNull<Control>("FontLayer");
+
+        const string fontRoot = "FontLayer/Center/Panel/VBox";
+        fontSmaller = GetNodeOrNull<Button>(fontRoot + "/Row/SmallerButton");
+        fontLarger = GetNodeOrNull<Button>(fontRoot + "/Row/LargerButton");
+        fontValue = GetNodeOrNull<Label>(fontRoot + "/Row/FontValue");
+        fontSample = GetNodeOrNull<Label>(fontRoot + "/Sample");
 
         if (inputEdit != null)
             inputEdit.TextSubmitted += _ => SubmitTypedInput();
         if (inputSubmit != null)
             inputSubmit.Pressed += SubmitTypedInput;
+
+        Wire("MenuButton", () => SetLayerVisible(menuLayer, true));
+
+        const string menuRoot = "MenuLayer/Center/Panel/VBox";
+        Wire(menuRoot + "/RestartButton", OnRestart);
+        Wire(menuRoot + "/SaveLogButton", OnSaveLog);
+        Wire(menuRoot + "/FontButton", OnOpenFontSettings);
+        Wire(menuRoot + "/QuitToListButton", OnQuitToList);
+        Wire(menuRoot + "/QuitAppButton", OnQuitApp);
+        Wire(menuRoot + "/CloseButton", () => SetLayerVisible(menuLayer, false));
+        Wire(fontRoot + "/FontCloseButton", () => SetLayerVisible(fontLayer, false));
 
         if (fontSmaller != null)
             fontSmaller.Pressed += () => NudgeFontSize(-2);
@@ -72,11 +105,152 @@ public partial class EmueraContent : Control
         fontSize = Settings.FontSize;
         ApplyFontSizeToChrome();
 
+        SetLayerVisible(menuLayer, false);
+        SetLayerVisible(fontLayer, false);
+
         if (inputBar != null)
             inputBar.Visible = false;
         if (processLabel != null)
             processLabel.Visible = false;
     }
+
+    /// <summary>ノードが見つからなくても落ちないように包む。</summary>
+    void Wire(string path, Action handler)
+    {
+        var b = GetNodeOrNull<Button>(path);
+        if (b == null)
+        {
+            GD.PushWarning($"EmueraContent: 버튼을 찾을 수 없습니다 ({path})");
+            return;
+        }
+        b.Pressed += handler;
+    }
+
+    static void SetLayerVisible(Control? layer, bool visible)
+    {
+        if (layer != null)
+            layer.Visible = visible;
+    }
+
+    // ------------------------------------------------------------------
+    // メニュー
+    // ------------------------------------------------------------------
+
+    void OnRestart()
+    {
+        SetLayerVisible(menuLayer, false);
+        GetNodeOrNull<EmueraMain>("../EmueraMain")?.Restart();
+    }
+
+    void OnQuitToList()
+    {
+        SetLayerVisible(menuLayer, false);
+        GetNodeOrNull<EmueraMain>("../EmueraMain")?.Clear();
+    }
+
+    void OnQuitApp()
+    {
+        SetLayerVisible(menuLayer, false);
+        // EmueraMain._Notificationがエンジンスレッドを畳んでから終了する。
+        GetTree()?.Quit();
+    }
+
+    void OnOpenFontSettings()
+    {
+        SetLayerVisible(menuLayer, false);
+        UpdateFontPopupLabels();
+        SetLayerVisible(fontLayer, true);
+    }
+
+    void OnSaveLog()
+    {
+        SetLayerVisible(menuLayer, false);
+        try
+        {
+            var path = SaveLog();
+            if (path != null)
+                ShowToast($"로그 저장: {path}");
+        }
+        catch (Exception e)
+        {
+            // ここで例外を漏らすとUIスレッドが死ぬので必ず止める
+            GD.PushError($"SaveLog failed: {e}");
+            ShowToast("로그 저장에 실패했습니다.");
+        }
+    }
+
+    /// <summary>
+    /// コンソール内容をテキストファイルに保存する。
+    /// ゲームフォルダ配下のlogs/を優先し、書けない場合はアプリ専用領域に出す。
+    /// (Androidのuser://はアプリ専用でファイル管理アプリから探しにくい)
+    /// </summary>
+    string? SaveLog()
+    {
+        var sb = new StringBuilder();
+        foreach (var line in lines)
+            sb.Append(BuildPlainText(line)).Append('\n');
+
+        var name = $"kemura_log_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+
+        var gameRoot = MinorShift._Library.Sys.ExeDir;
+        if (!string.IsNullOrEmpty(gameRoot))
+        {
+            try
+            {
+                var dir = System.IO.Path.Combine(gameRoot, "logs");
+                var full = System.IO.Path.Combine(dir, name);
+                System.IO.Directory.CreateDirectory(dir);
+                System.IO.File.WriteAllText(full, sb.ToString(), new UTF8Encoding(true));
+                return full;
+            }
+            catch (Exception e)
+            {
+                GD.PushWarning($"게임 폴더에 로그를 저장할 수 없습니다: {e.Message}");
+            }
+        }
+
+        var userPath = "user://" + name;
+        using var f = FileAccess.Open(userPath, FileAccess.ModeFlags.Write);
+        if (f == null)
+        {
+            ShowToast($"로그를 저장할 수 없습니다 ({FileAccess.GetOpenError()})");
+            return null;
+        }
+        f.StoreString(sb.ToString());
+        return ProjectSettings.GlobalizePath(userPath);
+    }
+
+    /// <summary>BBCodeを通さない素のテキスト(ログ保存用)。</summary>
+    static string BuildPlainText(ConsoleDisplayLine line)
+    {
+        var buttons = line.Buttons;
+        if (buttons == null || buttons.Length == 0)
+            return "";
+        var sb = new StringBuilder();
+        foreach (var button in buttons)
+        {
+            var parts = button?.StrArray;
+            if (parts == null) continue;
+            foreach (var part in parts)
+            {
+                if (part?.Str != null)
+                    sb.Append(part.Str);
+            }
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>簡単な通知。ProcessLabelを一時的に借りる。</summary>
+    void ShowToast(string msg)
+    {
+        GD.Print("[Kemura] " + msg);
+        if (processLabel == null) return;
+        processLabel.Text = msg;
+        processLabel.Visible = true;
+        toastFramesLeft = 240;   // 約4秒(60fps基準)
+    }
+
+    int toastFramesLeft;
 
     // ------------------------------------------------------------------
     // 文字サイズ
@@ -94,6 +268,21 @@ public partial class EmueraContent : Control
         foreach (var label in lineNodes)
             ApplyFontTo(label);
         ApplyFontSizeToChrome();
+        UpdateFontPopupLabels();
+        RequestScrollToBottom();       // 高さが変わるので追従し直す
+    }
+
+    void UpdateFontPopupLabels()
+    {
+        if (fontValue != null)
+            fontValue.Text = fontSize.ToString();
+        if (fontSample != null)
+        {
+            fontSample.AddThemeFontSizeOverride("font_size", fontSize);
+            var font = FontUtils.GetFont();
+            if (font != null)
+                fontSample.AddThemeFontOverride("font", font);
+        }
     }
 
     void ApplyFontTo(RichTextLabel label)
@@ -121,17 +310,6 @@ public partial class EmueraContent : Control
             inputSubmit.AddThemeFontSizeOverride("font_size", fontSize);
             if (font != null) inputSubmit.AddThemeFontOverride("font", font);
         }
-    }
-
-    /// <summary>FirstWindowから設定を変えた場合の反映用。</summary>
-    internal void ReloadFontSize()
-    {
-        var next = Settings.FontSize;
-        if (next == fontSize) return;
-        fontSize = next;
-        foreach (var label in lineNodes)
-            ApplyFontTo(label);
-        ApplyFontSizeToChrome();
     }
 
     // ------------------------------------------------------------------
@@ -232,8 +410,7 @@ public partial class EmueraContent : Control
         if (!added) return;
 
         TrimToCap();
-        // 追加直後はレイアウトが未確定なので、1フレーム待ってから最下部へ送る
-        Callable.From(ScrollToBottom).CallDeferred();
+        RequestScrollToBottom();
     }
 
     void AppendLineNode(ConsoleDisplayLine line)
@@ -281,16 +458,48 @@ public partial class EmueraContent : Control
         lines.Clear();
     }
 
+    /// <summary>
+    /// 最新ログに追従して最下部へスクロールするよう要求する。
+    ///
+    /// 1回で足りない理由: RichTextLabelはFitContentなので追加されたフレームでは
+    /// 高さがほぼ0で、ScrollContainerのスクロールバー最大値も未更新。
+    /// そのため数フレームにわたって最下部へ押し続ける。
+    /// </summary>
+    void RequestScrollToBottom()
+    {
+        scrollFramesLeft = ScrollFollowFrames;
+    }
+
     void ScrollToBottom()
     {
         if (scrollContainer == null) return;
         var vbar = scrollContainer.GetVScrollBar();
-        if (vbar != null)
-            scrollContainer.ScrollVertical = (int)vbar.MaxValue;
+        if (vbar == null) return;
+        scrollContainer.ScrollVertical = (int)(vbar.MaxValue - vbar.Page);
+    }
+
+    public override void _Process(double delta)
+    {
+        if (scrollFramesLeft > 0)
+        {
+            --scrollFramesLeft;
+            ScrollToBottom();
+        }
+
+        if (toastFramesLeft > 0)
+        {
+            --toastFramesLeft;
+            if (toastFramesLeft == 0 && processLabel != null)
+            {
+                processLabel.Text = "처리 중...";
+                processLabel.Visible = isInProcess;
+            }
+        }
     }
 
     void ApplyProcessIndicator()
     {
+        if (toastFramesLeft > 0) return;   // 通知表示中は上書きしない
         if (processLabel != null)
             processLabel.Visible = isInProcess;
     }
@@ -382,6 +591,7 @@ public partial class EmueraContent : Control
     {
         if (string.IsNullOrEmpty(inputs)) return;
         EmueraThread.instance.Input(inputs, true);
+        RequestScrollToBottom();
     }
 
     /// <summary>
@@ -419,6 +629,7 @@ public partial class EmueraContent : Control
         }
         inputEdit.Text = "";
         EmueraThread.instance.Input(text, true);
+        RequestScrollToBottom();
     }
 
     /// <summary>
@@ -442,6 +653,7 @@ public partial class EmueraContent : Control
         if (console.IsWaitingEnterKey)
         {
             EmueraThread.instance.Input("", false);
+            RequestScrollToBottom();
             AcceptEvent();
         }
     }
@@ -463,6 +675,7 @@ public partial class EmueraContent : Control
                 // Shift/Ctrl押下中はスキップ扱い
                 bool skip = key.ShiftPressed || key.CtrlPressed;
                 EmueraThread.instance.Input("", false, skip);
+                RequestScrollToBottom();
                 AcceptEvent();
             }
         }

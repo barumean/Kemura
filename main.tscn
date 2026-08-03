@@ -53,29 +53,147 @@ caret_blink = true
 layout_mode = 2
 text = "확인"
 
-[node name="FontBar" type="HBoxContainer" parent="EmueraContent"]
+[node name="MenuButton" type="Button" parent="EmueraContent"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -132.0
+offset_left = -66.0
 offset_top = 6.0
 offset_right = -6.0
-offset_bottom = 50.0
+offset_bottom = 54.0
 grow_horizontal = 0
-alignment = 2
+text = "≡"
 
-[node name="SmallerButton" type="Button" parent="EmueraContent/FontBar"]
+[node name="MenuLayer" type="Control" parent="EmueraContent"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="EmueraContent/MenuLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="EmueraContent/MenuLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Panel" type="PanelContainer" parent="EmueraContent/MenuLayer/Center"]
 layout_mode = 2
-custom_minimum_size = Vector2(56, 44)
+
+[node name="VBox" type="VBoxContainer" parent="EmueraContent/MenuLayer/Center/Panel"]
+layout_mode = 2
+
+[node name="RestartButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 58)
+text = "다시 시작"
+
+[node name="SaveLogButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 58)
+text = "로그 저장"
+
+[node name="FontButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 58)
+text = "글자 크기 설정"
+
+[node name="QuitToListButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 58)
+text = "게임 종료 (목록으로)"
+
+[node name="QuitAppButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 58)
+text = "앱 종료"
+
+[node name="CloseButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 58)
+text = "닫기"
+
+[node name="FontLayer" type="Control" parent="EmueraContent"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="EmueraContent/FontLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="EmueraContent/FontLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Panel" type="PanelContainer" parent="EmueraContent/FontLayer/Center"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="EmueraContent/FontLayer/Center/Panel"]
+layout_mode = 2
+
+[node name="Row" type="HBoxContainer" parent="EmueraContent/FontLayer/Center/Panel/VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="SmallerButton" type="Button" parent="EmueraContent/FontLayer/Center/Panel/VBox/Row"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 58)
 text = "A-"
-tooltip_text = "글자 작게"
 
-[node name="LargerButton" type="Button" parent="EmueraContent/FontBar"]
+[node name="FontValue" type="Label" parent="EmueraContent/FontLayer/Center/Panel/VBox/Row"]
 layout_mode = 2
-custom_minimum_size = Vector2(56, 44)
+custom_minimum_size = Vector2(90, 0)
+text = "28"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LargerButton" type="Button" parent="EmueraContent/FontLayer/Center/Panel/VBox/Row"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 58)
 text = "A+"
-tooltip_text = "글자 크게"
+
+[node name="Sample" type="Label" parent="EmueraContent/FontLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(320, 0)
+text = "미리보기 テキスト 0123"
+autowrap_mode = 3
+
+[node name="FontCloseButton" type="Button" parent="EmueraContent/FontLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(320, 58)
+text = "닫기"
 
 [node name="ProcessLabel" type="Label" parent="EmueraContent"]
 layout_mode = 1
