@@ -1,8 +1,8 @@
 # Kemura
 
-**Emuera era-script 게임 에뮬레이터 (Godot 4.6 + C#)**
+**Emuera era-script 게임 에뮬레이터 (Godot 4.7 + C# / net8.0)**
 
-uEmuera(Unity 포트)를 Godot 4.6 + .NET으로 이식한 프로젝트입니다.
+uEmuera(Unity 포트)를 Godot 4.7 + .NET 8으로 이식한 프로젝트입니다.
 
 ---
 
@@ -42,8 +42,8 @@ uEmuera(Unity 포트)를 Godot 4.6 + .NET으로 이식한 프로젝트입니다.
 
 ```
 Kemura/
-├── project.godot           # Godot 4.6 프로젝트 설정 (main_scene = main.tscn)
-├── kemura.csproj           # .NET (net8.0 데스크톱 / net9.0 Android)
+├── project.godot           # Godot 4.7 프로젝트 설정 (main_scene = main.tscn)
+├── kemura.csproj           # .NET (net8.0, Godot.NET.Sdk 4.7.0)
 ├── kemura.sln
 ├── main.tscn               # 루트 씬: EmueraContent + FirstWindow + EmueraMain
 ├── first_window.tscn       # 게임 선택 UI (main.tscn에 인스턴스로 포함)
@@ -82,9 +82,18 @@ Kemura/
 
 ### 사전 요구사항
 
-- **Godot 4.6 (.NET 에디션)**: https://godotengine.org/download
-- **.NET 8.0 SDK** (데스크톱), **.NET 9.0 SDK** (Android)
+- **Godot 4.7 (.NET 에디션)**: https://godotengine.org/download
+  - 파일명에 `mono` / `dotnet`이 들어간 것. 일반판은 C#을 실행할 수 없습니다.
+  - 압축을 풀 때 **`GodotSharp/` 폴더를 exe와 같은 위치에 유지**해야 합니다.
+    exe만 옮기면 `Microsoft.Build.Framework를 찾을 수 없음` 오류가 납니다.
+- **.NET SDK 8.0** — 런타임(Runtime)이 아니라 **SDK**여야 합니다:
+  https://dotnet.microsoft.com/download/dotnet/8.0
+  - `GodotSharp` 4.7.x는 `net8.0`만 제공하므로 8.0으로 맞춥니다.
+  - 설치 확인: `dotnet --list-sdks` 에 항목이 나와야 합니다.
 - Android 내보내기: **JDK 17+**, Android SDK (Godot 에디터 설정에서 경로 지정)
+
+> `kemura.csproj`의 `Godot.NET.Sdk` 버전은 설치한 Godot 버전과 맞춰야 합니다.
+> 현재 `4.7.0`. 에디터 버전은 Godot의 **Help → About**에서 확인하세요.
 
 ### 컴파일 확인
 

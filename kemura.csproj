@@ -1,7 +1,12 @@
-<Project Sdk="Godot.NET.Sdk/4.6.0">
+<Project Sdk="Godot.NET.Sdk/4.7.0">
   <PropertyGroup>
+    <!--
+      GodotSharp 4.7.x は net8.0 のみを提供している (lib/net8.0 だけ)。
+      Android用に net9.0 を条件付きで指定していたが、Godotが同梱する
+      Android向け.NETランタイムは8系なので、net9.0でビルドすると実行時に
+      「より新しいランタイムが必要」で落ちる。全プラットフォームで net8.0。
+    -->
     <TargetFramework>net8.0</TargetFramework>
-    <TargetFramework Condition="'$(GodotTargetPlatform)' == 'android'">net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>Kemura</RootNamespace>
     <Nullable>enable</Nullable>
