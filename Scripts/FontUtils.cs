@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 using System;
 using System.Collections.Generic;
 
@@ -16,11 +16,11 @@ public static class FontUtils
     public static string DefaultFontName => defaultFontName;
 
     /// <summary>
-    /// 일본어 폰트를 반환한다. 찾지 못하면 null.
+    /// 日本語フォントを返す。見つからない場合はnull。
     ///
-    /// Godot 기본 폰트에는 CJK 글리프가 없어서, 폰트가 없으면
-    /// era 계열 게임의 일본어 텍스트가 두부(□)가 된다. 이전에는 조용히 null을
-    /// 반환해서 원인을 알 수 없었다. 한 번만 경고를 출력한다.
+    /// Godot標準フォントにはCJKグリフが含まれないため、フォントが無いと
+    /// era系ゲームの日本語テキストが豆腐(□)になる。以前は黙ってnullを
+    /// 返していたので原因が分からなかった。一度だけ警告を出す。
     /// </summary>
     public static FontFile? GetFont()
     {
@@ -47,9 +47,9 @@ public static class FontUtils
         {
             warned = true;
             GD.PushWarning(
-                "일본어 폰트를 찾을 수 없습니다 (Fonts/ 가 비어 있습니다). " +
-                "Godot 기본 폰트는 CJK를 포함하지 않아 일본어가 표시되지 않습니다. " +
-                "Fonts/NotoSansJP-Regular.ttf 를 배치해주세요. 자세한 내용은 Fonts/README.md 참조.");
+                "日本語フォントが見つかりません (Fonts/ が空です)。" +
+                "Godot標準フォントはCJKを含まないため日本語が表示されません。" +
+                "Fonts/NotoSansJP-Regular.ttf を配置してください。詳細は Fonts/README.md 参照。");
         }
         return null;
     }

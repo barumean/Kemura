@@ -53,80 +53,29 @@ caret_blink = true
 layout_mode = 2
 text = "확인"
 
-[node name="MenuButton" type="Button" parent="EmueraContent"]
+[node name="FontBar" type="HBoxContainer" parent="EmueraContent"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -66.0
+offset_left = -132.0
 offset_top = 6.0
 offset_right = -6.0
-offset_bottom = 54.0
+offset_bottom = 50.0
 grow_horizontal = 0
-text = "≡"
-tooltip_text = "메뉴"
+alignment = 2
 
-[node name="MenuPopup" type="PopupPanel" parent="EmueraContent"]
-title = "메뉴"
-size = Vector2i(360, 380)
-
-[node name="VBox" type="VBoxContainer" parent="EmueraContent/MenuPopup"]
-
-[node name="RestartButton" type="Button" parent="EmueraContent/MenuPopup/VBox"]
-custom_minimum_size = Vector2(320, 60)
-text = "다시 시작"
-
-[node name="SaveLogButton" type="Button" parent="EmueraContent/MenuPopup/VBox"]
-custom_minimum_size = Vector2(320, 60)
-text = "로그 저장"
-
-[node name="FontButton" type="Button" parent="EmueraContent/MenuPopup/VBox"]
-custom_minimum_size = Vector2(320, 60)
-text = "글자 크기 설정"
-
-[node name="QuitToListButton" type="Button" parent="EmueraContent/MenuPopup/VBox"]
-custom_minimum_size = Vector2(320, 60)
-text = "게임 종료 (목록으로)"
-
-[node name="QuitAppButton" type="Button" parent="EmueraContent/MenuPopup/VBox"]
-custom_minimum_size = Vector2(320, 60)
-text = "앱 종료"
-
-[node name="CloseButton" type="Button" parent="EmueraContent/MenuPopup/VBox"]
-custom_minimum_size = Vector2(320, 60)
-text = "닫기"
-
-[node name="FontPopup" type="PopupPanel" parent="EmueraContent"]
-title = "글자 크기"
-size = Vector2i(420, 260)
-
-[node name="VBox" type="VBoxContainer" parent="EmueraContent/FontPopup"]
-
-[node name="Row" type="HBoxContainer" parent="EmueraContent/FontPopup/VBox"]
-alignment = 1
-
-[node name="SmallerButton" type="Button" parent="EmueraContent/FontPopup/VBox/Row"]
-custom_minimum_size = Vector2(80, 60)
+[node name="SmallerButton" type="Button" parent="EmueraContent/FontBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(56, 44)
 text = "A-"
+tooltip_text = "글자 작게"
 
-[node name="FontValue" type="Label" parent="EmueraContent/FontPopup/VBox/Row"]
-custom_minimum_size = Vector2(90, 0)
-text = "28"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="LargerButton" type="Button" parent="EmueraContent/FontPopup/VBox/Row"]
-custom_minimum_size = Vector2(80, 60)
+[node name="LargerButton" type="Button" parent="EmueraContent/FontBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(56, 44)
 text = "A+"
-
-[node name="Sample" type="Label" parent="EmueraContent/FontPopup/VBox"]
-custom_minimum_size = Vector2(380, 0)
-text = "미리보기 テキスト 0123"
-autowrap_mode = 3
-
-[node name="FontCloseButton" type="Button" parent="EmueraContent/FontPopup/VBox"]
-custom_minimum_size = Vector2(380, 60)
-text = "닫기"
+tooltip_text = "글자 크게"
 
 [node name="ProcessLabel" type="Label" parent="EmueraContent"]
 layout_mode = 1

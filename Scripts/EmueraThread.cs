@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using Godot;
 using MinorShift.Emuera;
@@ -11,9 +11,9 @@ public class EmueraThread
     EmueraThread() { }
 
     /// <summary>
-    /// Emuera 엔진 스레드를 시작한다. 이미 동작 중이면 아무것도 하지 않는다.
-    /// 다중 실행을 허용하면 동일한 static GlobalStatic.Console 을 두 엔진이
-    /// 공유해 상태가 깨진다.
+    /// Emueraエンジンスレッドを開始する。既に動作中の場合は何もしない。
+    /// 多重起動を許すと同一のstatic GlobalStatic.Consoleを2つのエンジンが
+    /// 共有して状態が壊れる。
     /// </summary>
     public bool Start(bool debug)
     {
@@ -33,8 +33,8 @@ public class EmueraThread
     }
 
     /// <summary>
-    /// 스레드 정지를 요청하고 실제로 종료될 때까지 기다린다.
-    /// Join 없이 다음 Start() 를 호출하면 엔진이 두 번 돈다.
+    /// スレッドの停止を要求し、実際に終了するまで待つ。
+    /// Joinせずに次のStart()を呼ぶとエンジンが二重に走る。
     /// </summary>
     public void End(int timeoutMs = 3000)
     {
@@ -81,11 +81,11 @@ public class EmueraThread
         try
         {
             Program.debugMode = debugmode;
-            // uEmuera.Application.Run() 은 win.Init() 을 호출하고 즉시 반환한다
-            // (WinForms처럼 블로킹하지 않는다). 즉 이 줄 직후에
-            // 콘솔은 초기화 완료·게임은 로드 완료 상태가 된다.
-            // 이전에는 여기서 ResourceClear()+GC.Collect() 를 호출했는데,
-            // 그건 '로드한 직후에 해제한다'는 잘못된 동작이었다.
+            // uEmuera.Application.Run()はwin.Init()を呼んで即座に戻る
+            // (WinFormsのようにブロックしない)。つまりこの行の直後で
+            // コンソールは初期化済み・ゲームはロード済みになっている。
+            // 以前はここでResourceClear()+GC.Collect()を呼んでいたが、
+            // それは「ロードした直後に解放する」という誤りだった。
             Program.Main(Array.Empty<string>());
 
             input = null;
@@ -99,8 +99,8 @@ public class EmueraThread
                     uEmuera.Forms.Timer.Update();
                 }
 
-                // console 은 Emuera 초기화나 Clear() 로 교체되므로 매번 다시 가져온다.
-                // 루프 밖에서 한 번만 가져오면 NullReferenceException 이 된다.
+                // consoleはEmuera初期化やClear()で差し替わるため毎回取り直す。
+                // ループ外で1度だけ取得するとNullReferenceExceptionになる。
                 var console = GlobalStatic.Console;
                 if (console != null && console.IsWaitingInput)
                 {
@@ -115,7 +115,7 @@ public class EmueraThread
         }
         catch (Exception e)
         {
-            // 백그라운드 스레드의 미처리 예외는 프로세스를 종료시키므로 반드시 잡는다
+            // バックグラウンドスレッドの未処理例外はプロセスを落とすため必ず捕える
             uEmuera.Logger.Error($"EmueraThread crashed: {e}");
         }
         finally

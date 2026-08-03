@@ -1,10 +1,10 @@
-﻿using Godot;
+using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 /// <summary>
-/// 게임 선택 화면. main.tscn 의 Main/FirstWindow 에 붙는다.
+/// ゲーム選択画面。main.tscnの Main/FirstWindow に付く。
 /// </summary>
 public partial class FirstWindow : Control
 {
@@ -16,6 +16,11 @@ public partial class FirstWindow : Control
     Button? rescanButton;
     LineEdit? pathEdit;
     FileDialog? dirDialog;
+
+    Label? fontValue;
+    Label? fontSample;
+    Button? fontSmaller;
+    Button? fontLarger;
 
     readonly List<string> gamePaths = new();
 
@@ -34,6 +39,11 @@ public partial class FirstWindow : Control
         rescanButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/RescanButton");
         dirDialog = GetNodeOrNull<FileDialog>("DirDialog");
 
+        fontValue = GetNodeOrNull<Label>("VBoxContainer/FontRow/FontValue");
+        fontSample = GetNodeOrNull<Label>("VBoxContainer/FontRow/FontSample");
+        fontSmaller = GetNodeOrNull<Button>("VBoxContainer/FontRow/FontSmaller");
+        fontLarger = GetNodeOrNull<Button>("VBoxContainer/FontRow/FontLarger");
+
         if (startButton != null)
             startButton.Pressed += OnStartPressed;
         if (permButton != null)
@@ -50,14 +60,19 @@ public partial class FirstWindow : Control
         if (dirDialog != null)
             dirDialog.DirSelected += OnDirSelected;
 
+        if (fontSmaller != null)
+            fontSmaller.Pressed += () => NudgeFontSize(-2);
+        if (fontLarger != null)
+            fontLarger.Pressed += () => NudgeFontSize(+2);
+
         eraBaseDir = Settings.EffectiveGameRoot;
         ApplyFontSize();
         Rescan();
     }
 
     /// <summary>
-    /// 설정 화면에서 돌아왔을 때 다시 스캔한다.
-    /// 이전에는 권한 부여 후 다시 스캔하는 경로가 없어 앱 재시작이 필요했다.
+    /// 設定画面から戻ってきたときに再スキャンする。
+    /// 以前は権限付与後に再スキャンする経路がなく、アプリ再起動が必要だった。
     /// </summary>
     public override void _Notification(int what)
     {
@@ -69,17 +84,31 @@ public partial class FirstWindow : Control
     }
 
     // ------------------------------------------------------------------
-    // 글자 크기
+    // 文字サイズ
     // ------------------------------------------------------------------
+
+    void NudgeFontSize(int delta)
+    {
+        int next = Mathf.Clamp(Settings.FontSize + delta, Settings.MinFontSize, Settings.MaxFontSize);
+        if (next == Settings.FontSize)
+            return;
+        Settings.FontSize = next;
+        ApplyFontSize();
+
+        // ゲーム画面側にも即反映する
+        GetNodeOrNull<EmueraContent>("../EmueraContent")?.ReloadFontSize();
+    }
 
     void ApplyFontSize()
     {
         int size = Settings.FontSize;
         var font = FontUtils.GetFont();
 
-        // 목록과 안내 문구도 게임 화면과 같은 크기로 맞춘다
-        // (크기 조절 UI 자체는 게임 화면의 메뉴로 옮겼다)
-        foreach (var c in new Control?[] { gameList, statusLabel, pathEdit })
+        if (fontValue != null)
+            fontValue.Text = size.ToString();
+
+        // 一覧と本文プレビューは実際の表示サイズを反映させる
+        foreach (var c in new Control?[] { gameList, fontSample, statusLabel, pathEdit })
         {
             if (c == null) continue;
             c.AddThemeFontSizeOverride("font_size", size);
@@ -89,7 +118,7 @@ public partial class FirstWindow : Control
     }
 
     // ------------------------------------------------------------------
-    // 경로
+    // 経路
     // ------------------------------------------------------------------
 
     void OpenDirDialog()
@@ -99,7 +128,7 @@ public partial class FirstWindow : Control
             SetStatus("내부 오류: 폴더 선택 대화상자를 찾을 수 없습니다.");
             return;
         }
-        // 현재 경로에서 연다. 없으면 상위로 거슬러 열 수 있는 곳을 찾는다.
+        // 現在の経路から開く。存在しない場合は上位に遡って開けるところを探す。
         var start = eraBaseDir;
         while (!string.IsNullOrEmpty(start) && !Directory.Exists(start))
         {
@@ -132,7 +161,7 @@ public partial class FirstWindow : Control
         var norm = Settings.NormalizeDir(dir);
         if (string.IsNullOrEmpty(norm))
         {
-            // 비우면 플랫폼 기본값으로 되돌린다
+            // 空にしたらプラットフォーム既定へ戻す
             Settings.GameRoot = "";
             eraBaseDir = Settings.EffectiveGameRoot;
             Rescan();
@@ -149,18 +178,14 @@ public partial class FirstWindow : Control
     }
 
     // ------------------------------------------------------------------
-    // 탐색
+    // 走査
     // ------------------------------------------------------------------
 
-    /// <summary>게임 폴더를 다시 탐색한다.</summary>
+    /// <summary>ゲームフォルダを再走査する。</summary>
     public void Rescan()
     {
         gamePaths.Clear();
         gameList?.Clear();
-
-        // 게임 화면 메뉴에서 글자 크기를 바꾼 뒤 목록으로 돌아온 경우를 위해
-        // 다시 스캔할 때마다 크기를 재적용한다.
-        ApplyFontSize();
 
         if (pathEdit != null && pathEdit.Text != eraBaseDir)
             pathEdit.Text = eraBaseDir;
@@ -175,9 +200,9 @@ public partial class FirstWindow : Control
             return;
         }
 
-        // 권한이 있어도 폴더가 없으면 생성을 시도한다.
-        // 권한 거부 시 UnauthorizedAccessException 이 발생하므로 반드시 잡는다
-        // (_Ready 안에서 예외가 나면 씬 초기화가 실패한다).
+        // 権限があってもフォルダが無い場合は作成を試みる。
+        // 権限拒否時はUnauthorizedAccessExceptionが飛ぶので必ず捕える
+        // (_Ready内で例外が出るとシーン初期化が失敗する)。
         if (!Directory.Exists(eraBaseDir))
         {
             try
@@ -232,19 +257,19 @@ public partial class FirstWindow : Control
     }
 
     // ------------------------------------------------------------------
-    // 권한
+    // 権限
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// 실제로 읽을 수 있는지로 판정한다.
-    /// 이전에는 OS.HasFeature("MANAGE_EXTERNAL_STORAGE") 를 확인했지만,
-    /// Godot의 feature tag는 "android"/"mobile" 등이고 권한 이름이 아니므로
-    /// 항상 false를 반환했고, 게다가 요청 처리의 본문이 비어 있었다.
+    /// 実際に読めるかで判定する。
+    /// 以前は OS.HasFeature("MANAGE_EXTERNAL_STORAGE") を見ていたが、
+    /// Godotのfeature tagは "android"/"mobile" 等であって権限名ではないため
+    /// 常にfalseを返し、しかも要求処理の中身が空だった。
     /// </summary>
     bool HasStorageAccess()
     {
 #if GODOT_ANDROID
-        // Android 6~10 은 런타임 권한으로 충분하다
+        // Android 6〜10はランタイム権限で足りる
         var granted = OS.GetGrantedPermissions();
         foreach (var p in granted)
         {
@@ -252,8 +277,8 @@ public partial class FirstWindow : Control
                 return true;
         }
 
-        // MANAGE_EXTERNAL_STORAGE 는 런타임 대화상자로 얻을 수 없으므로,
-        // 실제로 디렉터리를 열거할 수 있는지로 확인한다
+        // MANAGE_EXTERNAL_STORAGEはランタイムダイアログでは取得できないので、
+        // 実際にディレクトリを列挙できるかで確認する
         try
         {
             if (Directory.Exists(eraBaseDir))
@@ -279,13 +304,13 @@ public partial class FirstWindow : Control
     }
 
     /// <summary>
-    /// 저장소 권한을 요청한다.
+    /// ストレージ権限を要求する。
     ///
-    /// Android 6~10 은 OS.RequestPermissions() 의 런타임 대화상자로 충분하다.
-    /// Android 11+ 의 MANAGE_EXTERNAL_STORAGE 는 대화상자로 부여할 수 없고,
-    /// 설정 앱에서 수동 허용이 필수다. Godot은 해당 Intent를 직접 던지는 API가
-    /// 없으므로 여기서는 정직하게 절차를 안내한다.
-    /// (앱으로 돌아오면 _Notification 이 Rescan() 을 호출한다)
+    /// Android 6〜10は OS.RequestPermissions() のランタイムダイアログで足りる。
+    /// Android 11+ の MANAGE_EXTERNAL_STORAGE はダイアログでは付与できず、
+    /// 設定アプリでの手動許可が必須。Godotは該当Intentを直接投げるAPIを
+    /// 持たないため、ここでは正直に手順を案内する。
+    /// (アプリに戻ると _Notification が Rescan() を呼ぶ)
     /// </summary>
     void OpenAllFilesAccessSettings()
     {
@@ -301,7 +326,7 @@ public partial class FirstWindow : Control
     }
 
     // ------------------------------------------------------------------
-    // 게임 시작
+    // ゲーム開始
     // ------------------------------------------------------------------
 
     void OnStartPressed()
@@ -316,13 +341,13 @@ public partial class FirstWindow : Control
         int idx = selected[0];
         if (idx < 0 || idx >= gamePaths.Count) return;
 
-        // 절대 경로("/root/Main/EmueraMain")는 main.tscn 이 루트 씬이 아니면
-        // 해석되지 않아, 이전에는 여기가 항상 null 이고 버튼이 무반응이었다.
+        // 絶対パス("/root/Main/EmueraMain")はmain.tscnがルートシーンでないと
+        // 解決できず、以前はここが常にnullでボタンが無反応だった。
         var main = GetNodeOrNull<EmueraMain>("../EmueraMain");
         if (main == null)
         {
             SetStatus("내부 오류: EmueraMain 노드를 찾을 수 없습니다.");
-            GD.PushError("FirstWindow: EmueraMain 을 찾을 수 없습니다 (../EmueraMain)");
+            GD.PushError("FirstWindow: EmueraMain が見つかりません (../EmueraMain)");
             return;
         }
 

@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,18 +19,18 @@ public static class GenericUtils
     }
 
     /// <summary>
-    /// 게임 폴더의 루트. 플랫폼별 기본값과 사용자 설정의
-    /// 해석은 Settings 한 곳으로 모아뒀다(이전에는 여기와 FirstWindow/EmueraMain
-    /// 3곳에 같은 분기가 중복돼 있었다).
+    /// ゲームフォルダのルート。プラットフォーム別の既定値とユーザー設定の
+    /// 解決はSettingsに一本化してある(以前はこことFirstWindow/EmueraMainの
+    /// 3箇所に同じ分岐が重複していた)。
     /// </summary>
     public static string GetBaseDir() => Settings.EffectiveGameRoot;
 
     // --- Display helpers (delegated to EmueraContent) ---
     //
-    // ConsoleDisplayLine 은 Emuera 어셈블리 내의 internal 타입이므로, 이를 인자나
-    // 반환값으로 갖는 멤버는 internal 이어야 한다(public 으로 하면 CS0050/
-    // CS0051 "일관성 없는 접근성" 오류가 된다).
-    // 이전에는 존재하지 않는 `DisplayLine` 이라는 타입명을 써서 CS0246 이었다.
+    // ConsoleDisplayLineはEmueraアセンブリ内のinternal型なので、これを引数や
+    // 戻り値に持つメンバはinternalでなければならない(publicにするとCS0050/
+    // CS0051 "一貫性のないアクセシビリティ"になる)。
+    // 以前は存在しない`DisplayLine`という型名を使っていたためCS0246だった。
     static EmueraContent? _content;
     internal static void SetContent(EmueraContent? c) => _content = c;
 
@@ -64,11 +64,11 @@ public static class GenericUtils
     public static void RemoveTextCount(int count)
         => _content?.RemoveLines(count);
 
-    // --- Config key MD5 (emuera.config 의 키 이름 해석용) ---
+    // --- Config key MD5 (emuera.config のキー名解決用) ---
     //
-    // Emuera 엔진(ConfigData.cs)이 이 이름으로 호출한다. Unity 판 GenericUtils에
-    // 있었으나 이식되지 않아, Assets/ 삭제로 CS0117 이 됐다.
-    // 구현은 ConfigMaps 에 있다(테이블 쪽 MD5 계산과 쌍을 이루므로).
+    // Emueraエンジン(ConfigData.cs)がこの名前で呼ぶ。Unity版のGenericUtilsに
+    // あったが移植されておらず、Assets/削除でCS0117になった。
+    // 実装はConfigMapsに置いてある(テーブル側のMD5計算と対になるため)。
     internal static List<string> CalcMd5ListForConfig(byte[] data)
         => ConfigMaps.CalcMd5ListForConfig(data);
 
