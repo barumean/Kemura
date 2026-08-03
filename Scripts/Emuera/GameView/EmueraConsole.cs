@@ -1,5 +1,8 @@
 ﻿using System;
-using Godot;
+// `using Godot;` は使わない。
+// このファイルは uEmuera.Forms と uEmuera.Drawing を using しており、
+// Godot名前空間にも Timer / Color が居るため CS0104 (あいまいな参照) になる。
+// Godot側で必要なのは DisplayServer だけなので、そこだけ完全修飾する。
 using System.Collections.Generic;
 using System.Diagnostics;
 //using System.Drawing;
@@ -299,8 +302,8 @@ namespace MinorShift.Emuera.GameView
 			cbgList.Sort();
 			return true;
 		}
-		public int ClientWidth { get { return (int)DisplayServer.WindowGetSize().X; } }
-		public int ClientHeight { get { return (int)DisplayServer.WindowGetSize().Y; } }
+		public int ClientWidth { get { return (int)Godot.DisplayServer.WindowGetSize().X; } }
+		public int ClientHeight { get { return (int)Godot.DisplayServer.WindowGetSize().Y; } }
 #endregion
 
 		const string ErrorButtonsText = "__openFileWithDebug__";

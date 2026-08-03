@@ -1,5 +1,6 @@
 ﻿using System;
-using Godot;
+// `using Godot;` は使わない (uEmuera.Forms.Timer と Godot.Timer が衝突するため)。
+// 必要なのは GD.Print だけなので完全修飾する。
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -443,7 +444,7 @@ namespace MinorShift.Emuera.GameProc
 		
 		private void handleException(Exception exc, LogicalLine current, bool playSound)
 		{
-            GD.Print(exc);
+            Godot.GD.Print(exc);
 
 			console.ThrowError(playSound);
 			ScriptPosition position = null;
