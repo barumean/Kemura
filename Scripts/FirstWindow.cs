@@ -318,7 +318,7 @@ public partial class FirstWindow : Control
         if (main == null)
         {
             SetStatus("내부 오류: EmueraMain 노드를 찾을 수 없습니다.");
-            GD.PushError("FirstWindow: EmueraMain が見つかりません (../EmueraMain)");
+            GD.PushError("FirstWindow: EmueraMain 을 찾을 수 없습니다 (../EmueraMain)");
             return;
         }
 

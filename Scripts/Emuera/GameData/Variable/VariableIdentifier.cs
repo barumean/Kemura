@@ -293,8 +293,8 @@ namespace MinorShift.Emuera.GameData.Variable
 				if (localvarNameDic.TryGetValue(key, out ret))
 					return new VariableIdentifier(ret, subStr);
 				if (nameDic.ContainsKey(key))
-					throw new CodeEE("ローカル変数でない変数" + key + "に対して@が使われました");
-				throw new CodeEE("@の使い方が不正です");
+					throw new CodeEE("지역 변수가 아닌 변수 " + key + "에 대해 @가 사용되었습니다");
+				throw new CodeEE("@ 사용법이 잘못되었습니다");
 			}
 			if (nameDic.TryGetValue(key, out ret))
 				return new VariableIdentifier(ret);

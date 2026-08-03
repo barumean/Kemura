@@ -61,11 +61,11 @@ namespace MinorShift.Emuera.GameProc
 						if (ret.Global)
 							throw new CodeEE(keyword + "와 GLOBAL 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Save)
-							throw new CodeEE(keyword + "とSAVEDATAキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 SAVEDATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Reference)
 							throw new CodeEE(keyword + "와 REF 키워드는 동시에 지정할 수 없습니다", sc);
 						if (!ret.Static)
-							throw new CodeEE(keyword + "とDYNAMICキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 DYNAMIC 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Const)
 							throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						ret.Const = true;
@@ -75,13 +75,13 @@ namespace MinorShift.Emuera.GameProc
 						//if (!isPrivate)
 						//	throw new CodeEE("広域変数の宣言に" + keyword + "キーワードは指定できません", sc);
 						if (staticDefined && ret.Static)
-							throw new CodeEE(keyword + "とSTATICキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 STATIC 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.CharaData)
 							throw new CodeEE(keyword + "와 CHARADATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Global)
 							throw new CodeEE(keyword + "와 GLOBAL 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Save)
-							throw new CodeEE(keyword + "とSAVEDATAキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 SAVEDATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Const)
 							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Reference)
@@ -98,7 +98,7 @@ namespace MinorShift.Emuera.GameProc
 							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (ret.Static)
-								throw new CodeEE("STATICとDYNAMICキーワードは同時に指定できません", sc);
+								throw new CodeEE("STATIC과 DYNAMIC 키워드는 동시에 지정할 수 없습니다", sc);
 							else
 								throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						staticDefined = true;
@@ -111,7 +111,7 @@ namespace MinorShift.Emuera.GameProc
 							throw new CodeEE(keyword + "와 CHARADATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (!ret.Static)
-								throw new CodeEE("STATICとDYNAMICキーワードは同時に指定できません", sc);
+								throw new CodeEE("STATIC과 DYNAMIC 키워드는 동시에 지정할 수 없습니다", sc);
 							else
 								throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						if (ret.Reference)
@@ -160,9 +160,9 @@ namespace MinorShift.Emuera.GameProc
 							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (ret.Static)
-                                throw new CodeEE(keyword + "とSTATICキーワードは同時に指定できません", sc);
+                                throw new CodeEE(keyword + "와 STATIC 키워드는 동시에 지정할 수 없습니다", sc);
 							else
-                                throw new CodeEE(keyword + "とDYNAMICキーワードは同時に指定できません", sc);
+                                throw new CodeEE(keyword + "와 DYNAMIC 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Global)
                             throw new CodeEE(keyword + "와 GLOBAL 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.CharaData)
@@ -195,7 +195,7 @@ namespace MinorShift.Emuera.GameProc
 			if (wc.EOL)//サイズ省略
 			{
 				if (ret.Const)
-					throw new CodeEE("CONSTキーワードが指定されていますが初期値が設定されていません");
+					throw new CodeEE("CONST 키워드가 지정되었지만 초기값이 설정되지 않았습니다");
 				sizeNum.Add(1);
 			}
 			else if (wc.Current.Type == ',')//サイズ指定
@@ -216,11 +216,11 @@ namespace MinorShift.Emuera.GameProc
 							continue;
 					}
 					if (wc.EOL)
-						throw new CodeEE("カンマの後に有効な定数式が指定されていません", sc);
+						throw new CodeEE("쉼표 뒤에 유효한 상수식이 지정되지 않았습니다", sc);
 					IOperandTerm arg = ExpressionParser.ReduceIntegerTerm(wc, TermEndWith.Comma_Assignment);
 					SingleTerm sizeTerm = arg.Restructure(null) as SingleTerm;
 					if ((sizeTerm == null) || (sizeTerm.GetOperandType() != typeof(Int64)))
-						throw new CodeEE("カンマの後に有効な定数式が指定されていません", sc);
+						throw new CodeEE("쉼표 뒤에 유효한 상수식이 지정되지 않았습니다", sc);
 					if (ret.Reference)//参照型には要素数指定不可(0にするか書かないかどっちか
 					{
 						if (sizeTerm.Int != 0)
@@ -229,7 +229,7 @@ namespace MinorShift.Emuera.GameProc
 						continue;
 					}
 					else if ((sizeTerm.Int <= 0) || (sizeTerm.Int > 1000000))
-						throw new CodeEE("ユーザー定義変数のサイズは1以上1000000以下でなければなりません", sc);
+						throw new CodeEE("사용자 정의 변수의 크기는 1 이상 1000000 이하여야 합니다", sc);
 					sizeNum.Add((int)sizeTerm.Int);
 				}
 			}
@@ -238,7 +238,7 @@ namespace MinorShift.Emuera.GameProc
 			if (wc.Current.Type != '=')//初期値指定なし
 			{
 				if (ret.Const)
-					throw new CodeEE("CONSTキーワードが指定されていますが初期値が設定されていません");
+					throw new CodeEE("CONST 키워드가 지정되었지만 초기값이 설정되지 않았습니다");
 			}
 			else//初期値指定あり
 			{
@@ -256,7 +256,7 @@ namespace MinorShift.Emuera.GameProc
 				wc.ShiftNext();
 				IOperandTerm[] terms = ExpressionParser.ReduceArguments(wc, ArgsEndWith.EoL, false);
 				if (terms.Length == 0)
-					throw new CodeEE("配列の初期値は省略できません");
+					throw new CodeEE("배열의 초기값은 생략할 수 없습니다");
 				if (size > 0)
 				{
 					if (terms.Length > size)
@@ -272,7 +272,7 @@ namespace MinorShift.Emuera.GameProc
 				for (int i = 0; i < terms.Length; i++)
 				{
 					if (terms[i] == null)
-						throw new CodeEE("配列の初期値は省略できません");
+						throw new CodeEE("배열의 초기값은 생략할 수 없습니다");
 					terms[i] = terms[i].Restructure(GlobalStatic.EMediator);
 					SingleTerm sTerm = terms[i] as SingleTerm;
 					if (sTerm == null)
@@ -311,7 +311,7 @@ namespace MinorShift.Emuera.GameProc
 				totalBytes *= ret.Lengths[i];
 			}
 			if ((totalBytes <= 0) || (totalBytes > 1000000))
-				throw new CodeEE("ユーザー定義変数のサイズは1以上1000000以下でなければなりません", sc);
+				throw new CodeEE("사용자 정의 변수의 크기는 1 이상 1000000 이하여야 합니다", sc);
 			if (!isPrivate && ret.Save && !Config.SystemSaveInBinary)
 			{
 				if (dims && ret.Dimension > 1)

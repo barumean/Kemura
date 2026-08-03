@@ -477,7 +477,7 @@ namespace MinorShift.Emuera
 					if(ret != null)
 					{
 						if (subKey != null)
-							throw new CodeEE("プライベート変数" + key + "に対して@が使われました");
+							throw new CodeEE("프라이빗 변수 " + key + "에 대해 @가 사용되었습니다");
 						return ret;
 					}
 				}
@@ -487,7 +487,7 @@ namespace MinorShift.Emuera
 			{
 				if (vl.IsForbid)
                 {
-					throw new CodeEE("呼び出された変数\"" + key + "\"は設定により使用が禁止されています");
+					throw new CodeEE("호출된 변수 \"" + key + "\"은(는) 설정에 의해 사용이 금지되어 있습니다");
                 }
 				LogicalLine line = GlobalStatic.Process.GetScaningLine();
 				if (string.IsNullOrEmpty(subKey))
@@ -517,14 +517,14 @@ namespace MinorShift.Emuera
                 {
 					if(!ret.CanForbid)
 						throw new ExeEE("CanForbidでない変数\"" + ret.Name +"\"にIsForbidがついている");
-                    throw new CodeEE("呼び出された変数\"" + ret.Name +"\"は設定により使用が禁止されています");
+                    throw new CodeEE("호출된 변수 \"" + ret.Name +"\"은(는) 설정에 의해 사용이 금지되어 있습니다");
                 }
 				if (subKey != null)
-					throw new CodeEE("ローカル変数でない変数" + key + "に対して@が使われました");
+					throw new CodeEE("지역 변수가 아닌 변수 " + key + "에 대해 @가 사용되었습니다");
                 return ret;
             }
 			if (subKey != null)
-				throw new CodeEE("@の使い方が不正です");
+				throw new CodeEE("@ 사용법이 잘못되었습니다");
 			return null;
 		}
 
@@ -635,24 +635,24 @@ namespace MinorShift.Emuera
 					case DefinedNameType.SystemVariable:
 					case DefinedNameType.UserGlobalVariable:
 						if (isFunc)
-							throw new CodeEE("変数名\"" + str + "\"が関数のように使われています");
+							throw new CodeEE("변수명 \"" + str + "\"이(가) 함수처럼 사용되고 있습니다");
 						break;
 					case DefinedNameType.SystemMethod:
 					case DefinedNameType.UserRefMethod:
 						if (!isFunc)
-							throw new CodeEE("関数名\"" + str + "\"が変数のように使われています");
+							throw new CodeEE("함수명 \"" + str + "\"이(가) 변수처럼 사용되고 있습니다");
 						break;
 					case DefinedNameType.UserMacro:
 						throw new CodeEE("예기치 않은 매크로명 \"" + str + "\"입니다");
 					case DefinedNameType.SystemInstrument:
 						if (isFunc)
-							throw new CodeEE("命令名\"" + str + "\"が関数のように使われています");
+							throw new CodeEE("명령 이름 \"" + str + "\"이(가) 함수처럼 사용되고 있습니다");
 						else
-							throw new CodeEE("命令名\"" + str + "\"が変数のように使われています");
+							throw new CodeEE("명령 이름 \"" + str + "\"이(가) 변수처럼 사용되고 있습니다");
 			
 				}
 			}
-			throw new IdentifierNotFoundCodeEE("\"" + idStr + "\"は解釈できない識別子です");
+			throw new IdentifierNotFoundCodeEE("\"" + idStr + "\"은(는) 해석할 수 없는 식별자입니다");
 		}
 		#endregion
 

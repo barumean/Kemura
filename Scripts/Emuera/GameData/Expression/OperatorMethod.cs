@@ -17,7 +17,7 @@ namespace MinorShift.Emuera.GameData.Expression
 		{
 			argumentTypeArray = null;
 		}
-		public override string CheckArgumentType(string name, IOperandTerm[] arguments) { throw new ExeEE("型チェックは呼び出し元が行うこと"); }
+		public override string CheckArgumentType(string name, IOperandTerm[] arguments) { throw new ExeEE("형식 검사는 호출부에서 수행해야 함"); }
 	}
 
 	internal static class OperatorMethodManager
@@ -86,9 +86,9 @@ namespace MinorShift.Emuera.GameData.Expression
 			{
 				VariableTerm var = o1 as VariableTerm;
 				if (var == null)
-					throw new CodeEE("変数以外をインクリメントすることはできません");
+					throw new CodeEE("변수 이외를 증가시킬 수 없습니다");
 				if (var.Identifier.IsConst)
-					throw new CodeEE("変更できない変数をインクリメントすることはできません");
+					throw new CodeEE("변경할 수 없는 변수를 증가시킬 수 없습니다");
 			}
 			if (o1.GetOperandType() == typeof(Int64))
 			{
@@ -107,7 +107,7 @@ namespace MinorShift.Emuera.GameData.Expression
                 errMes += "文字列型";
             else
                 errMes += "不定型";
-            errMes += "に単項演算子\'" + OperatorManager.ToOperatorString(op) + "\'は適用できません";
+            errMes += "에 단항 연산자 \'" + OperatorManager.ToOperatorString(op) + "\'은(는) 적용할 수 없습니다";
             throw new CodeEE(errMes);
 		}
 		
@@ -118,9 +118,9 @@ namespace MinorShift.Emuera.GameData.Expression
 			{
 				VariableTerm var = o1 as VariableTerm;
 				if (var == null)
-					throw new CodeEE("変数以外をインクリメントすることはできません");
+					throw new CodeEE("변수 이외를 증가시킬 수 없습니다");
 				if (var.Identifier.IsConst)
-					throw new CodeEE("変更できない変数をインクリメントすることはできません");
+					throw new CodeEE("변경할 수 없는 변수를 증가시킬 수 없습니다");
 			}
 			if (o1.GetOperandType() == typeof(Int64))
 			{
@@ -137,7 +137,7 @@ namespace MinorShift.Emuera.GameData.Expression
                 errMes += "文字列型";
             else
                 errMes += "不定型";
-            errMes += "に後置単項演算子\'" + OperatorManager.ToOperatorString(op) + "\'は適用できません";
+            errMes += "에 후치 단항 연산자 \'" + OperatorManager.ToOperatorString(op) + "\'은(는) 적용할 수 없습니다";
             throw new CodeEE(errMes);
 		}
 		
@@ -177,7 +177,7 @@ namespace MinorShift.Emuera.GameData.Expression
                     errMes += "文字列型の";
                 else
                     errMes += "不定型の";
-                errMes += "演算に二項演算子\'" + OperatorManager.ToOperatorString(op) + "\'は適用できません";
+                errMes += " 연산에 이항 연산자 \'" + OperatorManager.ToOperatorString(op) + "\'은(는) 적용할 수 없습니다";
                 throw new CodeEE(errMes);
 		}
 		

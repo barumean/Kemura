@@ -578,7 +578,7 @@ namespace MinorShift.Emuera.GameData.Variable
 					//        reader.ReadStrArray3D(dataStringArray3D[codeInt], true);
 					//    break;
 					default:
-						throw new FileEE("データ異常");
+						throw new FileEE("데이터 이상");
 				}
 			}
 		whilebreak:

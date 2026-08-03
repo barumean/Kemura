@@ -57,7 +57,7 @@ namespace MinorShift.Emuera.GameProc.Function
 			if ( arguments.Length < minArg || 
 				((arguments.Length < argumentTypeArray.Length) && (minArg < 0)) )
 			{
-				warn("引数が足りません", line, 2, false);
+				warn("인수가 부족합니다", line, 2, false);
 				return false;
 			}
 			int length = arguments.Length;
@@ -256,7 +256,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				WordCollection wc = LexicalAnalyzer.Analyse(st, LexEndWith.Comma, LexAnalyzeFlag.None);
 				st.ShiftNext();
 				if (st.EOS)
-					{warn("引数が足りません", line, 2, false); return null;}
+					{warn("인수가 부족합니다", line, 2, false); return null;}
 				double d ;
 				try
 				{
@@ -526,7 +526,7 @@ namespace MinorShift.Emuera.GameProc.Function
                 else if (varTerm.Identifier.IsConst)
 				{ warn("第１引数が変更できない変数です", line, 2, false); return null; }
                 if (!varTerm.Identifier.IsArray1D)
-                { warn("第１引数に１次元配列もしくは配列型キャラクタ変数以外を指定することはできません", line, 2, false); return null; }
+                { warn("제1인수에 1차원 배열 또는 배열형 캐릭터 변수 이외를 지정할 수 없습니다", line, 2, false); return null; }
 
                 wc.ShiftNext();
                 IdentifierWord id = wc.Current as IdentifierWord;
@@ -715,7 +715,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					IOperandTerm[] srcTerms = ExpressionParser.ReduceArguments(srcWc, ArgsEndWith.EoL, false);
 					
 					if ((srcTerms.Length == 0) || (srcTerms[0] == null))
-						{assignwarn("代入文の右辺の読み取りに失敗しました", line, 2, false); return null;}
+						{assignwarn("대입문 우변을 읽지 못했습니다", line, 2, false); return null;}
 					if (srcTerms.Length != 1)
 					{
 						if(op != OperatorCode.Assignment)
@@ -725,9 +725,9 @@ namespace MinorShift.Emuera.GameProc.Function
 						for (int i = 0; i < srcTerms.Length; i++)
 						{
 							if (srcTerms[i] == null)
-							{ assignwarn("代入式の右辺の値は省略できません", line, 2, false); return null; }
+							{ assignwarn("대입식 우변의 값은 생략할 수 없습니다", line, 2, false); return null; }
 							if (!srcTerms[i].IsInteger)
-							{ assignwarn("数値型変数に文字列は代入できません", line, 2, false); return null; }
+							{ assignwarn("숫자형 변수에 문자열은 대입할 수 없습니다", line, 2, false); return null; }
 							srcTerms[i] = srcTerms[i].Restructure(exm);
 							if (allConst && (srcTerms[i] is SingleTerm))
 								constValues[i] = srcTerms[i].GetIntValue(null);
@@ -741,7 +741,7 @@ namespace MinorShift.Emuera.GameProc.Function
                         return arrayarg;
 					}
 					if(!srcTerms[0].IsInteger)
-						{assignwarn("数値型変数に文字列は代入できません", line, 2, false); return null;}
+						{assignwarn("숫자형 변수에 문자열은 대입할 수 없습니다", line, 2, false); return null;}
 					src = srcTerms[0].Restructure(exm);
 					if(op == OperatorCode.Assignment)
 					{
@@ -797,13 +797,13 @@ namespace MinorShift.Emuera.GameProc.Function
 						IOperandTerm[] srcTerms = ExpressionParser.ReduceArguments(srcWc, ArgsEndWith.EoL, false);
 						
 						if ((srcTerms.Length == 0) || (srcTerms[0] == null))
-							{assignwarn("代入文の右辺の読み取りに失敗しました", line, 2, false); return null;}
+							{assignwarn("대입문 우변을 읽지 못했습니다", line, 2, false); return null;}
 						if (op == OperatorCode.AssignmentStr)
 						{
 							if (srcTerms.Length == 1)
 							{
 								if (srcTerms[0].IsInteger)
-								{ assignwarn("文字列変数に数値型は代入できません", line, 2, false); return null; }
+								{ assignwarn("문자열 변수에 숫자형은 대입할 수 없습니다", line, 2, false); return null; }
 								src = srcTerms[0].Restructure(exm);
 								ret = new SpSetArgument(varTerm, src);
 								if (src is SingleTerm)
@@ -819,9 +819,9 @@ namespace MinorShift.Emuera.GameProc.Function
 							for (int i = 0; i < srcTerms.Length; i++)
 							{
 								if (srcTerms[i] == null)
-								{ assignwarn("代入式の右辺の値は省略できません", line, 2, false); return null; }
+								{ assignwarn("대입식 우변의 값은 생략할 수 없습니다", line, 2, false); return null; }
 								if (srcTerms[i].IsInteger)
-								{ assignwarn("文字列変数に数値型は代入できません", line, 2, false); return null; }
+								{ assignwarn("문자열 변수에 숫자형은 대입할 수 없습니다", line, 2, false); return null; }
 								srcTerms[i] = srcTerms[i].Restructure(exm);
 								if (allConst && (srcTerms[i] is SingleTerm))
 									constValues[i] = srcTerms[i].GetStrValue(null);
@@ -1390,7 +1390,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					warn("第３引数以降は1次元配列以外では無視されます", line, 1, false);
 				if (term.GetOperandType() != varTerm.GetOperandType())
 				{
-					warn("２つの引数の型が一致していません", line, 2, false);
+					warn("두 인수의 형식이 일치하지 않습니다", line, 2, false);
 					return null;
 				}
 				return new SpVarSetArgument(varTerm, term, term3, term4);
@@ -1439,13 +1439,13 @@ namespace MinorShift.Emuera.GameProc.Function
 				if (index is SingleTerm term1 && index.GetOperandType() == typeof(string) && varTerm.Identifier.IsArray1D)
 				{
 					if (!GlobalStatic.ConstantData.isDefined(varTerm.Identifier.Code, term1.Str))
-					{ warn("文字列" + index.GetStrValue(null) + "は変数" + varTerm.Identifier.Name + "の要素ではありません", line, 2, false); return null; }
+					{ warn("문자열 " + index.GetStrValue(null) + "은(는) 변수 " + varTerm.Identifier.Name + "의 요소가 아닙니다", line, 2, false); return null; }
 				}
 				if (terms.Length > 3 && !varTerm.Identifier.IsArray1D)
 					warn("第４引数以降は1次元配列以外では無視されます", line, 1, false);
 				if (term.GetOperandType() != varTerm.GetOperandType())
 				{
-					warn("２つの引数の型が一致していません", line, 2, false);
+					warn("두 인수의 형식이 일치하지 않습니다", line, 2, false);
 					return null;
 				}
 				return new SpCVarSetArgument(varTerm, index, term, term4, term5);
@@ -1620,7 +1620,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				if (x == null)
 					return null;
 				if (!x.Identifier.IsArray1D)
-				{ warn("第１引数に１次元配列もしくは配列型キャラクタ変数以外を指定することはできません", line, 2, false); return null; }
+				{ warn("제1인수에 1차원 배열 또는 배열형 캐릭터 변수 이외를 지정할 수 없습니다", line, 2, false); return null; }
 
 				if (line.FunctionCode == FunctionCode.ARRAYSHIFT)
 				{
@@ -1658,9 +1658,9 @@ namespace MinorShift.Emuera.GameProc.Function
 					if (vToken.IsCharacterData)
 					{ warn("캐릭터 변수 "+ vToken.Name+"은(는) 저장할 수 없습니다(캐릭터 변수 SAVE에는 SAVECHARA를 사용합니다)", line, 2, false); return null; }
 					if (vToken.IsPrivate)
-					{ warn("プライベート変数" + vToken.Name + "はセーブできません", line, 2, false); return null; }
+					{ warn("프라이빗 변수 " + vToken.Name + "은(는) 저장할 수 없습니다", line, 2, false); return null; }
 					if (vToken.IsLocal)
-					{ warn("ローカル変数" + vToken.Name + "はセーブできません", line, 2, false); return null; }
+					{ warn("지역 변수 " + vToken.Name + "은(는) 저장할 수 없습니다", line, 2, false); return null; }
 					if (vToken.IsConst)
 					{ warn("値を変更できない変数はセーブできません", line, 2, false); return null; }
 					if (vToken.IsCalc)

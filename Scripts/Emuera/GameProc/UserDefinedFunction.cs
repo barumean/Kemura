@@ -100,7 +100,7 @@ namespace MinorShift.Emuera.GameProc
 						if (state == 4 || state == 5)
 						{
 							if ((int)(argType & UserDifinedFunctionDataArgType.__Dimention) == 0)
-								throw new CodeEE("REF引数は配列変数でなければなりません", sc);
+								throw new CodeEE("REF 인수는 배열 변수여야 합니다", sc);
 							//state = 2;
 							argList.Add(argType);
 							goto argend;
@@ -133,7 +133,7 @@ namespace MinorShift.Emuera.GameProc
 						if (state == 4 || state == 5)
 						{
 							if ((int)(argType & UserDifinedFunctionDataArgType.__Dimention) == 0)
-								throw new CodeEE("REF引数は配列変数でなければなりません", sc);
+								throw new CodeEE("REF 인수는 배열 변수여야 합니다", sc);
 							state = 2;
 							argList.Add(argType);
 							continue;
@@ -189,7 +189,7 @@ namespace MinorShift.Emuera.GameProc
 			return ret;
 		argerr:
 			if (!wc.EOL)
-				throw new CodeEE("引数の解析中に予期しないトークン" + wc.Current.ToString() + "を発見しました", sc);
+				throw new CodeEE("인수 해석 중 예기치 않은 토큰" + wc.Current.ToString() + "을(를) 발견했습니다", sc);
 			throw new CodeEE("引数の解析中にエラーが発生しました", sc);
 		}
 

@@ -225,7 +225,7 @@ namespace MinorShift.Emuera.GameData
 				ReturnType = typeof(string);
 				argumentTypeArray = null;
 			}
-			public override string CheckArgumentType(string name, IOperandTerm[] arguments) { throw new ExeEE("型チェックは呼び出し元が行うこと"); }
+			public override string CheckArgumentType(string name, IOperandTerm[] arguments) { throw new ExeEE("형식 검사는 호출부에서 수행해야 함"); }
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] arguments) { throw new ExeEE("戻り値の型が違う"); }
 			public override SingleTerm GetReturnValue(ExpressionMediator exm, IOperandTerm[] arguments) { return new SingleTerm(GetStrValue(exm, arguments)); }
 		}

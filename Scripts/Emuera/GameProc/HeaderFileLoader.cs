@@ -192,7 +192,7 @@ namespace MinorShift.Emuera.GameProc
 				{
 					IdentifierWord word = wc.Current as IdentifierWord;
 					if (word == null)
-						throw new CodeEE("置換元の引数指定の書式が間違っています", position);
+						throw new CodeEE("치환 대상 인수 지정의 서식이 잘못되었습니다", position);
 					word.SetIsMacro();
 					string id = word.Code;
 					if (argID.Contains(id))
@@ -206,7 +206,7 @@ namespace MinorShift.Emuera.GameProc
 					}
 					if (wc.Current.Type == ')')
 						break;
-					throw new CodeEE("置換元の引数指定の書式が間違っています", position);
+					throw new CodeEE("치환 대상 인수 지정의 서식이 잘못되었습니다", position);
 				}
 				if (wc.EOL)
 					throw new CodeEE("')'が閉じられていません", position);

@@ -43,9 +43,9 @@ namespace MinorShift.Emuera.GameData.Variable
 		DOWN = 0x09 | __INTEGER__ | __ARRAY_1D__ | __CAN_FORBID__,//調教中パラメータの減少値。indexはPALAM.CSVのもの
 		RESULT = 0x0A | __INTEGER__ | __ARRAY_1D__,//戻り値(数値)
 		COUNT = 0x0B | __INTEGER__ | __ARRAY_1D__,//繰り返しカウンター
-		TARGET = 0x0C | __INTEGER__ | __ARRAY_1D__,//調教中のキャラの"登録番号"
-		ASSI = 0x0D | __INTEGER__ | __ARRAY_1D__ | __CAN_FORBID__,//助手のキャラの"登録番号"
-		MASTER = 0x0E | __INTEGER__ | __ARRAY_1D__ | __CAN_FORBID__,//主人公のキャラの"登録番号"。通常0
+		TARGET = 0x0C | __INTEGER__ | __ARRAY_1D__,//調教中のキャラの"등록 번호 "
+		ASSI = 0x0D | __INTEGER__ | __ARRAY_1D__ | __CAN_FORBID__,//助手のキャラの"등록 번호 "
+		MASTER = 0x0E | __INTEGER__ | __ARRAY_1D__ | __CAN_FORBID__,//主人公のキャラの"등록 번호 "。通常0
 		NOITEM = 0x0F | __INTEGER__ | __ARRAY_1D__ | __CAN_FORBID__,//アイテムが存在しないか？存在しない設定なら１．GAMEBASE.CSV
 		LOSEBASE = 0x10 | __INTEGER__ | __ARRAY_1D__ | __CAN_FORBID__,//基礎パラメータの減少値。通常はLOSEBASE:0が体力の消耗、LOSEBASE:1が気力の消耗。
 		SELECTCOM = 0x11 | __INTEGER__ | __ARRAY_1D__,//選択されたコマンド。TRAIN.CSVのものと同じ

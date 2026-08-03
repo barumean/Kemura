@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using MinorShift.Emuera;
 
@@ -36,9 +36,9 @@ public partial class EmueraMain : Node
         firstWindow = GetNodeOrNull<FirstWindow>("../FirstWindow");
 
         if (content == null)
-            GD.PushError("EmueraMain: EmueraContent が見つかりません (../EmueraContent)");
+            GD.PushError("EmueraMain: EmueraContent 를 찾을 수 없습니다 (../EmueraContent)");
         if (firstWindow == null)
-            GD.PushError("EmueraMain: FirstWindow が見つかりません (../FirstWindow)");
+            GD.PushError("EmueraMain: FirstWindow 를 찾을 수 없습니다 (../FirstWindow)");
 
         GenericUtils.SetContent(content);
 
@@ -66,7 +66,7 @@ public partial class EmueraMain : Node
         var name = System.IO.Path.GetFileName(full);
         if (string.IsNullOrEmpty(parent) || string.IsNullOrEmpty(name))
         {
-            GD.PushError($"EmueraMain.StartGame: 不正なゲームパス '{gamePath}'");
+            GD.PushError($"EmueraMain.StartGame: 잘못된 게임 경로 '{gamePath}'");
             return false;
         }
         MinorShift._Library.Sys.SetWorkFolder(parent);

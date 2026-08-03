@@ -473,7 +473,7 @@ namespace MinorShift.Emuera.GameProc
 					if (!(exc is EmueraException))
 						errmes = exc.GetType().ToString() + ":" + errmes;
 					ParserMediator.Warn("함수 @" + label.LabelName + " 인수 오류: " + errmes, label, 2, true, false);
-					label.ErrMes = "ロード時に解析に失敗した関数が呼び出されました";
+					label.ErrMes = "로드 시 해석에 실패한 함수가 호출되었습니다";
                     label.IsError = true;
 				}
 				finally
@@ -523,7 +523,7 @@ namespace MinorShift.Emuera.GameProc
 					for (int i = 0; i < subNamesRow.Length; i++)
 					{
 						if (subNamesRow[i] == null)
-						{ errMes = "関数定義の引数は省略できません"; goto err; }
+						{ errMes = "함수 정의의 인수는 생략할 수 없습니다"; goto err; }
 						IOperandTerm term = subNamesRow[i].Restructure(exm);
 						subNames[i] = term as SingleTerm;
 						if (subNames[i] == null)
@@ -840,7 +840,7 @@ namespace MinorShift.Emuera.GameProc
                 //1756beta2+v6.1 修正の効率化のために何かパース関係でハンドリングできてないエラーが出た場合はスタックトレースを投げるようにした
                 string errmes = (exc is EmueraException) ? exc.Message : exc.GetType().ToString() + ":" + exc.Message;
                 ParserMediator.Warn("@" + label.LabelName + " の解析中にエラー:" + errmes, label, 2, true, false, !(exc is EmueraException) ? exc.StackTrace : null);
-                label.ErrMes = "ロード時に解析に失敗した関数が呼び出されました";
+                label.ErrMes = "로드 시 해석에 실패한 함수가 호출되었습니다";
 			}
 			finally
 			{
@@ -1102,7 +1102,7 @@ namespace MinorShift.Emuera.GameProc
                             {
                                 do
                                 {
-                                    ParserMediator.Warn(selectLine.Function.Name + "文に対応する" + FunctionIdentifier.getMatchFunction(selectLine.FunctionCode) + "がない状態で" + func.Function.Name + "文に到達しました", func, 2, true, false);
+                                    ParserMediator.Warn(selectLine.Function.Name + "문에 대응하는 " + FunctionIdentifier.getMatchFunction(selectLine.FunctionCode) + "이(가) 없는 상태에서 " + func.Function.Name + "문에 도달했습니다", func, 2, true, false);
                                     //これを跨いでIF等が閉じられることがないようにする。
                                     nestStack.Pop();
                                     //if (nestStack.Count > 0)　//空になってるかは下で判定できるので、これを見る必要がない
@@ -1128,7 +1128,7 @@ namespace MinorShift.Emuera.GameProc
                             {
                                 do
                                 {
-                                    ParserMediator.Warn(selectLine.Function.Name + "文に対応する" + FunctionIdentifier.getMatchFunction(selectLine.FunctionCode) + "がない状態で" + func.Function.Name + "文に到達しました", func, 2, true, false);
+                                    ParserMediator.Warn(selectLine.Function.Name + "문에 대응하는 " + FunctionIdentifier.getMatchFunction(selectLine.FunctionCode) + "이(가) 없는 상태에서 " + func.Function.Name + "문에 도달했습니다", func, 2, true, false);
                                     //これを跨いでIF等が閉じられることがないようにする。
                                     nestStack.Pop();
                                     //if (nestStack.Count > 0)　//空になってるかは下で判定できるので、これを見る必要がない
@@ -1463,7 +1463,7 @@ namespace MinorShift.Emuera.GameProc
 					if (FunctionNotFoundName != null)
 					{
 						if (!Program.AnalysisMode)
-							printFunctionNotFoundWarning("指定された関数名\"@" + FunctionNotFoundName + "\"は存在しません", func, 2, true);
+							printFunctionNotFoundWarning("지정된 함수명 \"@" + FunctionNotFoundName + "\"은(는) 존재하지 않습니다", func, 2, true);
 						else
 							printFunctionNotFoundWarning(FunctionNotFoundName, func, 2, true);
 					}

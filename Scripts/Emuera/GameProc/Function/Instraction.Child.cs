@@ -833,7 +833,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				if (callfArg.FuncTerm == null)
 				{
 					if (!Program.AnalysisMode)
-						ParserMediator.Warn("指定された関数名\"@" + callfArg.ConstStr + "\"は存在しません", func, 2, true, false);
+						ParserMediator.Warn("지정된 함수명 \"@" + callfArg.ConstStr + "\"은(는) 존재하지 않습니다", func, 2, true, false);
 					else
 						ParserMediator.Warn(callfArg.ConstStr, func, 2, true, false);
 					return;
@@ -1185,14 +1185,14 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
 					start = (int)spvarsetarg.Start.GetIntValue(exm);
 					if (start < 0 || start >= charaNum)
-						throw new CodeEE("命令CVARSETの第４引数(" + start.ToString() + ")がキャラクタの範囲外です");
+						throw new CodeEE("명령 CVARSET의 제4인수(" + start.ToString() + ")이(가) 캐릭터 범위를 벗어났습니다");
 				}
 				int end;
 				if (spvarsetarg.End != null)
 				{
 					end = (int)spvarsetarg.End.GetIntValue(exm);
 					if (end < 0 || end > charaNum)
-						throw new CodeEE("命令CVARSETの第５引数(" + end.ToString() + ")がキャラクタの範囲外です");
+						throw new CodeEE("명령 CVARSET의 제5인수(" + end.ToString() + ")이(가) 캐릭터 범위를 벗어났습니다");
 				}
 				else
 					end = charaNum;
@@ -1207,7 +1207,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				if (index.GetOperandType() == typeof(string) && p.Identifier.IsArray1D)
 				{
 					if (!GlobalStatic.ConstantData.isDefined(p.Identifier.Code, index.Str))
-						throw new CodeEE("文字列" + index.Str + "は配列変数" + p.Identifier.Name + "の要素ではありません");
+						throw new CodeEE("문자열 " + index.Str + "은(는) 배열 변수 " + p.Identifier.Name + "의 요소가 아닙니다");
 				}
 				if (p.Identifier.IsString)
 				{
@@ -1364,7 +1364,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					for (int j = 0; j < i; j++)
 					{
 						if (savCharaList[i] == savCharaList[j])
-							throw new CodeEE("同一のキャラ登録番号(" + (savCharaList[i]).ToString() + ")が複数回指定されました");
+							throw new CodeEE("동일한 캐릭터 등록 번호(" + (savCharaList[i]).ToString() + ")이(가) 여러 번 지정되었습니다");
 					}
 				}
 				exm.VEvaluator.SaveChara(datFilename, savMes, savCharaList);
@@ -1588,7 +1588,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				else
 					delay = arg.Term.GetIntValue(exm);
 				if (delay < 0 || delay > int.MaxValue)
-					throw new CodeEE("引数の値が適切な範囲外です");
+					throw new CodeEE("인수 값이 적절한 범위를 벗어났습니다");
 				exm.Console.SetToolTipDelay((int)delay);
 				return;
 			}
@@ -1610,7 +1610,7 @@ namespace MinorShift.Emuera.GameProc.Function
                 else
                     duration = arg.Term.GetIntValue(exm);
                 if (duration < 0 || duration > int.MaxValue)
-                    throw new CodeEE("引数の値が適切な範囲外です");
+                    throw new CodeEE("인수 값이 적절한 범위를 벗어났습니다");
                 if (duration > short.MaxValue)
                     duration = short.MaxValue;
                 exm.Console.SetToolTipDuration((int)duration);

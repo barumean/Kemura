@@ -984,7 +984,7 @@ namespace MinorShift.Emuera.GameProc
 			}
 
 			if (!vEvaluator.LoadFrom((int)systemResult))
-				throw new ExeEE("ファイルのロード中に予期しないエラーが発生しました");
+				throw new ExeEE("파일 로드 중 예기치 않은 오류가 발생했습니다");
 			deletePrevState();
 			beginDataLoaded();
 		}

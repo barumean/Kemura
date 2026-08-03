@@ -30,13 +30,13 @@ namespace MinorShift.Emuera.GameData.Variable
 				dic = exm.VEvaluator.Constant.GetKeywordDictionary(out errPos, parentCode, index);
 			string key = strTerm.GetStrValue(exm);
 			if (key == "")
-				throw new CodeEE("キーワードを空には出来ません");
+				throw new CodeEE("키워드를 비워둘 수 없습니다");
             if (!dic.TryGetValue(key, out int i))
             {
                 if (errPos == null)
                     throw new CodeEE("배열 변수 " + parentCode.ToString() + "의 요소를 문자열로 지정할 수 없습니다");
                 else
-                    throw new CodeEE(errPos + "の中に\"" + key + "\"の定義がありません");
+                    throw new CodeEE(errPos + "의 안에 \"" + key + "\"의 정의가 없습니다");
             }
             return i;
         }

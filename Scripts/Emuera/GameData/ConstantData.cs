@@ -226,7 +226,7 @@ namespace MinorShift.Emuera.GameData
 			string[] tokens = line.Split(',');
 			if (tokens.Length < 2)
 			{
-				ParserMediator.Warn("\",\"が必要です", position, 1);
+				ParserMediator.Warn("\",\"가 필요합니다", position, 1);
 				return;
 			}
 			string idtoken = tokens[0].Trim();
@@ -268,7 +268,7 @@ namespace MinorShift.Emuera.GameData
 				}
                 if (tokens.Length > 2 && tokens[2].Length > 0 && tokens[2].Trim().Length > 0 && char.IsDigit((tokens[2].Trim())[0]))
                 {
-                    ParserMediator.Warn("一次元配列のサイズ指定に不必要なデータは無視されます", position, 0);
+                    ParserMediator.Warn("1차원 배열의 크기 지정에 불필요한 데이터는 무시됩니다", position, 0);
                 }
 				length = 0;
 				goto check1break;
@@ -277,7 +277,7 @@ namespace MinorShift.Emuera.GameData
 			{
                 if (tokens.Length > 2 && tokens[2].Length > 0 && tokens[2].Trim().Length > 0 && char.IsDigit((tokens[2].Trim())[0]))
                 {
-                    ParserMediator.Warn("一次元配列のサイズ指定に不必要なデータは無視されます", position, 0);
+                    ParserMediator.Warn("1차원 배열의 크기 지정에 불필요한 데이터는 무시됩니다", position, 0);
                 }
 				if (id.IsLocal && length < 1)
 				{
@@ -308,17 +308,17 @@ namespace MinorShift.Emuera.GameData
                 }
                 if (!int.TryParse(tokens[2], out length2))
 				{
-					ParserMediator.Warn("三つ目の値を整数値として認識できません", position, 1);
+					ParserMediator.Warn("세 번째 값을 정수값으로 인식할 수 없습니다", position, 1);
 					return;
 				}
 				if ((length < 1) || (length2 < 1))
 				{
-					ParserMediator.Warn("配列サイズを1未満にはできません", position, 1);
+					ParserMediator.Warn("배열 크기를 1 미만으로 할 수 없습니다", position, 1);
 					return;
 				}
 				if ((length > 1000000) || (length2 > 1000000))
 				{
-					ParserMediator.Warn("配列サイズを1000000より大きくすることはできません", position, 1);
+					ParserMediator.Warn("배열 크기를 1000000보다 크게 할 수 없습니다", position, 1);
 					return;
 				}
 				if (length * length2 > 1000000)
@@ -340,7 +340,7 @@ namespace MinorShift.Emuera.GameData
                 }
                 if (!int.TryParse(tokens[2], out length2))
 				{
-					ParserMediator.Warn("三つ目の値を整数値として認識できません", position, 1);
+					ParserMediator.Warn("세 번째 값을 정수값으로 인식할 수 없습니다", position, 1);
 					return;
 				}
 				if (!int.TryParse(tokens[3], out length3))
@@ -350,13 +350,13 @@ namespace MinorShift.Emuera.GameData
 				}
 				if ((length < 1) || (length2 < 1) || (length3 < 1))
 				{
-					ParserMediator.Warn("配列サイズを1未満にはできません", position, 1);
+					ParserMediator.Warn("배열 크기를 1 미만으로 할 수 없습니다", position, 1);
 					return;
 				}
 				//1802 サイズ保存の都合上、2^20超えるとバグる
 				if ((length > 1000000) || (length2 > 1000000) || (length3 > 1000000))
 				{
-					ParserMediator.Warn("配列サイズを1000000より大きくすることはできません", position, 1);
+					ParserMediator.Warn("배열 크기를 1000000보다 크게 할 수 없습니다", position, 1);
 					return;
 				}
 				if (length * length2 * length3 > 10000000)
@@ -470,9 +470,9 @@ check1break:
 					MaxDataList[nameIndex] = i;
 					//1803beta004 不適切な指定として警告Lv1の対象にする
 					if (MaxDataList[nameIndex] == 0 || arraylength[mainLengthIndex] == 0)
-						ParserMediator.Warn(mainCode.ToString() +"と" + nameCode.ToString() + "の禁止設定が異なります（使用禁止を解除します）", position, 1);
+						ParserMediator.Warn(mainCode.ToString() +"와 " + nameCode.ToString() + "의 금지 설정이 다릅니다(사용 금지를 해제합니다)", position, 1);
 					else
-						ParserMediator.Warn(mainCode.ToString() +"と" + nameCode.ToString() + "の要素数が異なります（大きい方に合わせます）", position, 1);
+						ParserMediator.Warn(mainCode.ToString() +"와 " + nameCode.ToString() + "의 요소 수가 다릅니다(더 큰 쪽에 맞춥니다)", position, 1);
 				}
 			}
 			else if (changedCode.Contains(nameCode) && !changedCode.Contains(mainCode))
@@ -680,14 +680,14 @@ check1break:
 		public int KeywordToInteger(VariableCode code, string key, int index)
 		{
 			if (string.IsNullOrEmpty(key))
-				throw new CodeEE("キーワードを空には出来ません");
+				throw new CodeEE("키워드를 비워둘 수 없습니다");
             Dictionary<string, int> dic = GetKeywordDictionary(out string errPos, code, index);
             if (dic.TryGetValue(key, out int ret))
                 return ret;
             if (errPos == null)
 				throw new CodeEE("배열 변수 " + code.ToString() + "의 요소를 문자열로 지정할 수 없습니다");
 			else
-				throw new CodeEE(errPos + "の中に\"" + key + "\"の定義がありません");
+				throw new CodeEE(errPos + "의 안에 \"" + key + "\"의 정의가 없습니다");
 		}
 
 		public Dictionary<string, int> GetKeywordDictionary(out string errPos, VariableCode code, int index)
@@ -1054,9 +1054,9 @@ check1break:
                 if (targetList.TryGetValue(tmpl.No, out ct))
 				{
 					if (!Config.CompatiSPChara && (tmpl.IsSpchara!= ct.IsSpchara))
-						ParserMediator.Warn("番号" + tmpl.No.ToString() + "のキャラが複数回定義されています(SPキャラとして定義するには互換性オプション「SPキャラを使用する」をONにしてください)", null, 1);
+						ParserMediator.Warn("번호 " + tmpl.No.ToString() + "의 캐릭터가 여러 번 정의되었습니다(SP캐릭터로 정의하려면 호환성 옵션 「SPキャラを使用する」를 ON으로 하세요)", null, 1);
 					else
-						ParserMediator.Warn("番号" + tmpl.No.ToString() + "のキャラが複数回定義されています", null, 1);
+						ParserMediator.Warn("번호 " + tmpl.No.ToString() + "의 캐릭터가 여러 번 정의되었습니다", null, 1);
 				}
 				else
 					targetList.Add(tmpl.No, tmpl);
@@ -1085,7 +1085,7 @@ check1break:
 					string[] tokens = st.Substring().Split(',');
 					if (tokens.Length < 2)
 					{
-						ParserMediator.Warn("\",\"が必要です", position, 1);
+						ParserMediator.Warn("\",\"가 필요합니다", position, 1);
 						continue;
 					}
 					if (tokens[0].Length == 0)
@@ -1298,7 +1298,7 @@ check1break:
 					errPos = "cstr.csv";
 					break;
 				default:
-					ParserMediator.Warn("\"" + tokens[0] + "\"は解釈できない識別子です", position, 1);
+					ParserMediator.Warn("\"" + tokens[0] + "\"은(는) 해석할 수 없는 식별자입니다", position, 1);
 					return;
 			}
 			if (length < 0)
@@ -1314,7 +1314,7 @@ check1break:
 			bool p1isNumeric = tryToInt64(tokens[1].TrimEnd(), out long p1);
 			if (p1isNumeric && ((p1 < 0) || (p1 >= length)))
 			{
-				ParserMediator.Warn(p1.ToString() + "は配列の範囲外です", position, 1);
+				ParserMediator.Warn(p1.ToString() + "은(는) 배열 범위를 벗어났습니다", position, 1);
 				return;
 			}
 			int index = (int)p1;
@@ -1322,13 +1322,13 @@ check1break:
 			{
 				if (!namearray.TryGetValue(tokens[1], out index))
 				{
-					ParserMediator.Warn(errPos + "に\"" + tokens[1] + "\"の定義がありません", position, 1);
+					ParserMediator.Warn(errPos + "에 \"" + tokens[1] + "\"의 정의가 없습니다", position, 1);
 					//ParserMediator.Warn("\"" + tokens[1] + "\"は解釈できない識別子です", position, 1);
 					return;
 				}
 				else if (index >= length)
 				{
-					ParserMediator.Warn("\"" + tokens[1] + "\"は配列の範囲外です", position, 1);
+					ParserMediator.Warn("\"" + tokens[1] + "\"은(는) 배열 범위를 벗어났습니다", position, 1);
 					return;
 				}
 			}
@@ -1336,11 +1336,11 @@ check1break:
 			if ((index < 0) || (index >= length))
 			{
 				if (p1isNumeric)
-					ParserMediator.Warn(index.ToString() + "は配列の範囲外です", position, 1);
+					ParserMediator.Warn(index.ToString() + "은(는) 배열 범위를 벗어났습니다", position, 1);
 				else if (tokens[1].Length == 0)
 					ParserMediator.Warn("二つ目の識別子がありません", position, 1);
 				else
-					ParserMediator.Warn("\"" + tokens[1] + "\"は解釈できない識別子です", position, 1);
+					ParserMediator.Warn("\"" + tokens[1] + "\"은(는) 해석할 수 없는 식별자입니다", position, 1);
 				return;
 			}
 			if (strArray != null)
@@ -1388,7 +1388,7 @@ check1break:
 					string[] tokens = st.Substring().Split(',');
 					if (tokens.Length < 2)
 					{
-						ParserMediator.Warn("\",\"が必要です", position, 1);
+						ParserMediator.Warn("\",\"가 필요합니다", position, 1);
 						continue;
 					}
                     if (!Int32.TryParse(tokens[0], out int index))
@@ -1403,7 +1403,7 @@ check1break:
 					}
 					if ((index < 0) || (target.Length <= index))
 					{
-						ParserMediator.Warn(index.ToString() + "は配列の範囲外です", position, 1);
+						ParserMediator.Warn(index.ToString() + "은(는) 배열 범위를 벗어났습니다", position, 1);
 						continue;
 					}
                     if (!defined.Add(index))
@@ -1476,7 +1476,7 @@ check1break:
 				case CharacterStrData.CSTR:
 					return cstrSize;
 				default:
-					throw new CodeEE("存在しないキーを参照しました");
+					throw new CodeEE("존재하지 않는 키를 참조했습니다");
 			}
 		}
 
@@ -1507,7 +1507,7 @@ check1break:
 				case CharacterIntData.JUEL:
 					return arraySize[(int)(VariableCode.__LOWERCASE__ & VariableCode.JUEL)];
 				default:
-					throw new CodeEE("存在しないキーを参照しました");
+					throw new CodeEE("존재하지 않는 키를 참조했습니다");
 			}
 		}
 

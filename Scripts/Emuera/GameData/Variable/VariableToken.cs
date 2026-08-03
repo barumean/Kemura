@@ -96,19 +96,19 @@ namespace MinorShift.Emuera.GameData.Variable
 		public virtual Int64 GetIntValue(ExpressionMediator exm, Int64[] arguments)
 		{ throw new CodeEE("정수형이 아닌 변수 " + varName + "을(를) 정수형으로 호출했습니다"); }
 		public virtual string GetStrValue(ExpressionMediator exm, Int64[] arguments)
-		{ throw new CodeEE("文字列型でない変数" + varName + "を文字列型として呼び出しました"); }
+		{ throw new CodeEE("문자열형이 아닌 변수 " + varName + "을(를) 문자열형으로 호출했습니다"); }
 		public virtual void SetValue(Int64 value, Int64[] arguments)
 		{ throw new CodeEE("정수형이 아닌 변수 " + varName + "을(를) 정수형으로 호출했습니다"); }
 		public virtual void SetValue(string value, Int64[] arguments)
-		{ throw new CodeEE("文字列型でない変数" + varName + "を文字列型として呼び出しました"); }
+		{ throw new CodeEE("문자열형이 아닌 변수 " + varName + "을(를) 문자열형으로 호출했습니다"); }
 		public virtual void SetValue(Int64[] values, Int64[] arguments)
-		{ throw new CodeEE("整数型配列でない変数" + varName + "を整数型配列として呼び出しました"); }
+		{ throw new CodeEE("정수형 배열이 아닌 변수 " + varName + "을(를) 정수형 배열로 호출했습니다"); }
 		public virtual void SetValue(string[] values, Int64[] arguments)
-		{ throw new CodeEE("文字列型配列でない変数" + varName + "を文字列型配列として呼び出しました"); }
+		{ throw new CodeEE("문자열형 배열이 아닌 변수 " + varName + "을(를) 문자열형 배열로 호출했습니다"); }
 		public virtual void SetValueAll(Int64 value, int start, int end, int charaPos)
-		{ throw new CodeEE("整数型配列でない変数" + varName + "を整数型配列として呼び出しました"); }
+		{ throw new CodeEE("정수형 배열이 아닌 변수 " + varName + "을(를) 정수형 배열로 호출했습니다"); }
 		public virtual void SetValueAll(string value, int start, int end, int charaPos)
-		{ throw new CodeEE("文字列型配列でない変数" + varName + "を文字列型配列として呼び出しました"); }
+		{ throw new CodeEE("문자열형 배열이 아닌 변수 " + varName + "을(를) 문자열형 배열로 호출했습니다"); }
 		public virtual Int64 PlusValue(Int64 value, Int64[] arguments)
 		{ throw new CodeEE("정수형이 아닌 변수 " + varName + "을(를) 정수형으로 호출했습니다"); }
 		public virtual Int32 GetLength()

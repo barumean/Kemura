@@ -95,7 +95,7 @@ namespace MinorShift.Emuera.GameData.Variable
 					if ((op1 == null) && (op2 == null) && (op3 == null))
 						return new VariableNoArgTerm(id);
 					if ((op1 == null) || (op2 == null) || (op3 == null))
-						throw new CodeEE("キャラクタ二次元配列変数" + id.Name + "の引数は省略できません");
+						throw new CodeEE("캐릭터 2차원 배열 변수 " + id.Name + "의 인수는 생략할 수 없습니다");
 					terms = new IOperandTerm[3];
 					terms[0] = op1;
 					terms[1] = op2;
@@ -142,7 +142,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				if ((op1 == null) && (op2 == null) && (op3 == null))
 					return new VariableNoArgTerm(id);
 				if ((op1 == null) || (op2 == null) || (op3 == null))
-					throw new CodeEE("三次元配列変数" + id.Name + "の引数は省略できません");
+					throw new CodeEE("3차원 배열 변수 " + id.Name + "의 인수는 생략할 수 없습니다");
 				terms = new IOperandTerm[3];
 				terms[0] = op1;
 				terms[1] = op2;
@@ -153,7 +153,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				if ((op1 == null) && (op2 == null) && (op3 == null))
 					return new VariableNoArgTerm(id);
 				if ((op1 == null) || (op2 == null))
-					throw new CodeEE("二次元配列変数" + id.Name + "の引数は省略できません");
+					throw new CodeEE("2차원 배열 변수 " + id.Name + "의 인수는 생략할 수 없습니다");
 				if (op3 != null)
 					throw new CodeEE("2차원 배열 " + id.Name + "의 인수가 너무 많습니다");
 				terms = new IOperandTerm[2];

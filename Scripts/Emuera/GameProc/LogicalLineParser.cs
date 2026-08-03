@@ -35,7 +35,7 @@ namespace MinorShift.Emuera.GameProc
 					case "SINGLE":
 						if (label.IsMethod)
 						{
-							ParserMediator.Warn("式中関数では#SINGLEは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #SINGLE이 동작하지 않습니다", position, 1);
 							break;
 						}
 						else if (!label.IsEvent)
@@ -58,7 +58,7 @@ namespace MinorShift.Emuera.GameProc
 					case "LATER":
 						if (label.IsMethod)
 						{
-							ParserMediator.Warn("式中関数では#LATERは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #LATER가 동작하지 않습니다", position, 1);
 							break;
 						}
 						else if (!label.IsEvent)
@@ -77,13 +77,13 @@ namespace MinorShift.Emuera.GameProc
 							break;
 						}
 						else if (label.IsPri)
-							ParserMediator.Warn("#PRIと#LATERが重複して使われています(この関数は2度呼ばれます)", position, 1);
+							ParserMediator.Warn("#PRI와 #LATER가 중복 사용되었습니다(이 함수는 두 번 호출됩니다)", position, 1);
 						label.IsLater = true;
 						break;
 					case "PRI":
 						if (label.IsMethod)
 						{
-							ParserMediator.Warn("式中関数では#PRIは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #PRI가 동작하지 않습니다", position, 1);
 							break;
 						}
 						else if (!label.IsEvent)
@@ -102,13 +102,13 @@ namespace MinorShift.Emuera.GameProc
 							break;
 						}
 						else if (label.IsLater)
-							ParserMediator.Warn("#PRIと#LATERが重複して使われています(この関数は2度呼ばれます)", position, 1);
+							ParserMediator.Warn("#PRI와 #LATER가 중복 사용되었습니다(이 함수는 두 번 호출됩니다)", position, 1);
 						label.IsPri = true;
 						break;
 					case "ONLY":
 						if (label.IsMethod)
 						{
-							ParserMediator.Warn("式中関数では#ONLYは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #ONLY가 동작하지 않습니다", position, 1);
 							break;
 						}
 						else if (!label.IsEvent)
@@ -154,13 +154,13 @@ namespace MinorShift.Emuera.GameProc
 						{
 							if ((label.MethodType == typeof(Int64) && token == "FUNCTION") || (label.MethodType == typeof(string) && token == "FUNCTIONS"))
 							{
-								ParserMediator.Warn("関数" + label.LabelName + "にはすでに#" + token + "が宣言されています(この行は無視されます)", position, 1);
+								ParserMediator.Warn("함수 " + label.LabelName + "에는 이미 #" + token + "이(가) 선언되어 있습니다(이 행은 무시됩니다)", position, 1);
 								return false;
 							}
 							if (label.MethodType == typeof(Int64) && token == "FUNCTIONS")
-								ParserMediator.Warn("関数" + label.LabelName + "にはすでに#FUNCTIONが宣言されています", position, 2);
+								ParserMediator.Warn("함수 " + label.LabelName + "에는 이미 #FUNCTION이 선언되어 있습니다", position, 2);
 							else if (label.MethodType == typeof(string) && token == "FUNCTION")
-								ParserMediator.Warn("関数" + label.LabelName + "にはすでに#FUNCTIONSが宣言されています", position, 2);
+								ParserMediator.Warn("함수 " + label.LabelName + "에는 이미 #FUNCTIONS가 선언되어 있습니다", position, 2);
 							return false;
 						}
 						if (label.Depth == 0)
@@ -176,22 +176,22 @@ namespace MinorShift.Emuera.GameProc
 							label.MethodType = typeof(Int64);
 						if (label.IsPri)
 						{
-							ParserMediator.Warn("式中関数では#PRIは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #PRI가 동작하지 않습니다", position, 1);
 							label.IsPri = false;
 						}
 						if (label.IsLater)
 						{
-							ParserMediator.Warn("式中関数では#LATERは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #LATER가 동작하지 않습니다", position, 1);
 							label.IsLater = false;
 						}
 						if (label.IsSingle)
 						{
-							ParserMediator.Warn("式中関数では#SINGLEは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #SINGLE이 동작하지 않습니다", position, 1);
 							label.IsSingle = false;
 						}
 						if (label.IsOnly)
 						{
-							ParserMediator.Warn("式中関数では#ONLYは機能しません", position, 1);
+							ParserMediator.Warn("식중 함수에서는 #ONLY가 동작하지 않습니다", position, 1);
 							label.IsOnly = false;
 						}
 						break;
@@ -217,12 +217,12 @@ namespace MinorShift.Emuera.GameProc
                             }
                             if (sizeTerm.Int <= 0)
 							{
-								ParserMediator.Warn("#" + token + "に0以下の値(" + sizeTerm.Int.ToString() + ")が与えられました。設定は無視されます", position, 1);
+								ParserMediator.Warn("#" + token + "에 0 이하의 값(" + sizeTerm.Int.ToString() + ")이(가) 주어졌습니다. 설정은 무시됩니다", position, 1);
 								break;
 							}
 							if (sizeTerm.Int >= Int32.MaxValue)
 							{
-								ParserMediator.Warn("#" + token + "に大きすぎる値(" + sizeTerm.Int.ToString() + ")が与えられました。設定は無視されます", position, 1);
+								ParserMediator.Warn("#" + token + "에 너무 큰 값(" + sizeTerm.Int.ToString() + ")이(가) 주어졌습니다. 설정은 무시됩니다", position, 1);
 								break;
 							}
 							int size = (int)sizeTerm.Int;
@@ -439,7 +439,7 @@ namespace MinorShift.Emuera.GameProc
 				LexicalAnalyzer.SkipWhiteSpace(stream);
 				if (stream.EOS)
 				{
-					errMes = "解釈できない行です";
+					errMes = "해석할 수 없는 행입니다";
 					goto err;
 				}
 				//命令行ではない→代入行のはず
@@ -454,7 +454,7 @@ namespace MinorShift.Emuera.GameProc
 				}
 				catch(CodeEE)
 				{
-					errMes = "解釈できない行です";
+					errMes = "해석할 수 없는 행입니다";
 					goto err;
 				}
 				//eramaker互換警告

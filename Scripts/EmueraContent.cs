@@ -608,7 +608,7 @@ public partial class EmueraContent : Control
         if (want && inputEdit != null)
         {
             var isInt = console!.InputType == MinorShift.Emuera.GameProc.InputType.IntValue;
-            inputEdit.PlaceholderText = isInt ? "数値を入力" : "文字を入力";
+            inputEdit.PlaceholderText = isInt ? "숫자 입력" : "문자 입력";
             inputEdit.Text = "";
             inputEdit.GrabFocus();
         }
@@ -624,7 +624,7 @@ public partial class EmueraContent : Control
             !long.TryParse(text, out _))
         {
             // 数値入力待ちに非数値を送るとEmuera側で弾かれ入力が失われるので出さない
-            inputEdit.PlaceholderText = "数値を入力してください";
+            inputEdit.PlaceholderText = "숫자를 입력해주세요";
             return;
         }
         inputEdit.Text = "";

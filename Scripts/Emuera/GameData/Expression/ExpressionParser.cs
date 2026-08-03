@@ -92,7 +92,7 @@ namespace MinorShift.Emuera.GameData.Expression
 				{
 					terms.Add(ReduceExpressionTerm(wc, termEndWith_Assignment));
                     if (terms[terms.Count - 1] == null)
-                        throw new CodeEE("関数定義の引数は省略できません");
+                        throw new CodeEE("함수 정의의 인수는 생략할 수 없습니다");
 					if (wc.Current is OperatorWord)
 					{//=がある
 						wc.ShiftNext();
@@ -205,7 +205,7 @@ namespace MinorShift.Emuera.GameData.Expression
 				wc.ShiftNext();
 				IdentifierWord subidWT = wc.Current as IdentifierWord;
 				if (subidWT == null)
-					throw new CodeEE("@の使い方が不正です");
+					throw new CodeEE("@ 사용법이 잘못되었습니다");
 				wc.ShiftNext();
 				subId = subidWT.Code;
 			}

@@ -36,8 +36,8 @@ namespace MinorShift.Emuera.GameData.Function
 		public bool HasUniqueRestructure { get; protected set; }
 
 		//実際の計算。
-		public virtual Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] arguments) { throw new ExeEE("戻り値の型が違う or 未実装"); }
-		public virtual string GetStrValue(ExpressionMediator exm, IOperandTerm[] arguments) { throw new ExeEE("戻り値の型が違う or 未実装"); }
+		public virtual Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] arguments) { throw new ExeEE("반환값 형식이 다름 또는 미구현"); }
+		public virtual string GetStrValue(ExpressionMediator exm, IOperandTerm[] arguments) { throw new ExeEE("반환값 형식이 다름 또는 미구현"); }
 		public virtual SingleTerm GetReturnValue(ExpressionMediator exm, IOperandTerm[] arguments)
 		{
 			if (ReturnType == typeof(Int64))

@@ -331,9 +331,9 @@ namespace MinorShift.Emuera.GameProc
 						double y = powerArg.Y.GetIntValue(exm);
 						double pow = Math.Pow(x, y);
 						if (double.IsNaN(pow))
-							throw new CodeEE("累乗結果が非数値です");
+							throw new CodeEE("거듭제곱 결과가 숫자가 아닙니다");
 						else if (double.IsInfinity(pow))
-							throw new CodeEE("累乗結果が無限大です");
+							throw new CodeEE("거듭제곱 결과가 무한대입니다");
 						else if ((pow >= Int64.MaxValue) || (pow <= Int64.MinValue))
 							throw new CodeEE("거듭제곱 결과(" + pow.ToString() + ")이(가) 64비트 부호 있는 정수 범위를 벗어났습니다");
 						powerArg.VariableDest.SetValue((long)pow, exm);
@@ -398,9 +398,9 @@ namespace MinorShift.Emuera.GameProc
 							colorG = colorArg.G.GetIntValue(exm);
 							colorB = colorArg.B.GetIntValue(exm);
 							if ((colorR < 0) || (colorG < 0) || (colorB < 0))
-								throw new CodeEE("SETCOLORの引数に0未満の値が指定されました");
+								throw new CodeEE("SETCOLOR의 인수에 0 미만의 값이 지정되었습니다");
 							if ((colorR > 255) || (colorG > 255) || (colorB > 255))
-								throw new CodeEE("SETCOLORの引数に255を超える値が指定されました");
+								throw new CodeEE("SETCOLOR의 인수에 255를 초과하는 값이 지정되었습니다");
 						}
 						Color c = Color.FromArgb((Int32)colorR, (Int32)colorG, (Int32)colorB);
 						exm.Console.SetStringStyle(c);
@@ -445,9 +445,9 @@ namespace MinorShift.Emuera.GameProc
 							colorG = colorArg.G.GetIntValue(exm);
 							colorB = colorArg.B.GetIntValue(exm);
 							if ((colorR < 0) || (colorG < 0) || (colorB < 0))
-								throw new CodeEE("SETCOLORの引数に0未満の値が指定されました");
+								throw new CodeEE("SETCOLOR의 인수에 0 미만의 값이 지정되었습니다");
 							if ((colorR > 255) || (colorG > 255) || (colorB > 255))
-								throw new CodeEE("SETCOLORの引数に255を超える値が指定されました");
+								throw new CodeEE("SETCOLOR의 인수에 255를 초과하는 값이 지정되었습니다");
 						}
 						Color c = Color.FromArgb((Int32)colorR, (Int32)colorG, (Int32)colorB);
 						exm.Console.SetBgColor(c);
@@ -500,7 +500,7 @@ namespace MinorShift.Emuera.GameProc
 					else if (str.Equals("RIGHT", Config.SCVariable))
 						exm.Console.Alignment = DisplayLineAlignment.RIGHT;
 					else
-						throw new CodeEE("ALIGNMENTのキーワード\"" + str + "\"は未定義です");
+						throw new CodeEE("ALIGNMENT의 키워드 \"" + str + "\"은(는) 정의되지 않았습니다");
 					break;
 
 				case FunctionCode.REDRAW:
@@ -671,13 +671,13 @@ namespace MinorShift.Emuera.GameProc
 							names[0] = varName1.GetStrValue(exm);
 							names[1] = varName2.GetStrValue(exm);
 							if ((vars[0] = GlobalStatic.IdentifierDictionary.GetVariableToken(names[0], null, true)) == null)
-								throw new CodeEE("ARRAYCOPY命令の第１引数(" + names[0] + ")が有効な変数名ではありません");
+								throw new CodeEE("ARRAYCOPY 명령의 제1인수(" + names[0] + ")이(가) 유효한 변수명이 아닙니다");
 							if (!vars[0].IsArray1D && !vars[0].IsArray2D && !vars[0].IsArray3D)
 								throw new CodeEE("ARRAYCOPY 명령의 제1인수 \"" + names[0] + "\"은(는) 배열 변수가 아닙니다");
 							if (vars[0].IsCharacterData)
 								throw new CodeEE("ARRAYCOPY 명령의 제1인수 \"" + names[0] + "\"은(는) 캐릭터 변수입니다(지원하지 않습니다)");
 							if ((vars[1] = GlobalStatic.IdentifierDictionary.GetVariableToken(names[1], null, true)) == null)
-								throw new CodeEE("ARRAYCOPY命令の第２引数(" + names[0] + ")が有効な変数名ではありません");
+								throw new CodeEE("ARRAYCOPY 명령의 제2인수(" + names[0] + ")이(가) 유효한 변수명이 아닙니다");
 							if (!vars[1].IsArray1D && !vars[1].IsArray2D && !vars[1].IsArray3D)
 								throw new CodeEE("ARRAYCOPY 명령의 제2인수 \"" + names[1] + "\"은(는) 배열 변수가 아닙니다");
 							if (vars[1].IsCharacterData)
@@ -788,7 +788,7 @@ namespace MinorShift.Emuera.GameProc
 							throw new CodeEE("不正なデータをロードしようとしました");
 
 						if (!vEvaluator.LoadFrom((int)target))
-							throw new ExeEE("ファイルのロード中に予期しないエラーが発生しました");
+							throw new ExeEE("파일 로드 중 예기치 않은 오류가 발생했습니다");
 						state.ClearFunctionList();
 						state.SystemState = SystemStateCode.LoadData_DataLoaded;
 						return false;

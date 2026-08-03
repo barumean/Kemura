@@ -60,9 +60,9 @@ namespace MinorShift.Emuera.GameData.Variable
                 if (line != null)
                 {
                     if (!func.IsSystem)
-						ParserMediator.Warn("関数宣言に引数変数\"" + varCode + "\"が使われていない関数中で\"" + varCode + "\"が使われています(関数の引数以外の用途に使うことは推奨されません。代わりに#DIMの使用を検討してください)", line, 1, false, false);
+						ParserMediator.Warn("함수 선언에 인수 변수 \"" + varCode + "\"이(가) 사용되지 않은 함수 안에서 \"" + varCode + "\"이(가) 사용되고 있습니다(함수 인수 이외의 용도로 사용하는 것은 권장되지 않습니다. 대신 #DIM 사용을 검토하세요)", line, 1, false, false);
                     else
-						ParserMediator.Warn("システム関数" + func.LabelName + "中で\"" + varCode + "\"が使われています(関数の引数以外の用途に使うことは推奨されません。代わりに#DIMの使用を検討してください)", line, 1, false, false);
+						ParserMediator.Warn("시스템 함수 " + func.LabelName + " 안에서 \"" + varCode + "\"이(가) 사용되고 있습니다(함수 인수 이외의 용도로 사용하는 것은 권장되지 않습니다. 대신 #DIM 사용을 검토하세요)", line, 1, false, false);
                 }
 				//throw new CodeEE("この関数に引数変数\"" + varCode + "\"は定義されていません");
 			}

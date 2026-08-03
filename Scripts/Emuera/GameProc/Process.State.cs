@@ -197,7 +197,7 @@ namespace MinorShift.Emuera.GameProc
 				case "TITLE":
 					SetBegin(BeginType.TITLE); return;
 			}
-			throw new CodeEE("BEGINのキーワード\"" + keyword + "\"は未定義です");
+			throw new CodeEE("BEGIN의 키워드 \"" + keyword + "\"은(는) 정의되지 않았습니다");
 		}
 
 		public void SetBegin(BeginType type)
@@ -428,7 +428,7 @@ namespace MinorShift.Emuera.GameProc
 			else if (Program.DebugMode)
 			{
 				FunctionLabelLine label = called.CurrentLabel;
-				console.DebugAddTraceLog("CALL :@" + label.LabelName + ":" + label.Position.ToString() + "行目");
+				console.DebugAddTraceLog("CALL :@" + label.LabelName + ":" + label.Position.ToString() + "행");
 			}
             lineCount++;
             //ShfitNextLine();
@@ -450,9 +450,9 @@ namespace MinorShift.Emuera.GameProc
 			{
 				FunctionLabelLine label = call.CurrentLabel;
 				if (call.IsJump)
-					console.DebugAddTraceLog("JUMP :@" + label.LabelName + ":" + label.Position.ToString() + "行目");
+					console.DebugAddTraceLog("JUMP :@" + label.LabelName + ":" + label.Position.ToString() + "행");
 				else
-					console.DebugAddTraceLog("CALL :@" + label.LabelName + ":" + label.Position.ToString() + "行目");
+					console.DebugAddTraceLog("CALL :@" + label.LabelName + ":" + label.Position.ToString() + "행");
 			}
             if (srcArgs != null)
             {

@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -36,8 +36,8 @@ internal static class ConfigMaps
         if (jisBytes == null || utf8Text == null || utf8CnText == null)
         {
             GD.PushWarning(
-                "config変換テーブルを読めませんでした。SHIFT-JISで書かれた " +
-                "emuera.config のキーが認識されない可能性があります。");
+                "config 변환 테이블을 읽을 수 없습니다. SHIFT-JIS로 작성된 " +
+                "emuera.config 의 키가 인식되지 않을 수 있습니다.");
             return;
         }
 
@@ -49,9 +49,9 @@ internal static class ConfigMaps
         if (jisMd5s.Count != utf8Lines.Count || utf8CnLines.Count != utf8Lines.Count)
         {
             GD.PushWarning(
-                $"config変換テーブルの行数が一致しません " +
+                $"config 변환 테이블의 행 수가 일치하지 않습니다 " +
                 $"(shiftjis={jisMd5s.Count}, utf8={utf8Lines.Count}, zhcn={utf8CnLines.Count})。" +
-                "変換を無効にします。");
+                "변환을 비활성화합니다.");
             return;
         }
 
@@ -73,7 +73,7 @@ internal static class ConfigMaps
         using var f = FileAccess.Open(resPath, FileAccess.ModeFlags.Read);
         if (f == null)
         {
-            GD.PushWarning($"ConfigMaps: {resPath} が開けません ({FileAccess.GetOpenError()})");
+            GD.PushWarning($"ConfigMaps: {resPath} 를 열 수 없습니다 ({FileAccess.GetOpenError()})");
             return null;
         }
         return f.GetBuffer((long)f.GetLength());
@@ -84,7 +84,7 @@ internal static class ConfigMaps
         using var f = FileAccess.Open(resPath, FileAccess.ModeFlags.Read);
         if (f == null)
         {
-            GD.PushWarning($"ConfigMaps: {resPath} が開けません ({FileAccess.GetOpenError()})");
+            GD.PushWarning($"ConfigMaps: {resPath} 를 열 수 없습니다 ({FileAccess.GetOpenError()})");
             return null;
         }
         return f.GetAsText();

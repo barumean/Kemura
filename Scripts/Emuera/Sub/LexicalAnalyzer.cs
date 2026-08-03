@@ -256,7 +256,7 @@ namespace MinorShift.Emuera.Sub
 			{
 				if (string.IsNullOrEmpty(strInt))
 					throw new CodeEE("数値として認識できる文字が必要です");
-				throw new CodeEE("文字列\"" + strInt + "\"は数値として認識できません");
+				throw new CodeEE("문자열 \"" + strInt + "\"은(는) 숫자로 인식할 수 없습니다");
 			}
 		}
 
@@ -360,7 +360,7 @@ namespace MinorShift.Emuera.Sub
 					DefineMacro macro = GlobalStatic.IdentifierDictionary.GetMacro(str);
 					i++;
 					if (i > MAX_EXPAND_MACRO)
-						throw new CodeEE("マクロの展開数が1文あたりの上限値" + MAX_EXPAND_MACRO.ToString() + "を超えました(自己参照・循環参照のおそれ)");
+						throw new CodeEE("매크로 전개 수가 한 문장당 상한값 " + MAX_EXPAND_MACRO.ToString() + "을(를) 초과했습니다(자기 참조·순환 참조 우려)");
 					if (macro == null)
 						break;
 					if (macro.IDWord != null)
@@ -515,7 +515,7 @@ namespace MinorShift.Emuera.Sub
 						switch (st.Current)
 						{
 							case StringStream.EndOfString:
-								throw new CodeEE("エスケープ文字\\の後に文字がありません");
+								throw new CodeEE("이스케이프 문자 \\ 뒤에 문자가 없습니다");
 							case '\n': break;
 							case 's': buffer.Append(' '); break;
 							case 'S': buffer.Append('　'); break;
@@ -904,7 +904,7 @@ namespace MinorShift.Emuera.Sub
 							//1808beta009 ここだけ戻す
 							//現在の処理だとここに来た時点でrename失敗確定だが警告内容を元に戻すため
 							if (ParserMediator.RenameDic == null)
-								throw new CodeEE("字句解析中に予期しない文字\"[[\"を発見しました");
+								throw new CodeEE("어휘 분석 중 예기치 않은 문자 \"[[\"을(를) 발견했습니다");
 							int start = st.CurrentPosition;
 							int find = st.Find("]]");
 							if (find <= 2)
@@ -917,7 +917,7 @@ namespace MinorShift.Emuera.Sub
 							string key = st.Substring(start, find + 2);
 							//1810 ここまでで置換できなかったものは強制エラーにする
 							//行連結前に置換不能で行連結より置換することができるようになったものまで置換されていたため
-							throw new CodeEE("字句解析中に置換(rename)できない符号" + key + "を発見しました");
+							throw new CodeEE("어휘 분석 중 치환(rename)할 수 없는 기호" + key + "을(를) 발견했습니다");
 							//string value = null;
 							//if (!ParserMediator.RenameDic.TryGetValue(key, out value))
 							//    throw new CodeEE("字句解析中に置換(rename)できない符号" + key + "を発見しました");
@@ -962,7 +962,7 @@ namespace MinorShift.Emuera.Sub
 						st.ShiftNext();
 						ret.Add(new LiteralStringWord(ReadString(st, StrEndWith.DoubleQuotation)));
 						if (st.Current != '\"')
-							throw new CodeEE("\"が閉じられていません");
+							throw new CodeEE("\"이(가) 닫히지 않았습니다");
 						st.ShiftNext();
 						break;
 					case '@':
@@ -976,7 +976,7 @@ namespace MinorShift.Emuera.Sub
 						st.ShiftNext();
 						ret.Add(AnalyseFormattedString(st, FormStrEndWith.DoubleQuotation, false));
 						if (st.Current != '\"')
-							throw new CodeEE("\"が閉じられていません");
+							throw new CodeEE("\"이(가) 닫히지 않았습니다");
 						st.ShiftNext();
 						break;
 					case '.':
@@ -1055,7 +1055,7 @@ namespace MinorShift.Emuera.Sub
 				}
 				count++;
 				if (count > MAX_EXPAND_MACRO)
-					throw new CodeEE("マクロの展開数が1文あたりの上限" + MAX_EXPAND_MACRO.ToString() + "を超えました(自己参照・循環参照のおそれ)");
+					throw new CodeEE("매크로 전개 수가 한 문장당 상한 " + MAX_EXPAND_MACRO.ToString() + "을(를) 초과했습니다(자기 참조·순환 참조 우려)");
 				if (!macro.HasArguments)
 				{
 					wc.Remove();
@@ -1223,7 +1223,7 @@ namespace MinorShift.Emuera.Sub
 						switch (cur)
 						{
 							case '\0':
-								throw new CodeEE("エスケープ文字\\の後に文字がありません");
+								throw new CodeEE("이스케이프 문자 \\ 뒤에 문자가 없습니다");
 							case '\n': break;
 							case 's': buffer.Append(' '); break;
 							case 'S': buffer.Append('　'); break;
@@ -1283,9 +1283,9 @@ namespace MinorShift.Emuera.Sub
 			if (st.Current != '#')
 			{
 				if (st.Current != '@')
-					throw new CodeEE("\'\\@\',\'?\'が使われましたが対応する\'#\'が見つかりません");
+					throw new CodeEE("\'\\@\',\'?\'가 사용되었지만 대응하는 \'#\'을(를) 찾을 수 없습니다");
 				st.ShiftNext();
-				ParserMediator.Warn("\'\\@\',\'?\'が使われましたが対応する\'#\'が見つかりません", GlobalStatic.Process.GetScaningLine(), 1, false, false);
+				ParserMediator.Warn("\'\\@\',\'?\'가 사용되었지만 대응하는 \'#\'을(를) 찾을 수 없습니다", GlobalStatic.Process.GetScaningLine(), 1, false, false);
 				return new YenAtSubWord(w, left, null);
 			}
 			st.ShiftNext();

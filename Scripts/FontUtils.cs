@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Collections.Generic;
 
@@ -47,9 +47,9 @@ public static class FontUtils
         {
             warned = true;
             GD.PushWarning(
-                "日本語フォントが見つかりません (Fonts/ が空です)。" +
-                "Godot標準フォントはCJKを含まないため日本語が表示されません。" +
-                "Fonts/NotoSansJP-Regular.ttf を配置してください。詳細は Fonts/README.md 参照。");
+                "일본어 폰트를 찾을 수 없습니다 (Fonts/ 가 비어 있습니다). " +
+                "Godot 기본 폰트는 CJK를 포함하지 않아 일본어가 표시되지 않습니다. " +
+                "Fonts/NotoSansJP-Regular.ttf 를 배치해주세요. 자세한 내용은 Fonts/README.md 참조.");
         }
         return null;
     }

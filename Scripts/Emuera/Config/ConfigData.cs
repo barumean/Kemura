@@ -292,7 +292,7 @@ static ConfigData() { }
 			AConfigItem item = ConfigData.Instance.GetItem(text);
 			if(item == null)
 			{
-				errMes = "文字列\"" + text + "\"は適切なコンフィグ名ではありません";
+				errMes = "문자열 \"" + text + "\"은(는) 적절한 config 이름이 아닙니다";
 				return null;
 			}
 			SingleTerm term;

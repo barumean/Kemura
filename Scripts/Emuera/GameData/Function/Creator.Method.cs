@@ -276,9 +276,9 @@ namespace MinorShift.Emuera.GameData.Function
                 if (arguments.Length >= 4 && arguments[3] != null)
                     lastindex = arguments[3].GetIntValue(exm);
                 if (startindex < 0 || startindex >= exm.VEvaluator.CHARANUM)
-                    throw new CodeEE((isLast ? "" : "") + "関数の第3引数(" + startindex.ToString() + ")はキャラクタ位置の範囲外です");
+                    throw new CodeEE((isLast ? "" : "") + "함수의 제3인수(" + startindex.ToString() + ")는 캐릭터 위치 범위를 벗어났습니다");
                 if (lastindex < 0 || lastindex > exm.VEvaluator.CHARANUM)
-                    throw new CodeEE((isLast ? "" : "") + "関数の第4引数(" + lastindex.ToString() + ")はキャラクタ位置の範囲外です");
+                    throw new CodeEE((isLast ? "" : "") + "함수의 제4인수(" + lastindex.ToString() + ")는 캐릭터 위치 범위를 벗어났습니다");
                 long ret;
                 if (varID.IsString)
                 {
@@ -350,12 +350,12 @@ namespace MinorShift.Emuera.GameData.Function
                 if (arguments[0] == null)
                     return name + "함수의 1번째 인수는 생략할 수 없습니다";
                 if (!arguments[0].IsString)
-                    return name + "関数の1番目の引数が文字列ではありません";
+                    return name + "함수의 1번째 인수가 문자열이 아닙니다";
                 if (arguments[0] is SingleTerm)
                 {
                     string varName = ((SingleTerm)arguments[0]).Str;
                     if (GlobalStatic.IdentifierDictionary.GetVariableToken(varName, null, true) == null)
-                        return name + "関数の1番目の引数が変数名ではありません";
+                        return name + "함수의 1번째 인수가 변수명이 아닙니다";
                 }
                 if (arguments.Length == 1)
                     return null;
@@ -369,7 +369,7 @@ namespace MinorShift.Emuera.GameData.Function
             {
                 VariableToken var = GlobalStatic.IdentifierDictionary.GetVariableToken(arguments[0].GetStrValue(exm), null, true);
                 if (var == null)
-                    throw new CodeEE("VARSIZEの1番目の引数(\"" + arguments[0].GetStrValue(exm) + "\")が変数名ではありません");
+                    throw new CodeEE("VARSIZE의 1번째 인수(\"" + arguments[0].GetStrValue(exm) + "\")이(가) 변수명이 아닙니다");
                 int dim = 0;
                 if (arguments.Length == 2 && arguments[1] != null)
                     dim = (int)arguments[1].GetIntValue(exm);
@@ -488,7 +488,7 @@ namespace MinorShift.Emuera.GameData.Function
 				if (arguments.Length == 0 || arguments[0] == null)
 					return null;
 				if (!arguments[0].IsString)
-					return name + "関数の1番目の引数が文字列ではありません";
+					return name + "함수의 1번째 인수가 문자열이 아닙니다";
 				return null;
 			}
 
@@ -1054,9 +1054,9 @@ namespace MinorShift.Emuera.GameData.Function
                 Int64 y = arguments[1].GetIntValue(exm);
                 double pow = Math.Pow(x, y);
                 if (double.IsNaN(pow))
-                    throw new CodeEE("累乗結果が非数値です");
+                    throw new CodeEE("거듭제곱 결과가 숫자가 아닙니다");
                 else if (double.IsInfinity(pow))
-                    throw new CodeEE("累乗結果が無限大です");
+                    throw new CodeEE("거듭제곱 결과가 무한대입니다");
                 else if ((pow >= Int64.MaxValue) || (pow <= Int64.MinValue))
                     throw new CodeEE("거듭제곱 결과(" + pow.ToString() + ")이(가) 64비트 부호 있는 정수 범위를 벗어났습니다");
                 return ((long)pow);
@@ -1127,9 +1127,9 @@ namespace MinorShift.Emuera.GameData.Function
                 else
                     dret = Math.Log10(dret);
                 if (double.IsNaN(dret))
-                    throw new CodeEE("計算値が非数値です");
+                    throw new CodeEE("계산값이 숫자가 아닙니다");
                 else if (double.IsInfinity(dret))
-                    throw new CodeEE("計算値が無限大です");
+                    throw new CodeEE("계산값이 무한대입니다");
                 else if ((dret >= Int64.MaxValue) || (dret <= Int64.MinValue))
                     throw new CodeEE("계산 결과(" + dret.ToString() + ")이(가) 64비트 부호 있는 정수 범위를 벗어났습니다");
                 return ((Int64)dret);
@@ -1149,9 +1149,9 @@ namespace MinorShift.Emuera.GameData.Function
                 Int64 ret = arguments[0].GetIntValue(exm);
                 double dret = Math.Exp((double)ret);
                 if (double.IsNaN(dret))
-                    throw new CodeEE("計算値が非数値です");
+                    throw new CodeEE("계산값이 숫자가 아닙니다");
                 else if (double.IsInfinity(dret))
-                    throw new CodeEE("計算値が無限大です");
+                    throw new CodeEE("계산값이 무한대입니다");
                 else if ((dret >= Int64.MaxValue) || (dret <= Int64.MinValue))
                     throw new CodeEE("계산 결과(" + dret.ToString() + ")이(가) 64비트 부호 있는 정수 범위를 벗어났습니다");
 
@@ -1230,7 +1230,7 @@ namespace MinorShift.Emuera.GameData.Function
                     return name + "함수의 1번째 인수가 변수가 아닙니다";
                 VariableTerm varToken = (VariableTerm)arguments[0];
                 if (varToken.IsString)
-                    return name + "関数の1番目の引数が数値変数ではありません";
+                    return name + "함수의 1번째 인수가 숫자 변수가 아닙니다";
                 if (isCharaRange && !varToken.Identifier.IsCharacterData)
                     return name + "함수의 1번째 인수가 캐릭터 변수가 아닙니다";
                 if (!isCharaRange && !varToken.Identifier.IsArray1D && !varToken.Identifier.IsArray2D && !varToken.Identifier.IsArray3D)
@@ -1560,7 +1560,7 @@ namespace MinorShift.Emuera.GameData.Function
                 if (isCharaRange && !varToken.Identifier.IsCharacterData)
                     return name + "함수의 1번째 인수가 캐릭터 변수가 아닙니다";
                 if (!varToken.IsInteger)
-                    return name + "関数の1番目の引数が数値変数ではありません";
+                    return name + "함수의 1번째 인수가 숫자 변수가 아닙니다";
                 if (!isCharaRange && (varToken.Identifier.IsArray2D || varToken.Identifier.IsArray3D))
                     return name + "함수는 2중·3중 배열을 지원하지 않습니다";
                 if (!varToken.Identifier.IsArray1D)
@@ -1683,7 +1683,7 @@ namespace MinorShift.Emuera.GameData.Function
 				{
 					string varName = ((SingleTerm)arguments[0]).Str;
 					if (GlobalStatic.IdentifierDictionary.GetVariableToken(varName, null, true) == null)
-						return name + "関数の1番目の引数が変数名ではありません";
+						return name + "함수의 1번째 인수가 변수명이 아닙니다";
 				}
 				return null;
 			}
@@ -1691,7 +1691,7 @@ namespace MinorShift.Emuera.GameData.Function
 			{
 				VariableToken var = GlobalStatic.IdentifierDictionary.GetVariableToken(arguments[0].GetStrValue(exm), null, true);
 				if (var == null)
-					throw new CodeEE("GETNUMBの1番目の引数(\"" + arguments[0].GetStrValue(exm) + "\")が変数名ではありません");
+					throw new CodeEE("GETNUMB의 1번째 인수(\"" + arguments[0].GetStrValue(exm) + "\")이(가) 변수명이 아닙니다");
 				string key = arguments[1].GetStrValue(exm);
                 if (exm.VEvaluator.Constant.TryKeywordToInteger(out int ret, var.Code, key, -1))
                     return ret;
@@ -1790,7 +1790,7 @@ namespace MinorShift.Emuera.GameData.Function
                 if ((arguments.Length >= 4) && (arguments[3] != null) && (arguments[3].GetOperandType() != typeof(Int64)))
                     return name + "함수의 4번째 인수 형식이 올바르지 않습니다";
                 if ((arguments.Length >= 5) && (arguments[4] != null) && (arguments[4].GetOperandType() != typeof(Int64)))
-                    return name + "関数の5番目の引数の型が正しくありません";
+                    return name + "함수의 5번째 인수 형식이 올바르지 않습니다";
                 return null;
             }
 
@@ -1908,7 +1908,7 @@ namespace MinorShift.Emuera.GameData.Function
                 if ((arguments.Length >= 4) && (arguments[3] != null) && (arguments[3].GetOperandType() != typeof(Int64)))
                     return name + "함수의 4번째 인수 형식이 올바르지 않습니다";
                 if ((arguments.Length >= 5) && (arguments[4] != null) && (arguments[4].GetOperandType() != typeof(Int64)))
-                    return name + "関数の5番目の引数の型が正しくありません";
+                    return name + "함수의 5번째 인수 형식이 올바르지 않습니다";
                 return null;
             }
             public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] arguments)
@@ -2620,9 +2620,9 @@ namespace MinorShift.Emuera.GameData.Function
                     return -1;
                 Int64 position = (arguments.Length > 1 && arguments[1] != null) ? arguments[1].GetIntValue(exm) : 0;
                 if (position < 0)
-                    throw new CodeEE("ENCOIDETOUNI関数の第２引数(" + position.ToString() + ")が負の値です");
+                    throw new CodeEE("ENCOIDETOUNI 함수의 제2인수(" + position.ToString() + ")이(가) 음수입니다");
                 if (position >= baseStr.Length)
-                    throw new CodeEE("ENCOIDETOUNI関数の第２引数(" + position.ToString() + ")が第１引数の文字列(" + baseStr + ")の文字数を超えています");
+                    throw new CodeEE("ENCOIDETOUNI 함수의 제2인수(" + position.ToString() + ")이(가) 제1인수 문자열(" + baseStr + ")의 문자 수를 초과했습니다");
                 return char.ConvertToUtf32(baseStr, (int)position);
             }
         }
@@ -2683,11 +2683,11 @@ namespace MinorShift.Emuera.GameData.Function
 				}
 				catch(CodeEE e)
 				{
-					throw new CodeEE("STRFORM関数:文字列\"" + str + "\"の展開エラー:" + e.Message);
+					throw new CodeEE("STRFORM 함수: 문자열 \"" + str + "\"의 전개 오류: " + e.Message);
 				}
 				catch
 				{
-					throw new CodeEE("STRFORM関数:文字列\"" + str+ "\"の展開処理中にエラーが発生しました");
+					throw new CodeEE("STRFORM 함수: 문자열 \"" + str+ "\"의 전개 처리 중 오류가 발생했습니다");
 				}
 				return destStr;
 			}
@@ -2816,7 +2816,7 @@ namespace MinorShift.Emuera.GameData.Function
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] arguments)
 			{
 				if(ReturnType != typeof(Int64))
-					throw new ExeEE(funcname + "関数:不正な呼び出し");
+					throw new ExeEE(funcname + "함수: 잘못된 호출");
 				SingleTerm term = GetSingleTerm(exm, arguments);
 				if(term.GetOperandType() != typeof(Int64))
 					throw new CodeEE(funcname + "関数:型が違います（GETCONFIGS関数を使用してください）");
@@ -2825,7 +2825,7 @@ namespace MinorShift.Emuera.GameData.Function
 			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] arguments)
 			{
 				if(ReturnType != typeof(string))
-					throw new ExeEE(funcname + "関数:不正な呼び出し");
+					throw new ExeEE(funcname + "함수: 잘못된 호출");
 				SingleTerm term = GetSingleTerm(exm, arguments);
 				if (term.GetOperandType() != typeof(string))
 					throw new CodeEE(funcname + "関数:型が違います（GETCONFIG関数を使用してください）");

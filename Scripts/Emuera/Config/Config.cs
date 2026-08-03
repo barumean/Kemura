@@ -268,7 +268,7 @@ namespace MinorShift.Emuera
 			}
 			catch
 			{
-				MessageBox.Show("savフォルダの作成に失敗しました", "フォルダ作成失敗");
+				MessageBox.Show("sav 폴더 생성에 실패했습니다", "폴더 생성 실패");
 				return;
 			}
 			bool existGlobal = File.Exists(Program.ExeDir + "global.sav");
@@ -281,7 +281,7 @@ namespace MinorShift.Emuera
 			//ダイアログが開いている間にフォルダを消してしまうような邪悪なユーザーがいるかもしれない
 			if (!Directory.Exists(SavDir))
 			{
-				MessageBox.Show("savフォルダの作成が見当たりません", "フォルダ作成失敗");
+				MessageBox.Show("sav 폴더를 찾을 수 없습니다", "폴더 생성 실패");
 				return;
 			}
 			//ダイアログが開いている間にファイルを変更するような邪悪なユーザーがいるかもしれない

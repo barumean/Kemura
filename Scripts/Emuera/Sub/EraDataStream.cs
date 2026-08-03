@@ -327,7 +327,7 @@ namespace MinorShift.Emuera.Sub
 
 					for (int x = 0; x < tokens.Length; x++)
 						if (!Int64.TryParse(tokens[x], out intTokens[x]))
-							throw new FileEE(tokens[x] + "は数値として認識できません");
+							throw new FileEE(tokens[x] + "은(는) 숫자로 인식할 수 없습니다");
 					valueList.Add(intTokens);
 				}
 				if (!ret.ContainsKey(key))
@@ -353,7 +353,7 @@ namespace MinorShift.Emuera.Sub
 					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
-				throw new FileEE("StringArray2Dのロードには対応していません");
+				throw new FileEE("StringArray2D 로드는 지원하지 않습니다");
 			}
 			return ret;
 		}
@@ -404,7 +404,7 @@ namespace MinorShift.Emuera.Sub
 
 							for (int x = 0; x < tokens.Length; x++)
 								if (!Int64.TryParse(tokens[x], out intTokens[x]))
-									throw new FileEE(tokens[x] + "は数値として認識できません");
+									throw new FileEE(tokens[x] + "은(는) 숫자로 인식할 수 없습니다");
 							tokenList.Add(intTokens);
 						}
 						valueList.Add(tokenList);
@@ -433,7 +433,7 @@ namespace MinorShift.Emuera.Sub
 					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
-				throw new FileEE("StringArray2Dのロードには対応していません");
+				throw new FileEE("StringArray2D 로드는 지원하지 않습니다");
 			}
 			return ret;
 		}
@@ -657,7 +657,7 @@ namespace MinorShift.Emuera.Sub
 
 		public void WriteExtended(string key, string[,] array2D)
 		{
-			throw new NotImplementedException("まだ実装してないよ");
+			throw new NotImplementedException("아직 구현되지 않았습니다");
 		}
 
 		public void WriteExtended(string key, Int64[, ,] array3D)
@@ -721,7 +721,7 @@ namespace MinorShift.Emuera.Sub
 
 		public void WriteExtended(string key, string[, ,] array2D)
 		{
-			throw new NotImplementedException("まだ実装してないよ");
+			throw new NotImplementedException("아직 구현되지 않았습니다");
 		}
 		#endregion
 
