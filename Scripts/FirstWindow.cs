@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,10 +17,6 @@ public partial class FirstWindow : Control
     LineEdit? pathEdit;
     FileDialog? dirDialog;
 
-    Label? fontValue;
-    Label? fontSample;
-    Button? fontSmaller;
-    Button? fontLarger;
 
     readonly List<string> gamePaths = new();
 
@@ -39,11 +35,6 @@ public partial class FirstWindow : Control
         rescanButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/RescanButton");
         dirDialog = GetNodeOrNull<FileDialog>("DirDialog");
 
-        fontValue = GetNodeOrNull<Label>("VBoxContainer/FontRow/FontValue");
-        fontSample = GetNodeOrNull<Label>("VBoxContainer/FontRow/FontSample");
-        fontSmaller = GetNodeOrNull<Button>("VBoxContainer/FontRow/FontSmaller");
-        fontLarger = GetNodeOrNull<Button>("VBoxContainer/FontRow/FontLarger");
-
         if (startButton != null)
             startButton.Pressed += OnStartPressed;
         if (permButton != null)
@@ -59,11 +50,6 @@ public partial class FirstWindow : Control
             pathEdit.TextSubmitted += _ => OnPathEntered();
         if (dirDialog != null)
             dirDialog.DirSelected += OnDirSelected;
-
-        if (fontSmaller != null)
-            fontSmaller.Pressed += () => NudgeFontSize(-2);
-        if (fontLarger != null)
-            fontLarger.Pressed += () => NudgeFontSize(+2);
 
         eraBaseDir = Settings.EffectiveGameRoot;
         ApplyFontSize();
@@ -87,28 +73,13 @@ public partial class FirstWindow : Control
     // 文字サイズ
     // ------------------------------------------------------------------
 
-    void NudgeFontSize(int delta)
-    {
-        int next = Mathf.Clamp(Settings.FontSize + delta, Settings.MinFontSize, Settings.MaxFontSize);
-        if (next == Settings.FontSize)
-            return;
-        Settings.FontSize = next;
-        ApplyFontSize();
-
-        // ゲーム画面側にも即反映する
-        GetNodeOrNull<EmueraContent>("../EmueraContent")?.ReloadFontSize();
-    }
-
     void ApplyFontSize()
     {
         int size = Settings.FontSize;
         var font = FontUtils.GetFont();
 
-        if (fontValue != null)
-            fontValue.Text = size.ToString();
-
         // 一覧と本文プレビューは実際の表示サイズを反映させる
-        foreach (var c in new Control?[] { gameList, fontSample, statusLabel, pathEdit })
+        foreach (var c in new Control?[] { gameList, statusLabel, pathEdit })
         {
             if (c == null) continue;
             c.AddThemeFontSizeOverride("font_size", size);
