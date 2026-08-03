@@ -18,14 +18,12 @@ public static class GenericUtils
         return Path.GetFileName(path);
     }
 
-    public static string GetBaseDir()
-    {
-#if GODOT_ANDROID
-        return "/storage/emulated/0/emuera/";
-#else
-        return OS.GetExecutablePath().GetBaseDir().PathJoin("emuera") + "/";
-#endif
-    }
+    /// <summary>
+    /// ゲームフォルダのルート。プラットフォーム別の既定値とユーザー設定の
+    /// 解決はSettingsに一本化してある(以前はこことFirstWindow/EmueraMainの
+    /// 3箇所に同じ分岐が重複していた)。
+    /// </summary>
+    public static string GetBaseDir() => Settings.EffectiveGameRoot;
 
     // --- Display helpers (delegated to EmueraContent) ---
     //

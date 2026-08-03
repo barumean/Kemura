@@ -16,31 +16,72 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="TitleLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "KEMURA - Emuera for Android"
+text = "KEMURA"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 32
 
-[node name="PathLabel" type="Label" parent="VBoxContainer"]
+[node name="PathRow" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
-text = "경로: ..."
-theme_override_font_sizes/font_size = 14
-autowrap_mode = 3
+
+[node name="PathEdit" type="LineEdit" parent="VBoxContainer/PathRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "게임 폴더 경로"
+
+[node name="BrowseButton" type="Button" parent="VBoxContainer/PathRow"]
+layout_mode = 2
+text = "찾아보기"
+
+[node name="RescanButton" type="Button" parent="VBoxContainer/PathRow"]
+layout_mode = 2
+text = "새로고침"
+
+[node name="FontRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="FontLabel" type="Label" parent="VBoxContainer/FontRow"]
+layout_mode = 2
+text = "글자 크기"
+
+[node name="FontSmaller" type="Button" parent="VBoxContainer/FontRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(56, 44)
+text = "A-"
+
+[node name="FontValue" type="Label" parent="VBoxContainer/FontRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(56, 0)
+text = "28"
+horizontal_alignment = 1
+
+[node name="FontLarger" type="Button" parent="VBoxContainer/FontRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(56, 44)
+text = "A+"
+
+[node name="FontSample" type="Label" parent="VBoxContainer/FontRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "본문 미리보기 テキスト"
+clip_text = true
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "스캔 중..."
-theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
 [node name="GameList" type="ItemList" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 20
 allow_reselect = true
 
 [node name="HBox" type="HBoxContainer" parent="VBoxContainer"]
@@ -49,11 +90,20 @@ layout_mode = 2
 [node name="StartButton" type="Button" parent="VBoxContainer/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 56)
 text = "게임 시작"
-theme_override_font_sizes/font_size = 24
 
 [node name="PermissionButton" type="Button" parent="VBoxContainer/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 56)
 text = "권한 설정"
-theme_override_font_sizes/font_size = 24
+
+[node name="DirDialog" type="FileDialog" parent="."]
+title = "게임 폴더 선택"
+initial_position = 2
+size = Vector2i(760, 620)
+ok_button_text = "이 폴더 선택"
+file_mode = 2
+access = 2
+show_hidden_files = true

@@ -12,7 +12,15 @@ public partial class FirstWindow : Control
     Label? statusLabel;
     Button? startButton;
     Button? permButton;
-    Label? pathLabel;
+    Button? browseButton;
+    Button? rescanButton;
+    LineEdit? pathEdit;
+    FileDialog? dirDialog;
+
+    Label? fontValue;
+    Label? fontSample;
+    Button? fontSmaller;
+    Button? fontLarger;
 
     readonly List<string> gamePaths = new();
 
@@ -25,7 +33,16 @@ public partial class FirstWindow : Control
         statusLabel = GetNodeOrNull<Label>("VBoxContainer/StatusLabel");
         startButton = GetNodeOrNull<Button>("VBoxContainer/HBox/StartButton");
         permButton = GetNodeOrNull<Button>("VBoxContainer/HBox/PermissionButton");
-        pathLabel = GetNodeOrNull<Label>("VBoxContainer/PathLabel");
+
+        pathEdit = GetNodeOrNull<LineEdit>("VBoxContainer/PathRow/PathEdit");
+        browseButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/BrowseButton");
+        rescanButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/RescanButton");
+        dirDialog = GetNodeOrNull<FileDialog>("DirDialog");
+
+        fontValue = GetNodeOrNull<Label>("VBoxContainer/FontRow/FontValue");
+        fontSample = GetNodeOrNull<Label>("VBoxContainer/FontRow/FontSample");
+        fontSmaller = GetNodeOrNull<Button>("VBoxContainer/FontRow/FontSmaller");
+        fontLarger = GetNodeOrNull<Button>("VBoxContainer/FontRow/FontLarger");
 
         if (startButton != null)
             startButton.Pressed += OnStartPressed;
@@ -34,7 +51,22 @@ public partial class FirstWindow : Control
         if (gameList != null)
             gameList.ItemActivated += _ => OnStartPressed();
 
-        ResolveBaseDir();
+        if (browseButton != null)
+            browseButton.Pressed += OpenDirDialog;
+        if (rescanButton != null)
+            rescanButton.Pressed += OnPathEntered;
+        if (pathEdit != null)
+            pathEdit.TextSubmitted += _ => OnPathEntered();
+        if (dirDialog != null)
+            dirDialog.DirSelected += OnDirSelected;
+
+        if (fontSmaller != null)
+            fontSmaller.Pressed += () => NudgeFontSize(-2);
+        if (fontLarger != null)
+            fontLarger.Pressed += () => NudgeFontSize(+2);
+
+        eraBaseDir = Settings.EffectiveGameRoot;
+        ApplyFontSize();
         Rescan();
     }
 
@@ -51,16 +83,103 @@ public partial class FirstWindow : Control
         }
     }
 
-    void ResolveBaseDir()
+    // ------------------------------------------------------------------
+    // 文字サイズ
+    // ------------------------------------------------------------------
+
+    void NudgeFontSize(int delta)
     {
-#if GODOT_ANDROID
-        eraBaseDir = "/storage/emulated/0/emuera/";
-#else
-        eraBaseDir = OS.GetExecutablePath().GetBaseDir().PathJoin("emuera") + "/";
-        if (!Directory.Exists(eraBaseDir))
-            eraBaseDir = OS.GetUserDataDir() + "/emuera/";
-#endif
+        int next = Mathf.Clamp(Settings.FontSize + delta, Settings.MinFontSize, Settings.MaxFontSize);
+        if (next == Settings.FontSize)
+            return;
+        Settings.FontSize = next;
+        ApplyFontSize();
+
+        // ゲーム画面側にも即反映する
+        GetNodeOrNull<EmueraContent>("../EmueraContent")?.ReloadFontSize();
     }
+
+    void ApplyFontSize()
+    {
+        int size = Settings.FontSize;
+        var font = FontUtils.GetFont();
+
+        if (fontValue != null)
+            fontValue.Text = size.ToString();
+
+        // 一覧と本文プレビューは実際の表示サイズを反映させる
+        foreach (var c in new Control?[] { gameList, fontSample, statusLabel, pathEdit })
+        {
+            if (c == null) continue;
+            c.AddThemeFontSizeOverride("font_size", size);
+            if (font != null)
+                c.AddThemeFontOverride("font", font);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // 経路
+    // ------------------------------------------------------------------
+
+    void OpenDirDialog()
+    {
+        if (dirDialog == null)
+        {
+            SetStatus("내부 오류: 폴더 선택 대화상자를 찾을 수 없습니다.");
+            return;
+        }
+        // 現在の経路から開く。存在しない場合は上位に遡って開けるところを探す。
+        var start = eraBaseDir;
+        while (!string.IsNullOrEmpty(start) && !Directory.Exists(start))
+        {
+            var parent = Path.GetDirectoryName(start.TrimEnd('/', '\\'));
+            if (string.IsNullOrEmpty(parent) || parent == start) break;
+            start = parent;
+        }
+#if GODOT_ANDROID
+        if (string.IsNullOrEmpty(start) || !Directory.Exists(start))
+            start = "/storage/emulated/0";
+#endif
+        if (Directory.Exists(start))
+            dirDialog.CurrentDir = start;
+
+        dirDialog.PopupCentered();
+    }
+
+    void OnDirSelected(string dir)
+    {
+        SetGameRoot(dir);
+    }
+
+    void OnPathEntered()
+    {
+        SetGameRoot(pathEdit?.Text ?? "");
+    }
+
+    void SetGameRoot(string dir)
+    {
+        var norm = Settings.NormalizeDir(dir);
+        if (string.IsNullOrEmpty(norm))
+        {
+            // 空にしたらプラットフォーム既定へ戻す
+            Settings.GameRoot = "";
+            eraBaseDir = Settings.EffectiveGameRoot;
+            Rescan();
+            return;
+        }
+        if (!Directory.Exists(norm))
+        {
+            SetStatus($"폴더가 없습니다: {norm}");
+            return;
+        }
+        Settings.GameRoot = norm;
+        eraBaseDir = norm;
+        Rescan();
+    }
+
+    // ------------------------------------------------------------------
+    // 走査
+    // ------------------------------------------------------------------
 
     /// <summary>ゲームフォルダを再走査する。</summary>
     public void Rescan()
@@ -68,8 +187,8 @@ public partial class FirstWindow : Control
         gamePaths.Clear();
         gameList?.Clear();
 
-        if (pathLabel != null)
-            pathLabel.Text = $"경로: {eraBaseDir}";
+        if (pathEdit != null && pathEdit.Text != eraBaseDir)
+            pathEdit.Text = eraBaseDir;
 
         bool granted = HasStorageAccess();
         if (permButton != null)
@@ -118,7 +237,7 @@ public partial class FirstWindow : Control
         }
 
         if (gamePaths.Count == 0)
-            SetStatus($"게임을 찾을 수 없습니다. {eraBaseDir} 안에 ERB 폴더를 가진 게임 폴더를 넣어주세요.");
+            SetStatus($"게임을 찾을 수 없습니다. 이 폴더 안에 ERB 폴더를 가진 게임 폴더를 넣거나, [찾아보기]로 다른 경로를 지정하세요.");
         else
             SetStatus($"{gamePaths.Count}개 게임 발견");
     }
@@ -152,17 +271,11 @@ public partial class FirstWindow : Control
 #if GODOT_ANDROID
         // Android 6〜10はランタイム権限で足りる
         var granted = OS.GetGrantedPermissions();
-        bool hasLegacyRead = false;
         foreach (var p in granted)
         {
             if (p.EndsWith("READ_EXTERNAL_STORAGE") || p.EndsWith("MANAGE_EXTERNAL_STORAGE"))
-            {
-                hasLegacyRead = true;
-                break;
-            }
+                return true;
         }
-        if (hasLegacyRead)
-            return true;
 
         // MANAGE_EXTERNAL_STORAGEはランタイムダイアログでは取得できないので、
         // 実際にディレクトリを列挙できるかで確認する
@@ -173,7 +286,6 @@ public partial class FirstWindow : Control
                 Directory.GetDirectories(eraBaseDir);
                 return true;
             }
-            // 親が読めるなら書き込みも期待できる
             Directory.GetDirectories("/storage/emulated/0/");
             return true;
         }
@@ -182,7 +294,6 @@ public partial class FirstWindow : Control
             if (!permissionRequested)
             {
                 permissionRequested = true;
-                // Android 6〜10向け: 通常のランタイム権限要求
                 OS.RequestPermissions();
             }
             return false;

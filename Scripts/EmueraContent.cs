@@ -37,25 +37,101 @@ public partial class EmueraContent : Control
 
     const int MaxCachedLines = 2000;
 
+    Button? fontSmaller;
+    Button? fontLarger;
+
+    // 表示に使う文字サイズ。Settings経由で永続化される。
+    int fontSize = Settings.DefaultFontSize;
+
     public override void _Ready()
     {
-        scrollContainer = GetNodeOrNull<ScrollContainer>("ScrollContainer");
+        // ScrollContainerとInputBarはLayout(VBoxContainer)の子。
+        // 以前はScrollContainerが全画面、InputBarがその上に重なる構造で、
+        // 画面下部の選択肢が入力欄に隠れて読めなかった。
+        scrollContainer = GetNodeOrNull<ScrollContainer>("Layout/ScrollContainer");
         textContainer = scrollContainer?.GetNodeOrNull<VBoxContainer>("VBoxContainer");
 
-        inputBar = GetNodeOrNull<Control>("InputBar");
-        inputEdit = GetNodeOrNull<LineEdit>("InputBar/LineEdit");
-        inputSubmit = GetNodeOrNull<Button>("InputBar/SubmitButton");
+        inputBar = GetNodeOrNull<Control>("Layout/InputBar");
+        inputEdit = GetNodeOrNull<LineEdit>("Layout/InputBar/LineEdit");
+        inputSubmit = GetNodeOrNull<Button>("Layout/InputBar/SubmitButton");
+
         processLabel = GetNodeOrNull<Label>("ProcessLabel");
+        fontSmaller = GetNodeOrNull<Button>("FontBar/SmallerButton");
+        fontLarger = GetNodeOrNull<Button>("FontBar/LargerButton");
 
         if (inputEdit != null)
             inputEdit.TextSubmitted += _ => SubmitTypedInput();
         if (inputSubmit != null)
             inputSubmit.Pressed += SubmitTypedInput;
 
+        if (fontSmaller != null)
+            fontSmaller.Pressed += () => NudgeFontSize(-2);
+        if (fontLarger != null)
+            fontLarger.Pressed += () => NudgeFontSize(+2);
+
+        fontSize = Settings.FontSize;
+        ApplyFontSizeToChrome();
+
         if (inputBar != null)
             inputBar.Visible = false;
         if (processLabel != null)
             processLabel.Visible = false;
+    }
+
+    // ------------------------------------------------------------------
+    // 文字サイズ
+    // ------------------------------------------------------------------
+
+    void NudgeFontSize(int delta)
+    {
+        int next = Mathf.Clamp(fontSize + delta, Settings.MinFontSize, Settings.MaxFontSize);
+        if (next == fontSize)
+            return;
+        fontSize = next;
+        Settings.FontSize = next;      // 永続化
+
+        // 既に生成済みの行にも即座に反映する(作り直さずサイズだけ差し替える)
+        foreach (var label in lineNodes)
+            ApplyFontTo(label);
+        ApplyFontSizeToChrome();
+    }
+
+    void ApplyFontTo(RichTextLabel label)
+    {
+        var font = FontUtils.GetFont();
+        if (font != null)
+            label.AddThemeFontOverride("normal_font", font);
+        label.AddThemeFontSizeOverride("normal_font_size", fontSize);
+        label.AddThemeFontSizeOverride("bold_font_size", fontSize);
+        label.AddThemeFontSizeOverride("italics_font_size", fontSize);
+        label.AddThemeFontSizeOverride("mono_font_size", fontSize);
+    }
+
+    /// <summary>入力欄など本文以外のUIも同じサイズ感に揃える。</summary>
+    void ApplyFontSizeToChrome()
+    {
+        var font = FontUtils.GetFont();
+        if (inputEdit != null)
+        {
+            inputEdit.AddThemeFontSizeOverride("font_size", fontSize);
+            if (font != null) inputEdit.AddThemeFontOverride("font", font);
+        }
+        if (inputSubmit != null)
+        {
+            inputSubmit.AddThemeFontSizeOverride("font_size", fontSize);
+            if (font != null) inputSubmit.AddThemeFontOverride("font", font);
+        }
+    }
+
+    /// <summary>FirstWindowから設定を変えた場合の反映用。</summary>
+    internal void ReloadFontSize()
+    {
+        var next = Settings.FontSize;
+        if (next == fontSize) return;
+        fontSize = next;
+        foreach (var label in lineNodes)
+            ApplyFontTo(label);
+        ApplyFontSizeToChrome();
     }
 
     // ------------------------------------------------------------------
@@ -173,11 +249,10 @@ public partial class EmueraContent : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
 
-        var font = FontUtils.GetFont();
-        if (font != null)
-            label.AddThemeFontOverride("normal_font", font);
-        int fontSize = Config.FontSize > 0 ? Config.FontSize : 20;
-        label.AddThemeFontSizeOverride("normal_font_size", fontSize);
+        // 表示サイズはEmueraのConfig.FontSizeではなくユーザー設定に従う。
+        // Config.FontSizeはエンジン内部の折り返し計算用の値で、画面上の
+        // 読みやすさ(特にスマートフォン)とは別問題。
+        ApplyFontTo(label);
 
         label.Text = BuildBbcode(line);
         // ボタン部分は [url=...] で囲んでいるので meta_clicked で入力に変換する
