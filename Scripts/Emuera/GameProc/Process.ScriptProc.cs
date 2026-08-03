@@ -311,9 +311,9 @@ namespace MinorShift.Emuera.GameProc
 						SpSaveDataArgument spSavedataArg = (SpSaveDataArgument)func.Argument;
 						Int64 target = spSavedataArg.Target.GetIntValue(exm);
 						if (target < 0)
-							throw new CodeEE("SAVEDATAの引数に負の値(" + target.ToString() + ")が指定されました");
+							throw new CodeEE("SAVEDATA의 인수에 음수(" + target.ToString() + ")이(가) 지정되었습니다");
 						else if (target > int.MaxValue)
-							throw new CodeEE("SAVEDATAの引数(" + target.ToString() + ")が大きすぎます");
+							throw new CodeEE("SAVEDATA의 인수(" + target.ToString() + ")이(가) 너무 큽니다");
 						string savemes = spSavedataArg.StrExpression.GetStrValue(exm);
 						if (savemes.Contains("\n"))
 							throw new CodeEE("SAVEDATAのセーブテキストに改行文字が与えられました（セーブデータが破損するため改行文字は使えません）");
@@ -335,7 +335,7 @@ namespace MinorShift.Emuera.GameProc
 						else if (double.IsInfinity(pow))
 							throw new CodeEE("累乗結果が無限大です");
 						else if ((pow >= Int64.MaxValue) || (pow <= Int64.MinValue))
-							throw new CodeEE("累乗結果(" + pow.ToString() + ")が64ビット符号付き整数の範囲外です");
+							throw new CodeEE("거듭제곱 결과(" + pow.ToString() + ")이(가) 64비트 부호 있는 정수 범위를 벗어났습니다");
 						powerArg.VariableDest.SetValue((long)pow, exm);
 						break;
 					}
@@ -413,8 +413,8 @@ namespace MinorShift.Emuera.GameProc
 						if (c.A == 0)
 						{
 							if (str.Equals("transparent", StringComparison.OrdinalIgnoreCase))
-								throw new CodeEE("無色透明(Transparent)は色として指定できません");
-							throw new CodeEE("指定された色名\"" + colorName + "\"は無効な色名です");
+								throw new CodeEE("무색 투명(Transparent)은 색으로 지정할 수 없습니다");
+							throw new CodeEE("지정된 색 이름 \"" + colorName + "\"은(는) 잘못된 색 이름입니다");
 						}
 						exm.Console.SetStringStyle(c);
 					}
@@ -460,8 +460,8 @@ namespace MinorShift.Emuera.GameProc
 						if (c.A == 0)
 						{
 							if (str.Equals("transparent", StringComparison.OrdinalIgnoreCase))
-								throw new CodeEE("無色透明(Transparent)は色として指定できません");
-							throw new CodeEE("指定された色名\"" + colorName + "\"は無効な色名です");
+								throw new CodeEE("무색 투명(Transparent)은 색으로 지정할 수 없습니다");
+							throw new CodeEE("지정된 색 이름 \"" + colorName + "\"은(는) 잘못된 색 이름입니다");
 						}
 						exm.Console.SetBgColor(c);
 					}
@@ -595,13 +595,13 @@ namespace MinorShift.Emuera.GameProc
 							break;
 						int start = (int)arrayArg.Num3.GetIntValue(exm);
 						if (start < 0)
-							throw new CodeEE("ARRAYSHIFTの第４引数が負の値(" + start.ToString() + ")です");
+							throw new CodeEE("ARRAYSHIFT의 제4인수가 음수(" + start.ToString() + ")입니다");
 						int num;
 						if (arrayArg.Num4 != null)
 						{
 							num = (int)arrayArg.Num4.GetIntValue(exm);
 							if (num < 0)
-								throw new CodeEE("ARRAYSHIFTの第５引数が負の値(" + num.ToString() + ")です");
+								throw new CodeEE("ARRAYSHIFT의 제5인수가 음수(" + num.ToString() + ")입니다");
 							if (num == 0)
 								break;
 						}
@@ -628,9 +628,9 @@ namespace MinorShift.Emuera.GameProc
 						int start = (int)arrayArg.Num1.GetIntValue(exm);
 						int num = (int)arrayArg.Num2.GetIntValue(exm);
 						if (start < 0)
-							throw new CodeEE("ARRAYREMOVEの第２引数が負の値(" + start.ToString() + ")です");
+							throw new CodeEE("ARRAYREMOVE의 제2인수가 음수(" + start.ToString() + ")입니다");
 						if (num < 0)
-							throw new CodeEE("ARRAYREMOVEの第３引数が負の値(" + start.ToString() + ")です");
+							throw new CodeEE("ARRAYREMOVE의 제3인수가 음수(" + start.ToString() + ")입니다");
 						if (num == 0)
 							break;
 						vEvaluator.RemoveArray(p, start, num);
@@ -644,13 +644,13 @@ namespace MinorShift.Emuera.GameProc
 						FixedVariableTerm p = arrayArg.VarToken.GetFixedVariableTerm(exm);
 						int start = (int)arrayArg.Num1.GetIntValue(exm);
 						if (start < 0)
-							throw new CodeEE("ARRAYSORTの第３引数が負の値(" + start.ToString() + ")です");
+							throw new CodeEE("ARRAYSORT의 제3인수가 음수(" + start.ToString() + ")입니다");
 						int num = 0;
 						if (arrayArg.Num2 != null)
 						{
 							num = (int)arrayArg.Num2.GetIntValue(exm);
 							if (num < 0)
-								throw new CodeEE("ARRAYSORTの第４引数が負の値(" + start.ToString() + ")です");
+								throw new CodeEE("ARRAYSORT의 제4인수가 음수(" + start.ToString() + ")입니다");
 							if (num == 0)
 								break;
 						}
@@ -673,28 +673,28 @@ namespace MinorShift.Emuera.GameProc
 							if ((vars[0] = GlobalStatic.IdentifierDictionary.GetVariableToken(names[0], null, true)) == null)
 								throw new CodeEE("ARRAYCOPY命令の第１引数(" + names[0] + ")が有効な変数名ではありません");
 							if (!vars[0].IsArray1D && !vars[0].IsArray2D && !vars[0].IsArray3D)
-								throw new CodeEE("ARRAYCOPY命令の第１引数\"" + names[0] + "\"は配列変数ではありません");
+								throw new CodeEE("ARRAYCOPY 명령의 제1인수 \"" + names[0] + "\"은(는) 배열 변수가 아닙니다");
 							if (vars[0].IsCharacterData)
-								throw new CodeEE("ARRAYCOPY命令の第１引数\"" + names[0] + "\"はキャラクタ変数です（対応していません）");
+								throw new CodeEE("ARRAYCOPY 명령의 제1인수 \"" + names[0] + "\"은(는) 캐릭터 변수입니다(지원하지 않습니다)");
 							if ((vars[1] = GlobalStatic.IdentifierDictionary.GetVariableToken(names[1], null, true)) == null)
 								throw new CodeEE("ARRAYCOPY命令の第２引数(" + names[0] + ")が有効な変数名ではありません");
 							if (!vars[1].IsArray1D && !vars[1].IsArray2D && !vars[1].IsArray3D)
-								throw new CodeEE("ARRAYCOPY命令の第２引数\"" + names[1] + "\"は配列変数ではありません");
+								throw new CodeEE("ARRAYCOPY 명령의 제2인수 \"" + names[1] + "\"은(는) 배열 변수가 아닙니다");
 							if (vars[1].IsCharacterData)
-								throw new CodeEE("ARRAYCOPY命令の第２引数\"" + names[1] + "\"はキャラクタ変数です（対応していません）");
+								throw new CodeEE("ARRAYCOPY 명령의 제2인수 \"" + names[1] + "\"은(는) 캐릭터 변수입니다(지원하지 않습니다)");
 							if (vars[1].IsConst)
-								throw new CodeEE("ARRAYCOPY命令の第２引数\"" + names[1] + "\"は値を変更できない変数です");
+								throw new CodeEE("ARRAYCOPY 명령의 제2인수 \"" + names[1] + "\"은(는) 값을 변경할 수 없는 변수입니다");
 							if ((vars[0].IsArray1D && !vars[1].IsArray1D) || (vars[0].IsArray2D && !vars[1].IsArray2D) || (vars[0].IsArray3D && !vars[1].IsArray3D))
 								throw new CodeEE("ARRAYCOPY命令の２つの配列変数の次元数が一致していません");
 							if ((vars[0].IsInteger && vars[1].IsString) || (vars[0].IsString && vars[1].IsInteger))
-								throw new CodeEE("ARRAYCOPY命令の２つの配列変数の型が一致していません");
+								throw new CodeEE("ARRAYCOPY 명령의 두 배열 변수의 형식이 일치하지 않습니다");
 						}
 						else
 						{
 							vars[0] = GlobalStatic.IdentifierDictionary.GetVariableToken(((SingleTerm)varName1).Str, null, true);
 							vars[1] = GlobalStatic.IdentifierDictionary.GetVariableToken(((SingleTerm)varName2).Str, null, true);
 							if ((vars[0].IsInteger && vars[1].IsString) || (vars[0].IsString && vars[1].IsInteger))
-								throw new CodeEE("ARRAYCOPY命令の２つの配列変数の型が一致していません");
+								throw new CodeEE("ARRAYCOPY 명령의 두 배열 변수의 형식이 일치하지 않습니다");
 						}
 						vEvaluator.CopyArray(vars[0], vars[1]);
 					}
@@ -779,9 +779,9 @@ namespace MinorShift.Emuera.GameProc
 						ExpressionArgument intExpArg = (ExpressionArgument)func.Argument;
 						Int64 target = intExpArg.Term.GetIntValue(exm);
 						if (target < 0)
-							throw new CodeEE("LOADDATAの引数に負の値(" + target.ToString() + ")が指定されました");
+							throw new CodeEE("LOADDATA의 인수에 음수(" + target.ToString() + ")이(가) 지정되었습니다");
 						else if (target > int.MaxValue)
-							throw new CodeEE("LOADDATAの引数(" + target.ToString() + ")が大きすぎます");
+							throw new CodeEE("LOADDATA의 인수(" + target.ToString() + ")이(가) 너무 큽니다");
 						//EraDataResult result = vEvaluator.checkData((int)target);
 						EraDataResult result = vEvaluator.CheckData((int)target, EraSaveFileType.Normal);
 						if (result.State != EraDataState.OK)

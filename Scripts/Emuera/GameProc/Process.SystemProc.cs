@@ -120,7 +120,7 @@ namespace MinorShift.Emuera.GameProc
 				if (!force)
 					return false;
 				else
-					throw new CodeEE("関数\"@" + functionName + "\"が見つかりません");
+					throw new CodeEE("함수 \"@" + functionName + "\"을(를) 찾을 수 없습니다");
 			//そもそも非イベント関数では関数1個分しか与えないので条件を満たすわけがない
 			//if ((!isEvent) && (call.Count > 1))
 			//    throw new ExeEE("イベント関数でない関数\"@" + functionName + "\"の候補が複数ある");

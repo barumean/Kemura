@@ -34,7 +34,7 @@ namespace MinorShift.Emuera.GameData.Variable
             if (!dic.TryGetValue(key, out int i))
             {
                 if (errPos == null)
-                    throw new CodeEE("配列変数" + parentCode.ToString() + "の要素を文字列で指定することはできません");
+                    throw new CodeEE("배열 변수 " + parentCode.ToString() + "의 요소를 문자열로 지정할 수 없습니다");
                 else
                     throw new CodeEE(errPos + "の中に\"" + key + "\"の定義がありません");
             }

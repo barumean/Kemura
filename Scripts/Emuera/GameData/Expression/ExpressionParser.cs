@@ -416,19 +416,19 @@ namespace MinorShift.Emuera.GameData.Expression
 					case ')':
 						if ((endWith & TermEndWith.RightParenthesis) == TermEndWith.RightParenthesis)
 							goto end;
-						throw new CodeEE("構文解釈中に予期しない記号'" + token.Type + "'を発見しました");
+						throw new CodeEE("구문 해석 중 예상치 못한 기호 '" + token.Type + "'을(를) 발견했습니다");
 					case ']':
 						if ((endWith & TermEndWith.RightBracket) == TermEndWith.RightBracket)
 							goto end;
-						throw new CodeEE("構文解釈中に予期しない記号'" + token.Type + "'を発見しました");
+						throw new CodeEE("구문 해석 중 예상치 못한 기호 '" + token.Type + "'을(를) 발견했습니다");
 					case ',':
 						if ((endWith & TermEndWith.Comma) == TermEndWith.Comma)
 							goto end;
-						throw new CodeEE("構文解釈中に予期しない記号'" + token.Type + "'を発見しました");
+						throw new CodeEE("구문 해석 중 예상치 못한 기호 '" + token.Type + "'을(를) 발견했습니다");
 					case 'M':
 						throw new ExeEE("マクロ解決失敗");
 					default:
-						throw new CodeEE("構文解釈中に予期しない記号'" + token.Type + "'を発見しました");
+						throw new CodeEE("구문 해석 중 예상치 못한 기호 '" + token.Type + "'을(를) 발견했습니다");
 				}
 				//termCount++;
 				wc.ShiftNext();
@@ -458,11 +458,11 @@ namespace MinorShift.Emuera.GameData.Expression
             public void Add(OperatorCode op)
             {
                 if (state == 2 || state == 3)
-                    throw new CodeEE("式が異常です");
+                    throw new CodeEE("식이 잘못되었습니다");
                 if (state == 0)
                 {
                     if (!OperatorManager.IsUnary(op))
-                        throw new CodeEE("式が異常です");
+                        throw new CodeEE("식이 잘못되었습니다");
                     stack.Push(op);
                     if (op == OperatorCode.Plus || op == OperatorCode.Minus || op == OperatorCode.BitNot)
                         state = 2;
@@ -496,7 +496,7 @@ namespace MinorShift.Emuera.GameData.Expression
                         return;
                     }
                     if (!OperatorManager.IsBinary(op) && !OperatorManager.IsTernary(op))
-                        throw new CodeEE("式が異常です");
+                        throw new CodeEE("식이 잘못되었습니다");
                     //先に未解決の前置演算子解決
                     if (waitAfter)
                         reduceUnary();
@@ -513,7 +513,7 @@ namespace MinorShift.Emuera.GameData.Expression
                     hasAfter = false;
                     return;
                 }
-                throw new CodeEE("式が異常です");
+                throw new CodeEE("식이 잘못되었습니다");
             }
             public void Add(Int64 i) { Add(new SingleTerm(i)); }
             public void Add(string s) { Add(new SingleTerm(s)); }
@@ -521,7 +521,7 @@ namespace MinorShift.Emuera.GameData.Expression
             {
                 stack.Push(term);
                 if (state == 1)
-                    throw new CodeEE("式が異常です");
+                    throw new CodeEE("식이 잘못되었습니다");
                 if (state == 2)
                     waitAfter = true;
                 if (state == 3)
@@ -550,7 +550,7 @@ namespace MinorShift.Emuera.GameData.Expression
                 if (stack.Count == 0)
                     return null;
                 if (state != 1)
-                    throw new CodeEE("式が異常です");
+                    throw new CodeEE("식이 잘못되었습니다");
                 //単項演算子の待ちが未解決の時はここで解決
                 if (waitAfter)
                     reduceUnary();

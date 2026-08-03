@@ -59,7 +59,7 @@ namespace MinorShift.Emuera.GameProc
 					case "GLOBAL":
 					case "SAVEDATA":
 					case "CHARADATA":
-						throw new CodeEE(dims + "中では" + keyword + "キーワードは指定できません", sc);
+						throw new CodeEE(dims + " 안에서는 " + keyword + "키워드는 지정할 수 없습니다", sc);
 					default:
 						ret.Name = keyword;
 						goto whilebreak;

@@ -856,7 +856,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					mToken = ((SpCallFArgment)func.Argument).FuncTerm;
 				}
 				if (mToken == null)
-					throw new CodeEE("式中関数\"@" + labelName + "\"が見つかりません");
+					throw new CodeEE("식중 함수 \"@" + labelName + "\"을(를) 찾을 수 없습니다");
 				mToken.GetValue(exm);
 			}
 		}
@@ -935,7 +935,7 @@ namespace MinorShift.Emuera.GameProc.Function
 			public override void DoInstruction(ExpressionMediator exm, InstructionLine func, ProcessState state)
 			{
 				if(!Config.CompatiSPChara && isSp)
-					throw new CodeEE("SPキャラ関係の機能は標準では使用できません(互換性オプション「SPキャラを使用する」をONにしてください)");
+					throw new CodeEE("SP캐릭터 관련 기능은 기본적으로 사용할 수 없습니다(호환성 옵션 「SPキャラを使用する」를 ON으로 하세요)");
 				ExpressionArrayArgument intExpArg = (ExpressionArrayArgument)func.Argument;
 				Int64 integer;
 				Int64[] charaNoList = new Int64[intExpArg.TermList.Length];
@@ -1332,9 +1332,9 @@ namespace MinorShift.Emuera.GameProc.Function
 		private static int toUInt32inArg(Int64 value, string funcName, int argnum)
 		{
 			if (value < 0)
-				throw new CodeEE(funcName + "の第" + argnum.ToString() + "引数に負の値(" + value.ToString() + ")が指定されました");
+				throw new CodeEE(funcName + "의 제" + argnum.ToString() + "인수에 음수(" + value.ToString() + ")이(가) 지정되었습니다");
 			else if (value > Int32.MaxValue)
-				throw new CodeEE(funcName + "の第" + argnum.ToString() + "引数の値(" + value.ToString() + ")が大きすぎます");
+				throw new CodeEE(funcName + "의 제" + argnum.ToString() + "인수 값(" + value.ToString() + ")이(가) 너무 큽니다");
 
 			return (int)value;
 		}
@@ -1660,7 +1660,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
 					waittime = arg.Term.GetIntValue(exm);
 					if (waittime < 0)
-						throw new CodeEE("AWAIT命令:負の値(" + waittime.ToString() + ")が指定されました");
+						throw new CodeEE("AWAIT 명령: 음수(" + waittime.ToString() + ")이(가) 지정되었습니다");
 					if (waittime > 10000)
 						throw new CodeEE("AWAIT命令:10秒以上の待機時間(" + waittime.ToString() + " ms)が指定されました");
 				}
@@ -2317,7 +2317,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				if (call == null)
 				{
 					if (!isTry)
-						throw new CodeEE("関数\"@" + labelName + "\"が見つかりません");
+						throw new CodeEE("함수 \"@" + labelName + "\"을(를) 찾을 수 없습니다");
 					if (func.JumpToEndCatch != null)
 						state.JumpTo(func.JumpToEndCatch);
 					return;
@@ -2394,12 +2394,12 @@ namespace MinorShift.Emuera.GameProc.Function
 					if (jumpto == null)
 					{
 						if (!func.Function.IsTry())
-							ParserMediator.Warn("指定されたラベル名\"$" + labelName + "\"は現在の関数内に存在しません", func, 2, true, false);
+							ParserMediator.Warn("지정된 라벨명 \"$" + labelName + "\"은(는) 현재 함수 내에 존재하지 않습니다", func, 2, true, false);
 						else
 							return;
 					}
 					else if (jumpto.IsError)
-						ParserMediator.Warn("指定されたラベル名\"$" + labelName + "\"は無効な$ラベル行です", func, 2, true, false);
+						ParserMediator.Warn("지정된 라벨명 \"$" + labelName + "\"은(는) 잘못된 $라벨 행입니다", func, 2, true, false);
 					else if (jumpto != null)
 					{
 						func.JumpTo = jumpto;
@@ -2428,13 +2428,13 @@ namespace MinorShift.Emuera.GameProc.Function
 				if (jumpto == null)
 				{
 					if (!func.Function.IsTry())
-						throw new CodeEE("指定されたラベル名\"$" + label + "\"は現在の関数内に存在しません");
+						throw new CodeEE("지정된 라벨명 \"$" + label + "\"은(는) 현재 함수 내에 존재하지 않습니다");
 					if (func.JumpToEndCatch != null)
 						state.JumpTo(func.JumpToEndCatch);
 					return;
 				}
 				else if (jumpto.IsError)
-					throw new CodeEE("指定されたラベル名\"$" + label + "\"は無効な$ラベル行です");
+					throw new CodeEE("지정된 라벨명 \"$" + label + "\"은(는) 잘못된 $라벨 행입니다");
 				state.JumpTo(jumpto);
 			}
 		}

@@ -89,12 +89,12 @@ namespace MinorShift.Emuera
 			//}
 			if (!Directory.Exists(CsvDir))
 			{
-				MessageBox.Show("\"" + CsvDir + "\" csvフォルダが見つかりません", "フォルダなし");
+				MessageBox.Show("\"" + CsvDir + "\" csv 폴더를 찾을 수 없습니다", "폴더 없음");
 				return;
 			}
 			if (!Directory.Exists(ErbDir))
 			{
-				MessageBox.Show("\"" + ErbDir + "\" erbフォルダが見つかりません", "フォルダなし");
+				MessageBox.Show("\"" + ErbDir + "\" erb 폴더를 찾을 수 없습니다", "폴더 없음");
 				return;
 			}
             int argsStart = 0;
@@ -114,7 +114,7 @@ namespace MinorShift.Emuera
 					}
 					catch
 					{
-						MessageBox.Show("debugフォルダの作成に失敗しました", "フォルダなし");
+						MessageBox.Show("debug 폴더 생성에 실패했습니다", "폴더 없음");
 						return;
 					}
 				}

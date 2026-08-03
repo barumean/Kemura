@@ -93,7 +93,7 @@ namespace MinorShift.Emuera.GameData.Function
 			get
 			{
 				if (reffunc.CalledFunction == null)
-					throw new CodeEE("何も参照していない関数参照" + reffunc.Name + "を呼び出しました");
+					throw new CodeEE("아무것도 참조하지 않는 함수 참조 " + reffunc.Name + "을(를) 호출했습니다");
 				string errMes;
 				UserDefinedFunctionArgument arg = reffunc.CalledFunction.ConvertArg(srcArgs, out errMes);
 				if (arg == null)
@@ -106,7 +106,7 @@ namespace MinorShift.Emuera.GameData.Function
 			get
 			{
 				if (reffunc.CalledFunction == null)
-					throw new CodeEE("何も参照していない関数参照" + reffunc .Name+ "を呼び出しました");
+					throw new CodeEE("아무것도 참조하지 않는 함수 참조 " + reffunc .Name+ "을(를) 호출했습니다");
 				return reffunc.CalledFunction;
 			}
 		}
@@ -135,9 +135,9 @@ namespace MinorShift.Emuera.GameData.Function
 		}
 		readonly UserDefinedRefMethod reffunc = null;
 		public override UserDefinedFunctionArgument Argument
-		{ get { throw new CodeEE("引数のない関数参照" + reffunc.Name + "を呼び出しました"); } }
+		{ get { throw new CodeEE("인수 없는 함수 참조 " + reffunc.Name + "을(를) 호출했습니다"); } }
 		public override CalledFunction Call
-		{ get { throw new CodeEE("引数のない関数参照" + reffunc.Name + "を呼び出しました"); } }
+		{ get { throw new CodeEE("인수 없는 함수 참조 " + reffunc.Name + "을(를) 호출했습니다"); } }
 		public string GetRefName()
 		{
 			if (reffunc.CalledFunction == null)
@@ -145,11 +145,11 @@ namespace MinorShift.Emuera.GameData.Function
 			return reffunc.CalledFunction.TopLabel.LabelName;
 		}
 		public override long GetIntValue(ExpressionMediator exm)
-		{ throw new CodeEE("引数のない関数参照" + reffunc.Name + "を呼び出しました"); }
+		{ throw new CodeEE("인수 없는 함수 참조 " + reffunc.Name + "을(를) 호출했습니다"); }
 		public override string GetStrValue(ExpressionMediator exm)
-		{ throw new CodeEE("引数のない関数参照" + reffunc.Name + "を呼び出しました"); }
+		{ throw new CodeEE("인수 없는 함수 참조 " + reffunc.Name + "을(를) 호출했습니다"); }
 		public override SingleTerm GetValue(ExpressionMediator exm)
-		{ throw new CodeEE("引数のない関数参照" + reffunc.Name + "を呼び出しました"); }
+		{ throw new CodeEE("인수 없는 함수 참조 " + reffunc.Name + "을(를) 호출했습니다"); }
 		public override IOperandTerm Restructure(ExpressionMediator exm)
 		{
 			return this;

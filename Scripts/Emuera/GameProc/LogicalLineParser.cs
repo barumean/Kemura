@@ -24,7 +24,7 @@ namespace MinorShift.Emuera.GameProc
             if (token == null || (token != "SINGLE" && token != "LATER" && token != "PRI" && token != "ONLY" && token != "FUNCTION" && token != "FUNCTIONS" 
                 && token != "LOCALSIZE" && token != "LOCALSSIZE" && token != "DIM" && token != "DIMS"))
             {
-                ParserMediator.Warn("解釈できない#行です", position, 1);
+                ParserMediator.Warn("해석할 수 없는 # 행입니다", position, 1);
                 return false;
             }
 			try
@@ -256,13 +256,13 @@ namespace MinorShift.Emuera.GameProc
 							UserDefinedVariableData data = UserDefinedVariableData.Create(wc, token == "DIMS", true, position);
 							if (!label.AddPrivateVariable(data))
 							{
-								ParserMediator.Warn("変数名" + data.Name + "は既に使用されています", position, 2);
+								ParserMediator.Warn("변수명" + data.Name + "은(는) 이미 사용되고 있습니다", position, 2);
 								return false;
 							}
 							break;
 						}
 					default:
-						ParserMediator.Warn("解釈できない#行です", position, 1);
+						ParserMediator.Warn("해석할 수 없는 # 행입니다", position, 1);
 						break;
 				}
 				if (!wc.EOL)
@@ -427,7 +427,7 @@ namespace MinorShift.Emuera.GameProc
 						if ((stream.Current != ';') && (stream.Current != ' ') && (stream.Current != '\t') && (!Config.SystemAllowFullSpace || (stream.Current != '　')))
 						{
 							if (stream.Current == '　')
-								errMes = "命令で行が始まっていますが、命令の直後に半角スペース・タブ以外の文字が来ています(この警告はシステムオプション「" + Config.GetConfigName(ConfigCode.SystemAllowFullSpace) + "」により無視できます)";
+								errMes = "명령으로 행이 시작되었지만 명령 직후에 반각 공백·탭 이외의 문자가 옵니다(이 경고는 시스템 옵션 「" + Config.GetConfigName(ConfigCode.SystemAllowFullSpace) + "」로 무시할 수 있습니다)";
 							else
 								errMes = "命令で行が始まっていますが、命令の直後に半角スペース・タブ以外の文字が来ています";
 							goto err;

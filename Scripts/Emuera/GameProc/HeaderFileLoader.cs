@@ -97,7 +97,7 @@ namespace MinorShift.Emuera.GameProc
 					string sharpID = LexicalAnalyzer.ReadSingleIdentifier(st);
 					if (sharpID == null)
 					{
-						ParserMediator.Warn("解釈できない#行です", position, 1);
+						ParserMediator.Warn("해석할 수 없는 # 행입니다", position, 1);
 						return false;
 					}
 					if (Config.ICFunction)

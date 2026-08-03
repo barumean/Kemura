@@ -57,17 +57,17 @@ namespace MinorShift.Emuera.GameProc
 				{
 					case "CONST":
 						if (ret.CharaData)
-							throw new CodeEE(keyword + "とCHARADATAキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CHARADATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Global)
-							throw new CodeEE(keyword + "とGLOBALキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 GLOBAL 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Save)
 							throw new CodeEE(keyword + "とSAVEDATAキーワードは同時に指定できません", sc);
 						if (ret.Reference)
-							throw new CodeEE(keyword + "とREFキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 REF 키워드는 동시에 지정할 수 없습니다", sc);
 						if (!ret.Static)
 							throw new CodeEE(keyword + "とDYNAMICキーワードは同時に指定できません", sc);
 						if (ret.Const)
-							throw new CodeEE(keyword + "キーワードが二重に指定されています", sc);
+							throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						ret.Const = true;
 						break;
 					case "REF":
@@ -77,57 +77,57 @@ namespace MinorShift.Emuera.GameProc
 						if (staticDefined && ret.Static)
 							throw new CodeEE(keyword + "とSTATICキーワードは同時に指定できません", sc);
 						if (ret.CharaData)
-							throw new CodeEE(keyword + "とCHARADATAキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CHARADATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Global)
-							throw new CodeEE(keyword + "とGLOBALキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 GLOBAL 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Save)
 							throw new CodeEE(keyword + "とSAVEDATAキーワードは同時に指定できません", sc);
 						if (ret.Const)
-							throw new CodeEE(keyword + "とCONSTキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Reference)
-							throw new CodeEE(keyword + "キーワードが二重に指定されています", sc);
+							throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						ret.Reference = true;
 						ret.Static = false;
 						break;
 					case "DYNAMIC":
 						if (!isPrivate)
-							throw new CodeEE("広域変数の宣言に" + keyword + "キーワードは指定できません", sc);
+							throw new CodeEE("광역 변수 선언에 " + keyword + "키워드는 지정할 수 없습니다", sc);
 						if (ret.CharaData)
-							throw new CodeEE(keyword + "とCHARADATAキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CHARADATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Const)
-							throw new CodeEE(keyword + "とCONSTキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (ret.Static)
 								throw new CodeEE("STATICとDYNAMICキーワードは同時に指定できません", sc);
 							else
-								throw new CodeEE(keyword + "キーワードが二重に指定されています", sc);
+								throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						staticDefined = true;
 						ret.Static = false;
 						break;
 					case "STATIC":
 						if (!isPrivate)
-							throw new CodeEE("広域変数の宣言に" + keyword + "キーワードは指定できません", sc);
+							throw new CodeEE("광역 변수 선언에 " + keyword + "키워드는 지정할 수 없습니다", sc);
 						if (ret.CharaData)
-							throw new CodeEE(keyword + "とCHARADATAキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CHARADATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (!ret.Static)
 								throw new CodeEE("STATICとDYNAMICキーワードは同時に指定できません", sc);
 							else
-								throw new CodeEE(keyword + "キーワードが二重に指定されています", sc);
+								throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						if (ret.Reference)
-							throw new CodeEE(keyword + "とREFキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 REF 키워드는 동시에 지정할 수 없습니다", sc);
 						staticDefined = true;
 						ret.Static = true;
 						break;
 					case "GLOBAL":
 						if (isPrivate)
-							throw new CodeEE("ローカル変数の宣言に" + keyword + "キーワードは指定できません", sc);
+							throw new CodeEE("지역 변수 선언에 " + keyword + "키워드는 지정할 수 없습니다", sc);
 						if (ret.CharaData)
-							throw new CodeEE(keyword + "とCHARADATAキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CHARADATA 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Reference)
-							throw new CodeEE(keyword + "とREFキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 REF 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Const)
-							throw new CodeEE(keyword + "とCONSTキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (ret.Static)
 								throw new CodeEE("STATICとGLOBALキーワードは同時に指定できません", sc);
@@ -137,36 +137,36 @@ namespace MinorShift.Emuera.GameProc
 						break;
 					case "SAVEDATA":
 						if (isPrivate)
-							throw new CodeEE("ローカル変数の宣言に" + keyword + "キーワードは指定できません", sc);
+							throw new CodeEE("지역 변수 선언에 " + keyword + "키워드는 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (ret.Static)
 								throw new CodeEE("STATICとSAVEDATAキーワードは同時に指定できません", sc);
 							else
 								throw new CodeEE("DYNAMICとSAVEDATAキーワードは同時に指定できません", sc);
 						if (ret.Reference)
-							throw new CodeEE(keyword + "とREFキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 REF 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Const)
-							throw new CodeEE(keyword + "とCONSTキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Save)
-							throw new CodeEE(keyword + "キーワードが二重に指定されています", sc);
+							throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						ret.Save = true;
 						break;
 					case "CHARADATA":
 						if (isPrivate)
-							throw new CodeEE("ローカル変数の宣言に" + keyword + "キーワードは指定できません", sc);
+							throw new CodeEE("지역 변수 선언에 " + keyword + "키워드는 지정할 수 없습니다", sc);
 						if (ret.Reference)
-							throw new CodeEE(keyword + "とREFキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 REF 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.Const)
-							throw new CodeEE(keyword + "とCONSTキーワードは同時に指定できません", sc);
+							throw new CodeEE(keyword + "와 CONST 키워드는 동시에 지정할 수 없습니다", sc);
 						if (staticDefined)
 							if (ret.Static)
                                 throw new CodeEE(keyword + "とSTATICキーワードは同時に指定できません", sc);
 							else
                                 throw new CodeEE(keyword + "とDYNAMICキーワードは同時に指定できません", sc);
 						if (ret.Global)
-                            throw new CodeEE(keyword + "とGLOBALキーワードは同時に指定できません", sc);
+                            throw new CodeEE(keyword + "와 GLOBAL 키워드는 동시에 지정할 수 없습니다", sc);
 						if (ret.CharaData)
-							throw new CodeEE(keyword + "キーワードが二重に指定されています", sc);
+							throw new CodeEE(keyword + "키워드가 이중으로 지정되었습니다", sc);
 						ret.CharaData = true;
 						break;
 					default:
@@ -205,7 +205,7 @@ namespace MinorShift.Emuera.GameProc
 					if (wc.Current.Type == '=')//サイズ指定解読完了＆初期値指定
 						break;
 					if (wc.Current.Type != ',')
-						throw new CodeEE("書式が間違っています", sc);
+						throw new CodeEE("서식이 잘못되었습니다", sc);
 					wc.ShiftNext();
 					if (ret.Reference)//参照型の場合は要素数不要
 					{
@@ -288,7 +288,7 @@ namespace MinorShift.Emuera.GameProc
 					sizeNum.Add(terms.Length);
 			}
 			if (!wc.EOL)
-				throw new CodeEE("書式が間違っています", sc);
+				throw new CodeEE("서식이 잘못되었습니다", sc);
 
 			if (sizeNum.Count == 0)
 				sizeNum.Add(1);

@@ -63,7 +63,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				if (wc.Current.Type != ':')
 					break;
 				if (i >= 3)
-					throw new CodeEE(id.Code.ToString() + "の引数が多すぎます");
+					throw new CodeEE(id.Code.ToString() + "의 인수가 너무 많습니다");
 				wc.ShiftNext();
 
 				operand = ExpressionParser.ReduceVariableArgument(wc, id.Code);
@@ -104,13 +104,13 @@ namespace MinorShift.Emuera.GameData.Variable
 				else if (id.IsArray1D)
 				{
 					if (op3 != null)
-						throw new CodeEE("キャラクタ変数" + id.Name + "の引数が多すぎます");
+						throw new CodeEE("캐릭터 변수 " + id.Name + "의 인수가 너무 많습니다");
 					if ((op1 == null) && (op2 == null) && (op3 == null) && Config.SystemNoTarget)
 						return new VariableNoArgTerm(id);
 					if (op2 == null)
 					{
 						if (Config.SystemNoTarget)
-							throw new CodeEE("キャラクタ配列変数" + id.Name + "の引数は省略できません(コンフィグにより禁止が選択されています)");
+							throw new CodeEE("캐릭터 배열 변수 " + id.Name + "의 인수는 생략할 수 없습니다(설정에서 금지가 선택되어 있습니다)");
 						if (op1 == null)
 							op2 = ZeroTerm;
 						else
@@ -124,13 +124,13 @@ namespace MinorShift.Emuera.GameData.Variable
 				else
 				{
 					if (op2 != null)
-						throw new CodeEE("キャラクタ変数" + id.Name + "の引数が多すぎます");
+						throw new CodeEE("캐릭터 변수 " + id.Name + "의 인수가 너무 많습니다");
 					if ((op1 == null) && (op2 == null) && (op3 == null) && Config.SystemNoTarget)
 						return new VariableNoArgTerm(id);
 					if (op1 == null)
 					{
 						if (Config.SystemNoTarget)
-							throw new CodeEE("キャラクタ変数" + id.Name + "の引数は省略できません(コンフィグにより禁止が選択されています)");
+							throw new CodeEE("캐릭터 변수 " + id.Name + "의 인수는 생략할 수 없습니다(설정에서 금지가 선택되어 있습니다)");
 						op1 = TARGET;
 					}
 					terms = new IOperandTerm[1];
@@ -155,7 +155,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				if ((op1 == null) || (op2 == null))
 					throw new CodeEE("二次元配列変数" + id.Name + "の引数は省略できません");
 				if (op3 != null)
-					throw new CodeEE("二次元配列" + id.Name + "の引数が多すぎます");
+					throw new CodeEE("2차원 배열 " + id.Name + "의 인수가 너무 많습니다");
 				terms = new IOperandTerm[2];
 				terms[0] = op1;
 				terms[1] = op2;
@@ -163,7 +163,7 @@ namespace MinorShift.Emuera.GameData.Variable
 			else if (id.IsArray1D)
 			{
 				if (op2 != null)
-					throw new CodeEE("一次元配列変数" + id.Name + "の引数が多すぎます");
+					throw new CodeEE("1차원 배열 변수 " + id.Name + "의 인수가 너무 많습니다");
                 if (op1 == null)
                 {
                     op1 = ZeroTerm;

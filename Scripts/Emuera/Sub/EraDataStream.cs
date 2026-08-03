@@ -53,7 +53,7 @@ namespace MinorShift.Emuera.Sub
 		public string ReadString()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			string str = reader.ReadLine();
 			if (str == null)
 				throw new FileEE("読み取るべき文字列がありません");
@@ -63,12 +63,12 @@ namespace MinorShift.Emuera.Sub
 		public Int64 ReadInt64()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
             string str = reader.ReadLine();
             if (str == null)
 				throw new FileEE("読み取るべき数値がありません");
 			if (!Int64.TryParse(str, out long ret))
-				throw new FileEE("数値として認識できません");
+				throw new FileEE("숫자로 인식할 수 없습니다");
 			return ret;
 		}
 
@@ -76,9 +76,9 @@ namespace MinorShift.Emuera.Sub
 		public void ReadInt64Array(Int64[] array)
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int i = -1;
 			string str;
             while (true)
@@ -86,13 +86,13 @@ namespace MinorShift.Emuera.Sub
                 i++;
                 str = reader.ReadLine();
                 if (str == null)
-                    throw new FileEE("予期しないセーブデータの終端です");
+                    throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
                 if (str.Equals(FINISHER, StringComparison.Ordinal))
                     break;
                 if (i >= array.Length)//配列を超えて保存されていても動じないで読み飛ばす。
                     continue;
                 if (!Int64.TryParse(str, out long integer))
-                    throw new FileEE("数値として認識できません");
+                    throw new FileEE("숫자로 인식할 수 없습니다");
                 array[i] = integer;
             }
             for (; i < array.Length; i++)//保存されている値が無いなら0に初期化
@@ -102,9 +102,9 @@ namespace MinorShift.Emuera.Sub
 		public void ReadStringArray(string[] array)
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int i = -1;
 			string str;
 			while (true)
@@ -112,7 +112,7 @@ namespace MinorShift.Emuera.Sub
 				i++;
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
 					break;
 				if (i >= array.Length)//配列を超えて保存されていても動じないで読み飛ばす。
@@ -130,7 +130,7 @@ namespace MinorShift.Emuera.Sub
 		{
 
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (reader.EndOfStream)
 				return false;
 			while (true)
@@ -169,21 +169,21 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, string> ReadStringExtended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, string> strList = new Dictionary<string, string>();
 			string str;
 			while (true)
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				int index = str.IndexOf(':');
 				if (index < 0)
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				string key = str.Substring(0, index);
 				string value = str.Substring(index + 1, str.Length - index - 1);
 				if (!strList.ContainsKey(key))
@@ -194,25 +194,25 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, Int64> ReadInt64Extended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, Int64> intList = new Dictionary<string, Int64>();
 			string str;
 			while (true)
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				int index = str.IndexOf(':');
 				if (index < 0)
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				string key = str.Substring(0, index);
 				string valueStr = str.Substring(index + 1, str.Length - index - 1);
                 if (!Int64.TryParse(valueStr, out long value))
-                    throw new FileEE("数値として認識できません");
+                    throw new FileEE("숫자로 인식할 수 없습니다");
                 if (!intList.ContainsKey(key))
 					intList.Add(key, value);
 			}
@@ -222,16 +222,16 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, List<Int64>> ReadInt64ArrayExtended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, List<Int64>> ret = new Dictionary<string, List<Int64>>();
 			string str;
 			while (true)
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				string key = str;
@@ -240,13 +240,13 @@ namespace MinorShift.Emuera.Sub
 				{
 					str = reader.ReadLine();
 					if (str == null)
-						throw new FileEE("予期しないセーブデータの終端です");
+						throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 					if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
-						throw new FileEE("セーブデータの形式が不正です");
+						throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 					if (str.Equals(FINISHER, StringComparison.Ordinal))
 						break;
                     if (!Int64.TryParse(str, out long value))
-                        throw new FileEE("数値として認識できません");
+                        throw new FileEE("숫자로 인식할 수 없습니다");
                     valueList.Add(value);
 				}
 				if (!ret.ContainsKey(key))
@@ -258,16 +258,16 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, List<string>> ReadStringArrayExtended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, List<string>> ret = new Dictionary<string, List<string>>();
 			string str;
 			while (true)
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				string key = str;
@@ -276,9 +276,9 @@ namespace MinorShift.Emuera.Sub
 				{
 					str = reader.ReadLine();
 					if (str == null)
-						throw new FileEE("予期しないセーブデータの終端です");
+						throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 					if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
-						throw new FileEE("セーブデータの形式が不正です");
+						throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 					if (str.Equals(FINISHER, StringComparison.Ordinal))
 						break;
 					valueList.Add(str);
@@ -292,7 +292,7 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, List<Int64[]>> ReadInt64Array2DExtended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, List<Int64[]>> ret = new Dictionary<string, List<Int64[]>>();
 			if (emu_version < 1708)
 				return ret;
@@ -301,9 +301,9 @@ namespace MinorShift.Emuera.Sub
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				string key = str;
@@ -312,9 +312,9 @@ namespace MinorShift.Emuera.Sub
 				{
 					str = reader.ReadLine();
 					if (str == null)
-						throw new FileEE("予期しないセーブデータの終端です");
+						throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 					if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
-						throw new FileEE("セーブデータの形式が不正です");
+						throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 					if (str.Equals(FINISHER, StringComparison.Ordinal))
 						break;
 					if (str.Length == 0)
@@ -339,7 +339,7 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, List<string[]>> ReadStringArray2DExtended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, List<string[]>> ret = new Dictionary<string, List<string[]>>();
 			if (emu_version < 1708)
 				return ret;
@@ -348,9 +348,9 @@ namespace MinorShift.Emuera.Sub
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				throw new FileEE("StringArray2Dのロードには対応していません");
@@ -361,7 +361,7 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, List<List<Int64[]>>> ReadInt64Array3DExtended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, List<List<Int64[]>>> ret = new Dictionary<string, List<List<Int64[]>>>();
 			if (emu_version < 1729)
 				return ret;
@@ -370,9 +370,9 @@ namespace MinorShift.Emuera.Sub
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				string key = str;
@@ -381,9 +381,9 @@ namespace MinorShift.Emuera.Sub
 				{
 					str = reader.ReadLine();
 					if (str == null)
-						throw new FileEE("予期しないセーブデータの終端です");
+						throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 					if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
-						throw new FileEE("セーブデータの形式が不正です");
+						throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 					if (str.Equals(FINISHER, StringComparison.Ordinal))
 						break;
 					if (str.Contains("{"))
@@ -419,7 +419,7 @@ namespace MinorShift.Emuera.Sub
 		public Dictionary<string, List<List<string[]>>> ReadStringArray3DExtended()
 		{
 			if (reader == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			Dictionary<string, List<List<string[]>>> ret = new Dictionary<string, List<List<string[]>>>();
 			if (emu_version < 1729)
 				return ret;
@@ -428,9 +428,9 @@ namespace MinorShift.Emuera.Sub
 			{
 				str = reader.ReadLine();
 				if (str == null)
-					throw new FileEE("予期しないセーブデータの終端です");
+					throw new FileEE("예기치 않은 세이브 데이터의 끝입니다");
 				if (str.Equals(FINISHER, StringComparison.Ordinal))
-					throw new FileEE("セーブデータの形式が不正です");
+					throw new FileEE("세이브 데이터 형식이 잘못되었습니다");
 				if (str.Equals(EMU_SEPARATOR, StringComparison.Ordinal))
 					break;
 				throw new FileEE("StringArray2Dのロードには対応していません");
@@ -485,7 +485,7 @@ namespace MinorShift.Emuera.Sub
 		public void Write(Int64 integer)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			writer.WriteLine(integer.ToString());
 		}
 
@@ -493,7 +493,7 @@ namespace MinorShift.Emuera.Sub
 		public void Write(string str)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (str == null)
 				writer.WriteLine("");
 			else
@@ -503,9 +503,9 @@ namespace MinorShift.Emuera.Sub
 		public void Write(Int64[] array)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int count = -1;
 			for (int i = 0; i < array.Length; i++)
 				if (array[i] != 0)
@@ -518,9 +518,9 @@ namespace MinorShift.Emuera.Sub
 		public void Write(string[] array)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int count = -1;
 			for (int i = 0; i < array.Length; i++)
 				if (!string.IsNullOrEmpty(array[i]))
@@ -541,20 +541,20 @@ namespace MinorShift.Emuera.Sub
 		public void EmuStart()
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			writer.WriteLine(EMU_START);
 		}
 		public void EmuSeparete()
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			writer.WriteLine(EMU_SEPARATOR);
 		}
 
 		public void WriteExtended(string key, Int64 value)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (value == 0)
 				return;
 			writer.WriteLine(string.Format("{0}:{1}", key, value));
@@ -563,7 +563,7 @@ namespace MinorShift.Emuera.Sub
 		public void WriteExtended(string key, string value)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (string.IsNullOrEmpty(value))
 				return;
 			writer.WriteLine(string.Format("{0}:{1}", key, value));
@@ -573,9 +573,9 @@ namespace MinorShift.Emuera.Sub
 		public void WriteExtended(string key, Int64[] array)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int count = -1;
 			for (int i = 0; i < array.Length; i++)
 				if (array[i] != 0)
@@ -591,9 +591,9 @@ namespace MinorShift.Emuera.Sub
 		public void WriteExtended(string key, string[] array)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int count = -1;
 			for (int i = 0; i < array.Length; i++)
 				if (!string.IsNullOrEmpty(array[i]))
@@ -615,9 +615,9 @@ namespace MinorShift.Emuera.Sub
 		public void WriteExtended(string key, Int64[,] array2D)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array2D == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int countX = 0;
 			int length0 = array2D.GetLength(0);
 			int length1 = array2D.GetLength(1);
@@ -663,9 +663,9 @@ namespace MinorShift.Emuera.Sub
 		public void WriteExtended(string key, Int64[, ,] array3D)
 		{
 			if (writer == null)
-				throw new FileEE("無効なストリームです");
+				throw new FileEE("잘못된 스트림입니다");
 			if (array3D == null)
-				throw new FileEE("無効な配列が渡されました");
+				throw new FileEE("잘못된 배열이 전달되었습니다");
 			int countX = 0;
 			int length0 = array3D.GetLength(0);
 			int length1 = array3D.GetLength(1);

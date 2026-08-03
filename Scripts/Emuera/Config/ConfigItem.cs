@@ -192,7 +192,7 @@ namespace MinorShift.Emuera
                      = (TextDrawingMode)Enum.Parse(typeof(TextDrawingMode), str);
                 }
                 else
-                    throw new CodeEE("不正な指定です");
+                    throw new CodeEE("잘못된 지정입니다");
             }
             else if (this is ConfigItem<ReduceArgumentOnLoadFlag>)
             {
@@ -204,7 +204,7 @@ namespace MinorShift.Emuera
                      = (ReduceArgumentOnLoadFlag)Enum.Parse(typeof(ReduceArgumentOnLoadFlag), str);
                 }
                 else
-                    throw new CodeEE("不正な指定です");
+                    throw new CodeEE("잘못된 지정입니다");
             }
             else if (this is ConfigItem<DisplayWarningFlag>)
             {
@@ -216,7 +216,7 @@ namespace MinorShift.Emuera
                      = (DisplayWarningFlag)Enum.Parse(typeof(DisplayWarningFlag), str);
                 }
                 else
-                    throw new CodeEE("不正な指定です");
+                    throw new CodeEE("잘못된 지정입니다");
             }
             else if (this is ConfigItem<UseLanguage>)
             {
@@ -228,7 +228,7 @@ namespace MinorShift.Emuera
                         = (UseLanguage)Enum.Parse(typeof(UseLanguage), str);
                 }
                 else
-                    throw new CodeEE("不正な指定です");
+                    throw new CodeEE("잘못된 지정입니다");
             }
             else if (this is ConfigItem<TextEditorType>)
             {
@@ -240,7 +240,7 @@ namespace MinorShift.Emuera
                         = (TextEditorType)Enum.Parse(typeof(TextEditorType), str);
                 }
                 else
-                    throw new CodeEE("不正な指定です");
+                    throw new CodeEE("잘못된 지정입니다");
             }
             //else
             //    throw new ExeEE("型不明なコンフィグ");
@@ -273,7 +273,7 @@ namespace MinorShift.Emuera
 				p = true;
 				return true;
 			}
-			throw new CodeEE("不正な指定です");
+			throw new CodeEE("잘못된 지정입니다");
 		}
 
 		private bool tryStringsToColor(string str, out Color c)

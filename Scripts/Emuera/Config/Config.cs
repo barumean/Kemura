@@ -156,27 +156,27 @@ namespace MinorShift.Emuera
 
 			if (FontSize < 8)
 			{
-				MessageBox.Show("フォントサイズが小さすぎます(8が下限)", "設定のエラー");
+				MessageBox.Show("글자 크기가 너무 작습니다(하한 8)", "설정 오류");
 				FontSize = 8;
 			}
 			if (LineHeight < FontSize)
 			{
-				MessageBox.Show("行の高さがフォントサイズより小さいため、フォントサイズと同じ高さと解釈されます", "設定のエラー");
+				MessageBox.Show("행 높이가 글자 크기보다 작아 글자 크기와 같은 높이로 해석됩니다", "설정 오류");
 				LineHeight = FontSize;
 			}
 			if (SaveDataNos < 20)
 			{
-				MessageBox.Show("表示するセーブデータ数が少なすぎます(20が下限)", "設定のエラー");
+				MessageBox.Show("표시할 세이브 데이터 수가 너무 적습니다(하한 20)", "설정 오류");
 				SaveDataNos = 20;
 			}
 			if (SaveDataNos > 80)
 			{
-				MessageBox.Show("表示するセーブデータ数が多すぎます(80が上限)", "設定のエラー");
+				MessageBox.Show("표시할 세이브 데이터 수가 너무 많습니다(상한 80)", "설정 오류");
 				SaveDataNos = 80;
 			}
 			if (MaxLog < 500)
 			{
-				MessageBox.Show("ログ表示行数が少なすぎます(500が下限)", "設定のエラー");
+				MessageBox.Show("로그 표시 행 수가 너무 적습니다(하한 500)", "설정 오류");
 				MaxLog = 500;
 			}
 

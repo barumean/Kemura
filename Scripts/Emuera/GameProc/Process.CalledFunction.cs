@@ -42,7 +42,7 @@ namespace MinorShift.Emuera.GameProc
 					{
 						Int64 charaNo = vTerm.GetElementInt(0, exm);
 						if ((charaNo < 0) || (charaNo >= GlobalStatic.VariableData.CharacterList.Count))
-							throw new CodeEE("キャラクタ配列変数" + vTerm.Identifier.Name + "の第１引数(" + charaNo.ToString() + ")はキャラ登録番号の範囲外です");
+							throw new CodeEE("캐릭터 배열 변수 " + vTerm.Identifier.Name + "의 제1인수(" + charaNo.ToString() + ")는 캐릭터 등록 번호 범위를 벗어났습니다");
 						TransporterRef[i] = (Array)vTerm.Identifier.GetArrayChara((int)charaNo);
 					}
 					else
@@ -110,7 +110,7 @@ namespace MinorShift.Emuera.GameProc
 			{
 				if (parent.LabelDictionary.GetEventLabels(label) != null)
 				{
-					throw new CodeEE("イベント関数@" + label + "に対し通常のCALLが行われました(このエラーは互換性オプション「" + Config.GetConfigName(ConfigCode.CompatiCallEvent) + "」により無視できます)");
+					throw new CodeEE("이벤트 함수 @" + label + "에 대해 일반 CALL이 수행되었습니다(이 오류는 호환성 옵션 「" + Config.GetConfigName(ConfigCode.CompatiCallEvent) + "」로 무시할 수 있습니다)");
 				}
 				return null;
 			}
@@ -193,7 +193,7 @@ namespace MinorShift.Emuera.GameProc
 					//一応逃がす
 					if (term == null && !Config.CompatiFuncArgOptional)
 					{
-						errMes = "\"@" + func.LabelName + "\" " + (i + 1).ToString() + "番目の引数は省略できません(この警告は互換性オプション「" + Config.GetConfigName(ConfigCode.CompatiFuncArgOptional) + "」により無視できます)";
+						errMes = "\"@" + func.LabelName + "\" " + (i + 1).ToString() + "번째 인수는 생략할 수 없습니다(이 경고는 호환성 옵션 「" + Config.GetConfigName(ConfigCode.CompatiFuncArgOptional) + "」로 무시할 수 있습니다)";
 						return null;
 					}
 				}
@@ -208,7 +208,7 @@ namespace MinorShift.Emuera.GameProc
 					{
 						if (!Config.CompatiFuncArgAutoConvert)
 						{
-							errMes = "\"@" + func.LabelName + "\" " + (i + 1).ToString() + "番目の引数を整数型から文字列型に変換できません(この警告は互換性オプション「" + Config.GetConfigName(ConfigCode.CompatiFuncArgAutoConvert) + "」により無視できます)";
+							errMes = "\"@" + func.LabelName + "\" " + (i + 1).ToString() + "번째 인수를 정수형에서 문자열형으로 변환할 수 없습니다(이 경고는 호환성 옵션 「" + Config.GetConfigName(ConfigCode.CompatiFuncArgAutoConvert) + "」로 무시할 수 있습니다)";
 							return null;
 						}
 						if (tostrMethod == null)

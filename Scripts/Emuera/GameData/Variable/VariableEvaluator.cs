@@ -145,9 +145,9 @@ namespace MinorShift.Emuera.GameData.Variable
 		{
             var identifier = p.Identifier;
             if (!identifier.IsInteger)
-				throw new CodeEE("整数型でない変数" + identifier.Name + "に整数値を代入しようとしました");
+				throw new CodeEE("정수형이 아닌 변수 " + identifier.Name + "에 정수값을 대입하려 했습니다");
 			if (identifier.IsConst)
-				throw new CodeEE("読み取り専用の変数" + identifier.Name + "に代入しようとしました");
+				throw new CodeEE("읽기 전용 변수 " + identifier.Name + "에 대입하려 했습니다");
 			if (identifier.IsCalc)
 				return;
 			//一応チェック済み
@@ -165,7 +165,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				else
 					indexNum = constant.KeywordToInteger(identifier.Code, index.Str, 1);
                 if (indexNum < 0 || indexNum >= ((long[])(identifier.GetArrayChara(0))).Length)
-					throw new CodeEE("キャラクタ配列変数" + identifier.Name + "の第２引数(" + indexNum.ToString() + ")は配列の範囲外です");
+					throw new CodeEE("캐릭터 배열 변수 " + identifier.Name + "의 제2인수(" + indexNum.ToString() + ")는 배열 범위를 벗어났습니다");
 			}
 
             long[] arguments = new long[] { -1, indexNum };
@@ -182,7 +182,7 @@ namespace MinorShift.Emuera.GameData.Variable
             if (!identifier.IsString)
 				throw new CodeEE("文字列型でない変数" + identifier.Name + "に文字列型を代入しようとしました");
 			if (identifier.IsConst)
-				throw new CodeEE("読み取り専用の変数" + identifier.Name + "に代入しようとしました");
+				throw new CodeEE("읽기 전용 변수 " + identifier.Name + "에 대입하려 했습니다");
 			if (identifier.IsCalc)
 			{
 				if (identifier.Code == VariableCode.WINDOW_TITLE)
@@ -206,7 +206,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				else
 					indexNum = constant.KeywordToInteger(identifier.Code, index.Str, 1);
                 if (indexNum < 0 || indexNum >= ((string[])(identifier.GetArrayChara(0))).Length)
-					throw new CodeEE("キャラクタ配列変数" + identifier.Name + "の第２引数(" + indexNum.ToString() + ")は配列の範囲外です");
+					throw new CodeEE("캐릭터 배열 변수 " + identifier.Name + "의 제2인수(" + indexNum.ToString() + ")는 배열 범위를 벗어났습니다");
 			}
 
             long[] arguments = new long[] { -1, indexNum };
@@ -649,7 +649,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				array = (Int64[])identifier.GetArray();
 
 			if (start >= array.Length)
-				throw new CodeEE("命令ARRAYSHIFTの第４引数(" + start.ToString() + ")が配列" + p.Identifier.Name + "の範囲を超えています");
+				throw new CodeEE("명령 ARRAYSHIFT의 제4인수(" + start.ToString() + ")이(가) 배열 " + p.Identifier.Name + " 범위를 넘었습니다");
 
 			if (num == -1)
 				num = array.Length - start;
@@ -723,7 +723,7 @@ namespace MinorShift.Emuera.GameData.Variable
 				arrays = (string[])identifier.GetArray();
 
 			if (start >= arrays.Length)
-				throw new CodeEE("命令ARRAYSHIFTの第４引数(" + start.ToString() + ")が配列" + p.Identifier.Name + "の範囲を超えています");
+				throw new CodeEE("명령 ARRAYSHIFT의 제4인수(" + start.ToString() + ")이(가) 배열 " + p.Identifier.Name + " 범위를 넘었습니다");
 
 			//for (int i = 0; i < arrays.Length; i++)
 			//    arrays[i] = "";
@@ -798,7 +798,7 @@ namespace MinorShift.Emuera.GameData.Variable
 					array = (Int64[])identifier.GetArray();
 
                 if (start >= array.Length)
-					throw new CodeEE("命令ARRAYREMOVEの第２引数(" + start.ToString() + ")が配列" + p.Identifier.Name + "の範囲を超えています");
+					throw new CodeEE("명령 ARRAYREMOVE의 제2인수(" + start.ToString() + ")이(가) 배열 " + p.Identifier.Name + " 범위를 넘었습니다");
 				if (num <= 0)
 					num = array.Length;
 				Int64[] temp = new Int64[array.Length];
@@ -851,7 +851,7 @@ namespace MinorShift.Emuera.GameData.Variable
 					array = (Int64[])identifier.GetArray();
 
                 if (start >= array.Length)
-					throw new CodeEE("命令ARRAYSORTの第３引数(" + start.ToString() + ")が配列" + identifier.Name + "の範囲を超えています");
+					throw new CodeEE("명령 ARRAYSORT의 제3인수(" + start.ToString() + ")이(가) 배열 " + identifier.Name + " 범위를 넘었습니다");
 				if (num <= 0)
 					num = array.Length - start;
 				Int64[] temp = new Int64[num];
@@ -872,7 +872,7 @@ namespace MinorShift.Emuera.GameData.Variable
 					array = (string[])identifier.GetArray();
 
                 if (start >= array.Length)
-					throw new CodeEE("命令ARRAYSORTの第３引数(" + start.ToString() + ")が配列" + identifier.Name + "の範囲を超えています");
+					throw new CodeEE("명령 ARRAYSORT의 제3인수(" + start.ToString() + ")이(가) 배열 " + identifier.Name + " 범위를 넘었습니다");
 				if (num <= 0)
 					num = array.Length - start;
 				string[] temp = new string[num];
@@ -1993,14 +1993,14 @@ namespace MinorShift.Emuera.GameData.Variable
 					if (!gamebase.UniqueCodeEqualTo(reader.ReadInt64()))
 					{
 						result.State = EraDataState.GAME_ERROR;
-						result.DataMes = "異なるゲームのセーブデータです";
+						result.DataMes = "다른 게임의 세이브 데이터입니다";
 						return result;
 					}
 					version = reader.ReadInt64();
 					if (!gamebase.CheckVersion(version))
 					{
 						result.State = EraDataState.VIRSION_ERROR;
-						result.DataMes = "セーブデータのバーションが異なります";
+						result.DataMes = "세이브 데이터 버전이 다릅니다";
 						return result;
 					}
 					result.State = EraDataState.OK;
@@ -2020,14 +2020,14 @@ namespace MinorShift.Emuera.GameData.Variable
 				if (!gamebase.UniqueCodeEqualTo(bReader.ReadInt64()))
 				{
 					result.State = EraDataState.GAME_ERROR;
-					result.DataMes = "異なるゲームのセーブデータです";
+					result.DataMes = "다른 게임의 세이브 데이터입니다";
 					return result;
 				}
 				version = bReader.ReadInt64();
 				if (!gamebase.CheckVersion(version))
 				{
 					result.State = EraDataState.VIRSION_ERROR;
-					result.DataMes = "セーブデータのバーションが異なります";
+					result.DataMes = "세이브 데이터 버전이 다릅니다";
 					return result;
 				}
 				result.State = EraDataState.OK;
@@ -2292,10 +2292,10 @@ namespace MinorShift.Emuera.GameData.Variable
 		public void LoadFromStream(EraDataReader reader)
 		{
 			if (!gamebase.UniqueCodeEqualTo(reader.ReadInt64()))
-				throw new FileEE("異なるゲームのセーブデータです");
+				throw new FileEE("다른 게임의 세이브 데이터입니다");
 			Int64 version = reader.ReadInt64();
 			if (!gamebase.CheckVersion(version))
-				throw new FileEE("セーブデータのバーションが異なります");
+				throw new FileEE("세이브 데이터 버전이 다릅니다");
 			string text = reader.ReadString();//PUTFORM
 			varData.SetDefaultValue(constant);
 			varData.SetDefaultLocalValue();
@@ -2458,10 +2458,10 @@ namespace MinorShift.Emuera.GameData.Variable
 			if (fileType != EraSaveFileType.Normal)
 				throw new FileEE("セーブデータが壊れています");
 			if (!gamebase.UniqueCodeEqualTo(bReader.ReadInt64()))
-				throw new FileEE("異なるゲームのセーブデータです");
+				throw new FileEE("다른 게임의 세이브 데이터입니다");
 			Int64 version = bReader.ReadInt64();
 			if (!gamebase.CheckVersion(version))
-				throw new FileEE("セーブデータのバーションが異なります");
+				throw new FileEE("세이브 데이터 버전이 다릅니다");
 			string text = bReader.ReadString();//PUTFORM
 			varData.SetDefaultValue(constant);
 			varData.SetDefaultLocalValue();

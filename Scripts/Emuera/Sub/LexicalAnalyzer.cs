@@ -468,7 +468,7 @@ namespace MinorShift.Emuera.Sub
                 else if(c == '　')
                 {
                     if(!Config.SystemAllowFullSpace)
-                	    throw new CodeEE("予期しない全角スペースを発見しました(この警告はシステムオプション「" + Config.GetConfigName(ConfigCode.SystemAllowFullSpace) + "」により無視できます)");
+                	    throw new CodeEE("예기치 않은 전각 공백을 발견했습니다(이 경고는 시스템 옵션 「" + Config.GetConfigName(ConfigCode.SystemAllowFullSpace) + "」로 무시할 수 있습니다)");
                     goto end;
                 }
                 st.ShiftNext();
@@ -849,7 +849,7 @@ namespace MinorShift.Emuera.Sub
 						continue;
 					case '　':
 						if (!Config.SystemAllowFullSpace)
-							throw new CodeEE("字句解析中に予期しない全角スペースを発見しました(この警告はシステムオプション「" + Config.GetConfigName(ConfigCode.SystemAllowFullSpace) + "」により無視できます)");
+							throw new CodeEE("어휘 분석 중 예기치 않은 전각 공백을 발견했습니다(이 경고는 시스템 옵션 「" + Config.GetConfigName(ConfigCode.SystemAllowFullSpace) + "」로 무시할 수 있습니다)");
 						st.ShiftNext();
 						continue;
 					case '0':
@@ -912,7 +912,7 @@ namespace MinorShift.Emuera.Sub
 								if (find == 2)
 									throw new CodeEE("空の[[]]です");
 								else
-									throw new CodeEE("対応する\"]]\"のない\"[[\"です");
+									throw new CodeEE("대응하는 \"]]\"가 없는 \"[[\"입니다");
 							}
 							string key = st.Substring(start, find + 2);
 							//1810 ここまでで置換できなかったものは強制エラーにする
@@ -947,7 +947,7 @@ namespace MinorShift.Emuera.Sub
 							//AssignmentStr用特殊処理 代入文の代入演算子を探索中で'=の場合のみ許可
 							if ((endWith == LexEndWith.Operator) && (nestBracketS == 0) && (nestBracketL == 0) && st.Next == '=' )
 								goto end;
-							throw new CodeEE("字句解析中に予期しない文字'" + st.Current + "'を発見しました");
+							throw new CodeEE("어휘 분석 중 예상치 못한 문자 '" + st.Current + "'을(를) 발견했습니다");
 						}
 						st.ShiftNext();
 						ret.Add(new LiteralStringWord(ReadString(st, StrEndWith.Comma)));
@@ -957,7 +957,7 @@ namespace MinorShift.Emuera.Sub
 					case '}':
 						if (endWith == LexEndWith.RightCurlyBrace)
 							goto end;
-						throw new CodeEE("字句解析中に予期しない文字'" + st.Current + "'を発見しました");
+						throw new CodeEE("어휘 분석 중 예상치 못한 문자 '" + st.Current + "'을(를) 발견했습니다");
 					case '\"':
 						st.ShiftNext();
 						ret.Add(new LiteralStringWord(ReadString(st, StrEndWith.DoubleQuotation)));
@@ -986,7 +986,7 @@ namespace MinorShift.Emuera.Sub
 
 					case '\\':
 						if (st.Next != '@')
-							throw new CodeEE("字句解析中に予期しない文字'" + st.Current + "'を発見しました");
+							throw new CodeEE("어휘 분석 중 예상치 못한 문자 '" + st.Current + "'을(를) 발견했습니다");
 						{
 							st.Jump(2);
 							ret.Add(new StrFormWord(new string[] { "", "" }, new SubWord[] { AnalyseYenAt(st) }));
@@ -994,7 +994,7 @@ namespace MinorShift.Emuera.Sub
 						break;
 					case '{':
 					case '$':
-						throw new CodeEE("字句解析中に予期しない文字'" + st.Current + "'を発見しました");
+						throw new CodeEE("어휘 분석 중 예상치 못한 문자 '" + st.Current + "'을(를) 발견했습니다");
 					case ';'://1807 行中コメント
 						if (st.CurrentEqualTo(";#;") && Program.DebugMode)
 						{
@@ -1075,7 +1075,7 @@ namespace MinorShift.Emuera.Sub
 			wc.ShiftNext();
 			SymbolWord symbol = wc.Current as SymbolWord;
 			if (symbol == null || symbol.Type != '(')
-				throw new CodeEE("関数形式のマクロ" + macro.Keyword + "に引数がありません");
+				throw new CodeEE("함수 형식 매크로 " + macro.Keyword + "에 인수가 없습니다");
 			WordCollection macroWC = macro.Statement.Clone();
 			WordCollection[] args = new WordCollection[macro.ArgCount];
 			//引数部読み取りループ
@@ -1087,7 +1087,7 @@ namespace MinorShift.Emuera.Sub
 				{
 					wc.ShiftNext();
 					if (wc.EOL)
-						throw new CodeEE("関数形式のマクロ" + macro.Keyword + "の用法が正しくありません");
+						throw new CodeEE("함수 형식 매크로 " + macro.Keyword + "의 사용법이 올바르지 않습니다");
 					symbol = wc.Current as SymbolWord;
 					if (symbol == null)
 					{
@@ -1104,7 +1104,7 @@ namespace MinorShift.Emuera.Sub
 								break;
 							}
 							if (i != macro.ArgCount - 1)
-								throw new CodeEE("関数形式のマクロ" + macro.Keyword + "の引数の数が正しくありません");
+								throw new CodeEE("함수 형식 매크로 " + macro.Keyword + "의 인수 개수가 올바르지 않습니다");
 							goto exitfor;
 						case ',':
 							if (macroNestBracketS == 0)
@@ -1115,14 +1115,14 @@ namespace MinorShift.Emuera.Sub
 				}
 			exitwhile:
 				if (args[i].Collection.Count == 0)
-					throw new CodeEE("関数形式のマクロ" + macro.Keyword + "の引数を省略することはできません");
+					throw new CodeEE("함수 형식 매크로 " + macro.Keyword + "의 인수를 생략할 수 없습니다");
 				continue;
 			}
 		//引数部読み取りループ終端
 		exitfor:
 			symbol = wc.Current as SymbolWord;
 			if (symbol == null || symbol.Type != ')')
-				throw new CodeEE("関数形式のマクロ" + macro.Keyword + "の用法が正しくありません");
+				throw new CodeEE("함수 형식 매크로 " + macro.Keyword + "의 사용법이 올바르지 않습니다");
 			int macroLength = wc.Pointer - macroStart + 1;
 			wc.Pointer = macroStart;
 			for (int j = 0; j < macroLength; j++)

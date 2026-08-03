@@ -712,7 +712,7 @@ namespace MinorShift.Emuera.GameData.Variable
                     int elem1 = (int)(elem64 >> 32);
                     int elem2 = (int)(elem64 & 0x7FFFFFFF);
                     if (elem1 < 0 || elem1 >= array.GetLength(0) || elem2 < 0 || elem2 >= array.GetLength(1))
-                        throw new CodeEE("ソートキーが配列外を参照しています");
+                        throw new CodeEE("정렬 키가 배열 외부를 참조하고 있습니다");
                     temp_SortKey = array[elem1, elem2];
                 }
                 else if (sortkey.IsArray1D)
@@ -723,7 +723,7 @@ namespace MinorShift.Emuera.GameData.Variable
                     else
                         array = dataStringArray[sortkey.CodeInt];
                     if (elem64 < 0 || elem64 >= array.Length)
-                        throw new CodeEE("ソートキーが配列外を参照しています");
+                        throw new CodeEE("정렬 키가 배열 외부를 참조하고 있습니다");
                     if (array[(int)elem64] != null)
                         temp_SortKey = array[(int)elem64];
                     else
@@ -750,7 +750,7 @@ namespace MinorShift.Emuera.GameData.Variable
 					int elem1 = (int)(elem64 >> 32);
 					int elem2 = (int)(elem64 & 0x7FFFFFFF);
 					if (elem1 < 0 || elem1 >= array.GetLength(0) || elem2 < 0 || elem2 >= array.GetLength(1))
-						throw new CodeEE("ソートキーが配列外を参照しています");
+						throw new CodeEE("정렬 키가 배열 외부를 참조하고 있습니다");
 					temp_SortKey = array[elem1, elem2];
 				}
 				else if (sortkey.IsArray1D)
@@ -761,7 +761,7 @@ namespace MinorShift.Emuera.GameData.Variable
                     else
                         array = dataIntegerArray[sortkey.CodeInt];
 					if (elem64 < 0 || elem64 >= array.Length)
-						throw new CodeEE("ソートキーが配列外を参照しています");
+						throw new CodeEE("정렬 키가 배열 외부를 참조하고 있습니다");
 					temp_SortKey = array[(int)elem64];
 				}
 				else

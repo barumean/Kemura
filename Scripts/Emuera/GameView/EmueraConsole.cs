@@ -1583,13 +1583,13 @@ namespace MinorShift.Emuera.GameView
 					throw new CodeEE("フロー制御命令は使用できません");
 				//__METHOD_SAFE__をみるならいらないかも
 				if (func.Function.IsWaitInput())
-					throw new CodeEE(func.Function.Name + "命令は使用できません");
+					throw new CodeEE(func.Function.Name + "명령은 사용할 수 없습니다");
 				//1750 __METHOD_SAFE__とほぼ条件同じだよねってことで
 				if (!func.Function.IsMethodSafe())
-					throw new CodeEE(func.Function.Name + "命令は使用できません");
+					throw new CodeEE(func.Function.Name + "명령은 사용할 수 없습니다");
 				//1756 SIFの次に来てはいけないものはここでも不可。
 				if (func.Function.IsPartial())
-					throw new CodeEE(func.Function.Name + "命令は使用できません");
+					throw new CodeEE(func.Function.Name + "명령은 사용할 수 없습니다");
 				switch (func.FunctionCode)
 				{//取りこぼし
 					//逆にOUTPUTLOG、QUITはDebugCommandの前に捕まえる
@@ -1597,7 +1597,7 @@ namespace MinorShift.Emuera.GameView
 					case FunctionCode.UPCHECK:
 					case FunctionCode.CUPCHECK:
 					case FunctionCode.SAVEDATA:
-						throw new CodeEE(func.Function.Name + "命令は使用できません");
+						throw new CodeEE(func.Function.Name + "명령은 사용할 수 없습니다");
 				}
 				ArgumentParser.SetArgumentTo(func);
 				if (func.IsError)

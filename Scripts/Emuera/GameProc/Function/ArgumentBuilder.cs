@@ -63,7 +63,7 @@ namespace MinorShift.Emuera.GameProc.Function
 			int length = arguments.Length;
 			if ((arguments.Length > argumentTypeArray.Length)&&(!argAny))
 			{
-				warn("引数が多すぎます", line, 1, false);
+				warn("인수가 너무 많습니다", line, 1, false);
 				length = argumentTypeArray.Length;
 			}
 			for (int i = 0; i < length; i++)
@@ -79,12 +79,12 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
 					if (allowType == null)
 						continue;
-					warn("第" + (i + 1).ToString() + "引数を認識できません", line, 2, false);
+					warn("제" + (i + 1).ToString() + "인수를 인식할 수 없습니다", line, 2, false);
 					return false;
 				}
 				if ((allowType != typeof(void)) && (allowType != arguments[i].GetOperandType()))
 				{
-					warn("第" + (i + 1).ToString() + "引数の型が正しくありません", line, 2, false);
+					warn("제" + (i + 1).ToString() + "인수 형식이 올바르지 않습니다", line, 2, false);
 					return false;
 				}
 			}
@@ -102,12 +102,12 @@ namespace MinorShift.Emuera.GameProc.Function
 		{
             if (!(terms[i - 1] is VariableTerm varTerm))
             {
-                warn("第" + i + "引数に変数以外を指定することはできません", line, 2, false);
+                warn("제" + i + "인수에 변수 이외를 지정할 수 없습니다", line, 2, false);
                 return null;
             }
             else if (varTerm.Identifier.IsConst)
             {
-                warn("第" + i + "引数に変更できない変数を指定することはできません", line, 2, false);
+                warn("제" + i + "인수에 변경할 수 없는 변수를 지정할 수 없습니다", line, 2, false);
                 return null;
             }
             return varTerm;
@@ -264,7 +264,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					d = LexicalAnalyzer.ReadDouble(st);
 					LexicalAnalyzer.SkipWhiteSpace(st);
 					if (!st.EOS)
-						warn("引数が多すぎます", line, 1, false);
+						warn("인수가 너무 많습니다", line, 1, false);
 				}
 				catch
 				{
@@ -273,10 +273,10 @@ namespace MinorShift.Emuera.GameProc.Function
 				}
 				IOperandTerm term = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.EoL);
 				if (term == null)
-				{ warn("書式が間違っています", line, 2, false); return null; }
+				{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 				VariableTerm varTerm = term.Restructure(exm) as VariableTerm;
 				if (varTerm == null)
-				{ warn("第１引数に変数以外を指定することはできません", line, 2, false); return null; }
+				{ warn("제1인수에 변수 이외를 지정할 수 없습니다", line, 2, false); return null; }
 				else if (varTerm.IsString)
 				{ warn("第１引数を文字列変数にすることはできません", line, 2, false); return null; }
 				else if (varTerm.Identifier.IsConst)
@@ -303,7 +303,7 @@ namespace MinorShift.Emuera.GameProc.Function
 						ret.ConstInt = 0;
 						return ret;
 					}
-					warn("引数が設定されていません", line, 2, false);
+					warn("인수가 설정되지 않았습니다", line, 2, false);
 					return null;
 				}
 				while (true)
@@ -354,7 +354,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
 					if (!nullable)
 					{
-						warn("引数が設定されていません", line, 2, false);
+						warn("인수가 설정되지 않았습니다", line, 2, false);
 						return null;
 					}
 					rowStr = "";
@@ -370,8 +370,8 @@ namespace MinorShift.Emuera.GameProc.Function
 					if (c.A == 0)
 					{
 						if (rowStr.Equals("transparent", StringComparison.OrdinalIgnoreCase))
-							throw new CodeEE("無色透明(Transparent)は色として指定できません");
-						throw new CodeEE("指定された色名\"" + rowStr + "\"は無効な色名です");
+							throw new CodeEE("무색 투명(Transparent)은 색으로 지정할 수 없습니다");
+						throw new CodeEE("지정된 색 이름 \"" + rowStr + "\"은(는) 잘못된 색 이름입니다");
 					}
 
                 }
@@ -401,7 +401,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
 					if(!nullable)
 					{
-						warn("引数が設定されていません", line, 2, false);
+						warn("인수가 설정되지 않았습니다", line, 2, false);
 						return null;
 					}
                     //if (line.FunctionCode == FunctionCode.PRINTFORML)
@@ -437,7 +437,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				string idStr = iw.Code;
 				VariableToken id = GlobalStatic.IdentifierDictionary.GetVariableToken(idStr, null, true);
 				if (id == null)
-				{ warn("第１引数に変数以外を指定することはできません", line, 2, false); return null; }
+				{ warn("제1인수에 변수 이외를 지정할 수 없습니다", line, 2, false); return null; }
 				else if ((!id.IsArray1D && !id.IsArray2D && !id.IsArray3D) || (id.Code == VariableCode.RAND))
 				{ warn("第１引数に配列でない変数を指定することはできません", line, 2, false); return null; }
 				LexicalAnalyzer.SkipWhiteSpace(st);
@@ -469,16 +469,16 @@ namespace MinorShift.Emuera.GameProc.Function
 						order = SortOrder.DESENDING;
 					wc.ShiftNext();
 					if (!wc.EOL)
-						warn("引数が多すぎます", line, 1, false);
+						warn("인수가 너무 많습니다", line, 1, false);
 				}
 				else
 				{
 					IOperandTerm term = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.Comma);
 					if (term == null)
-					{ warn("書式が間違っています", line, 2, false); return null; }
+					{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 					varTerm = term.Restructure(exm) as VariableTerm;
 					if (varTerm == null)
-					{ warn("第１引数に変数以外を指定することはできません", line, 2, false); return null; }
+					{ warn("제1인수에 변수 이외를 지정할 수 없습니다", line, 2, false); return null; }
 					else if (!varTerm.Identifier.IsCharacterData)
 					{ warn("第１引数はキャラクタ変数でなければなりません", line, 2, false); return null; }
 					wc.ShiftNext();
@@ -492,10 +492,10 @@ namespace MinorShift.Emuera.GameProc.Function
 								order = SortOrder.DESENDING;
 							wc.ShiftNext();
 							if (!wc.EOL)
-								warn("引数が多すぎます", line, 1, false);
+								warn("인수가 너무 많습니다", line, 1, false);
 						}
 						else
-						{ warn("書式が間違っています", line, 2, false); return null; }
+						{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 					}
 				}
 				return new SpSortcharaArgument(varTerm, order);
@@ -513,16 +513,16 @@ namespace MinorShift.Emuera.GameProc.Function
 
                 if (wc.EOL)
                 {
-                    warn("書式が間違っています", line, 2, false); return null;
+                    warn("서식이 잘못되었습니다", line, 2, false); return null;
                 }
 
                 VariableTerm varTerm;
                 IOperandTerm term = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.Comma);
                 if (term == null)
-                { warn("書式が間違っています", line, 2, false); return null; }
+                { warn("서식이 잘못되었습니다", line, 2, false); return null; }
                 varTerm = term.Restructure(exm) as VariableTerm;
                 if (varTerm == null)
-                { warn("第１引数に変数以外を指定することはできません", line, 2, false); return null; }
+                { warn("제1인수에 변수 이외를 지정할 수 없습니다", line, 2, false); return null; }
                 else if (varTerm.Identifier.IsConst)
 				{ warn("第１引数が変更できない変数です", line, 2, false); return null; }
                 if (!varTerm.Identifier.IsArray1D)
@@ -560,7 +560,7 @@ namespace MinorShift.Emuera.GameProc.Function
                             { warn("第４引数が数値ではありません", line, 2, false); return null; }
                             wc.ShiftNext();
                             if (!wc.EOL)
-                                warn("引数が多すぎます", line, 1, false);
+                                warn("인수가 너무 많습니다", line, 1, false);
                         }
                     }
                 }
@@ -617,7 +617,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					else
 						args = ExpressionParser.ReduceArguments(wc, ArgsEndWith.EoL, false);
 					if (!wc.EOL)
-					{ warn("書式が間違っています", line, 2, false); return null; }
+					{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 				}
 				if (subNames == null)
 					subNames = new IOperandTerm[0];
@@ -655,7 +655,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				WordCollection wc = popWords(line);
 				CaseExpression[] args = ExpressionParser.ReduceCaseExpressions(wc);
 				if ((!wc.EOL) || (args.Length == 0))
-				{ warn("書式が間違っています", line, 2, false); return null; }
+				{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 				for(int i = 0; i < args.Length; i++)
 					args[i].Reduce(exm);
 				return new CaseArgument(args);
@@ -880,7 +880,7 @@ namespace MinorShift.Emuera.GameProc.Function
                 StrFormWord sfwt = LexicalAnalyzer.AnalyseFormattedString(st, FormStrEndWith.EoL, false);
                 if (!st.EOS)
                 {
-                    warn("引数が多すぎます", line, 1, false);
+                    warn("인수가 너무 많습니다", line, 1, false);
                 }
                 IOperandTerm term = ExpressionParser.ToStrFormTerm(sfwt);
                 term = term.Restructure(exm);
@@ -1001,7 +1001,7 @@ namespace MinorShift.Emuera.GameProc.Function
 						ret.ConstInt = 0;
 						return ret;
 					}
-					warn("引数が設定されていません", line, 2, false);
+					warn("인수가 설정되지 않았습니다", line, 2, false);
 					return null;
 				}
                 else if (terms.Length == 1)
@@ -1333,7 +1333,7 @@ namespace MinorShift.Emuera.GameProc.Function
                         Int64 bit = term.Int;
                         if ((bit < 0) || (bit > 63))
                         {
-                            warn("第" + Strings.StrConv((i + 2).ToString(), VbStrConv.Wide, Config.Language) + "引数(" + bit.ToString() + ")が範囲(０～６３)を超えています", line, 2, false);
+                            warn("제" + Strings.StrConv((i + 2).ToString(), VbStrConv.Wide, Config.Language) + "인수(" + bit.ToString() + ")이(가) 범위(0~63)를 넘었습니다", line, 2, false);
                             return null;
                         }
                     }
@@ -1650,13 +1650,13 @@ namespace MinorShift.Emuera.GameProc.Function
 				for (int i = 2; i < terms.Length; i++)
 				{
 					if (terms[i] == null)
-					{ warn("第" + (i + 1) + "引数を省略できません", line, 2, false); return null; }
+					{ warn("제" + (i + 1) + "인수를 생략할 수 없습니다", line, 2, false); return null; }
 					VariableTerm vTerm = getChangeableVariable(terms, i + 1, line);
 					if (vTerm == null)
 						return null;
 					VariableToken vToken = vTerm.Identifier;
 					if (vToken.IsCharacterData)
-					{ warn("キャラクタ変数"+ vToken.Name+"はセーブできません(キャラクタ変数のSAVEにはSAVECHARAを使用します)", line, 2, false); return null; }
+					{ warn("캐릭터 변수 "+ vToken.Name+"은(는) 저장할 수 없습니다(캐릭터 변수 SAVE에는 SAVECHARA를 사용합니다)", line, 2, false); return null; }
 					if (vToken.IsPrivate)
 					{ warn("プライベート変数" + vToken.Name + "はセーブできません", line, 2, false); return null; }
 					if (vToken.IsLocal)
@@ -1674,7 +1674,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					for (int j = i + 1; j < varTokens.Count; j++)
 						if (varTokens[i] == varTokens[j])
 						{
-							warn("変数" + varTokens[i].Name + "を二度以上保存しようとしています", line, 1, false);
+							warn("변수 " + varTokens[i].Name + "을(를) 두 번 이상 저장하려 합니다", line, 1, false);
 							return null;
 						}
 				}
@@ -1717,7 +1717,7 @@ namespace MinorShift.Emuera.GameProc.Function
 							continue;
 						if (iValue == termList[j].GetIntValue(null))
 						{
-							warn("キャラ登録番号" + iValue.ToString() + "を二度以上保存しようとしています", line, 1, false);
+							warn("캐릭터 등록 번호 " + iValue.ToString() + "을(를) 두 번 이상 저장하려 합니다", line, 1, false);
 							return null;
 						}
 					}
@@ -1742,7 +1742,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				WordCollection wc = popWords(line);
                 wc.ShiftNext();
                 if (!(wc.Current is IdentifierWord id) || wc.Current.Type != ',')
-				{ warn("書式が間違っています", line, 2, false); return null; }
+				{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 				wc.ShiftNext();
 				IOperandTerm name = null;
                 string srcCode = null;
@@ -1750,7 +1750,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
 					name = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.EoL);
 					if (name == null || name.IsInteger || !wc.EOL)
-					{ warn("書式が間違っています", line, 2, false); return null; }
+					{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 					name = name.Restructure(exm);
 					if (name is SingleTerm)
 						srcCode = name.GetStrValue(exm);
@@ -1759,7 +1759,7 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
                     wc.ShiftNext();
                     if (!(wc.Current is IdentifierWord id2) || !wc.EOL)
-					{ warn("書式が間違っています", line, 2, false); return null; }
+					{ warn("서식이 잘못되었습니다", line, 2, false); return null; }
 					srcCode = id2.Code;
 				}
 				UserDefinedRefMethod refm = GlobalStatic.IdentifierDictionary.GetRefMethod(id.Code);
@@ -1783,7 +1783,7 @@ namespace MinorShift.Emuera.GameProc.Function
 					}
 					FunctionLabelLine label = GlobalStatic.LabelDictionary.GetNonEventLabel(srcCode);
 					if (label == null)
-					{ warn("式中関数" + srcCode + "が見つかりません", line, 2, false); return null; }
+					{ warn("식중 함수 " + srcCode + "을(를) 찾을 수 없습니다", line, 2, false); return null; }
 					if (!label.IsMethod)
 					{ warn("#FUNCTION(S)属性を持たない関数" + srcCode + "は参照できません", line, 2, false); return null; }
 					CalledFunction called = CalledFunction.CreateCalledFunctionMethod(label, label.LabelName);
@@ -1795,7 +1795,7 @@ namespace MinorShift.Emuera.GameProc.Function
 						return new RefArgument(refVar, name);
 					VariableToken srcVar = GlobalStatic.IdentifierDictionary.GetVariableToken(srcCode, null, true);
 					if (srcVar == null)
-					{ warn("変数" + srcCode + "が見つかりません", line, 2, false); return null; }
+					{ warn("변수 " + srcCode + "을(를) 찾을 수 없습니다", line, 2, false); return null; }
 					return new RefArgument(refVar, srcVar);
 				}
 			}
@@ -1869,17 +1869,17 @@ namespace MinorShift.Emuera.GameProc.Function
                 {
                     if ((vars[0] = GlobalStatic.IdentifierDictionary.GetVariableToken(term.Str, null, true)) == null)
                     {
-                        warn("ARRAYCOPY命令の第１引数\"" + term.Str + "\"は変数名として存在しません", line, 2, false);
+                        warn("ARRAYCOPY 명령의 제1인수 \"" + term.Str + "\"은(는) 변수명으로 존재하지 않습니다", line, 2, false);
                         return null;
                     }
                     if (!vars[0].IsArray1D && !vars[0].IsArray2D && !vars[0].IsArray3D)
                     {
-                        warn("ARRAYCOPY命令の第１引数\"" + term.Str + "\"は配列変数ではありません", line, 2, false);
+                        warn("ARRAYCOPY 명령의 제1인수 \"" + term.Str + "\"은(는) 배열 변수가 아닙니다", line, 2, false);
                         return null;
                     }
                     if (vars[0].IsCharacterData)
                     {
-                        warn("ARRAYCOPY命令の第１引数\"" + term.Str + "\"はキャラクタ変数です（対応していません）", line, 2, false);
+                        warn("ARRAYCOPY 명령의 제1인수 \"" + term.Str + "\"은(는) 캐릭터 변수입니다(지원하지 않습니다)", line, 2, false);
                         return null;
                     }
                 }
@@ -1887,21 +1887,21 @@ namespace MinorShift.Emuera.GameProc.Function
                 {
                     if ((vars[1] = GlobalStatic.IdentifierDictionary.GetVariableToken(term1.Str, null, true)) == null)
                     {
-                        warn("ARRAYCOPY命令の第２引数\"" + term1.Str + "\"は変数名として存在しません", line, 2, false);
+                        warn("ARRAYCOPY 명령의 제2인수 \"" + term1.Str + "\"은(는) 변수명으로 존재하지 않습니다", line, 2, false);
                         return null;
                     }
                     if (!vars[1].IsArray1D && !vars[1].IsArray2D && !vars[1].IsArray3D)
                     {
-                        warn("ARRAYCOPY命令の第２引数\"" + term1.Str + "\"は配列変数ではありません", line, 2, false);
+                        warn("ARRAYCOPY 명령의 제2인수 \"" + term1.Str + "\"은(는) 배열 변수가 아닙니다", line, 2, false);
                     }
                     if (vars[1].IsCharacterData)
                     {
-                        warn("ARRAYCOPY命令の第２引数\"" + term1.Str + "\"はキャラクタ変数です（対応していません）", line, 2, false);
+                        warn("ARRAYCOPY 명령의 제2인수 \"" + term1.Str + "\"은(는) 캐릭터 변수입니다(지원하지 않습니다)", line, 2, false);
                         return null;
                     }
                     if (vars[1].IsConst)
                     {
-                        warn("ARRAYCOPY命令の第２引数\"" + term1.Str + "\"は値を変更できない変数です", line, 2, false);
+                        warn("ARRAYCOPY 명령의 제2인수 \"" + term1.Str + "\"은(는) 값을 변경할 수 없는 변수입니다", line, 2, false);
                         return null;
                     }
                 }
@@ -1914,7 +1914,7 @@ namespace MinorShift.Emuera.GameProc.Function
                     }
                     if ((vars[0].IsInteger && vars[1].IsString) || (vars[0].IsString && vars[1].IsInteger))
                     {
-                        warn("ARRAYCOPY命令の２つの配列変数の型が一致していません", line, 2, false);
+                        warn("ARRAYCOPY 명령의 두 배열 변수의 형식이 일치하지 않습니다", line, 2, false);
                         return null;
                     }
                 }

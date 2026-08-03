@@ -685,7 +685,7 @@ check1break:
             if (dic.TryGetValue(key, out int ret))
                 return ret;
             if (errPos == null)
-				throw new CodeEE("配列変数" + code.ToString() + "の要素を文字列で指定することはできません");
+				throw new CodeEE("배열 변수 " + code.ToString() + "의 요소를 문자열로 지정할 수 없습니다");
 			else
 				throw new CodeEE(errPos + "の中に\"" + key + "\"の定義がありません");
 		}
@@ -834,7 +834,7 @@ check1break:
 						errPos = "cdflag2.csv";
 					}
 					else if (index >= 0)
-						throw new CodeEE("配列変数" + code.ToString() + "の" + (index + 1).ToString() + "番目の要素を文字列で指定することはできません");
+						throw new CodeEE("배열 변수 " + code.ToString() + "의 " + (index + 1).ToString() + "번째 요소를 문자열로 지정할 수 없습니다");
 					else
 						throw new CodeEE("CDFLAGの要素の取得にはCDFLAGNAME1又はCDFLAGNAME2を使用します");
 					return ret;
@@ -879,12 +879,12 @@ check1break:
 			if (index < 0)
 				return ret;
 			if (ret == null)
-				throw new CodeEE("配列変数" + code.ToString() + "の要素を文字列で指定することはできません");
+				throw new CodeEE("배열 변수 " + code.ToString() + "의 요소를 문자열로 지정할 수 없습니다");
 			if ((index != allowIndex))
 			{
 				if (allowIndex < 0)//GETNUM専用
-					throw new CodeEE("配列変数" + code.ToString() + "の要素を文字列で指定することはできません");
-				throw new CodeEE("配列変数" + code.ToString() + "の" + (index + 1).ToString() + "番目の要素を文字列で指定することはできません");
+					throw new CodeEE("배열 변수 " + code.ToString() + "의 요소를 문자열로 지정할 수 없습니다");
+				throw new CodeEE("배열 변수 " + code.ToString() + "의 " + (index + 1).ToString() + "번째 요소를 문자열로 지정할 수 없습니다");
 			}
 			return ret;
 		}
@@ -1348,7 +1348,7 @@ check1break:
 				if (tokens.Length < 3)
 					ParserMediator.Warn("三つ目の識別子がありません", position, 1);
 				if (strArray.ContainsKey(index))
-					ParserMediator.Warn(varname + "の" + index.ToString() + "番目の要素は既に定義されています(上書きします)", position, 1);
+					ParserMediator.Warn(varname + "의 " + index.ToString() + "번째 요소는 이미 정의되어 있습니다(덮어씁니다)", position, 1);
 				strArray[index] = tokens[2];
 			}
 			else
@@ -1356,7 +1356,7 @@ check1break:
 				if ((tokens.Length < 3) || !tryToInt64(tokens[2], out long p2))
 					p2 = 1;
 				if (intArray.ContainsKey(index))
-					ParserMediator.Warn(varname + "の" + index.ToString() + "番目の要素は既に定義されています(上書きします)", position, 1);
+					ParserMediator.Warn(varname + "의 " + index.ToString() + "번째 요소는 이미 정의되어 있습니다(덮어씁니다)", position, 1);
 				intArray[index] = p2;
 			}
 		}

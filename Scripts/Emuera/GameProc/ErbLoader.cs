@@ -156,7 +156,7 @@ namespace MinorShift.Emuera.GameProc
 					case "SKIPSTART":
 						if (!string.IsNullOrEmpty(token2))
 						{
-							ParserMediator.Warn(token + "に余分な引数があります", position, 1);
+							ParserMediator.Warn(token + "에 불필요한 인수가 있습니다", position, 1);
 							break;
 						}
 						if (skip)
@@ -174,7 +174,7 @@ namespace MinorShift.Emuera.GameProc
 					case "IF_DEBUG":
 						if (!string.IsNullOrEmpty(token2))
 						{
-							ParserMediator.Warn(token + "に余分な引数があります", position, 1);
+							ParserMediator.Warn(token + "에 불필요한 인수가 있습니다", position, 1);
 							break;
 						}
 						ppMatch.Push("ELSEIF");
@@ -186,7 +186,7 @@ namespace MinorShift.Emuera.GameProc
 					case "IF_NDEBUG":
 						if (!string.IsNullOrEmpty(token2))
 						{
-							ParserMediator.Warn(token + "に余分な引数があります", position, 1);
+							ParserMediator.Warn(token + "에 불필요한 인수가 있습니다", position, 1);
 							break;
 						}
 						ppMatch.Push("ELSEIF");
@@ -198,7 +198,7 @@ namespace MinorShift.Emuera.GameProc
 					case "IF":
 						if (string.IsNullOrEmpty(token2))
 						{
-							ParserMediator.Warn(token + "に引数がありません", position, 1);
+							ParserMediator.Warn(token + "에 인수가 없습니다", position, 1);
 							break;
 						}
 						ppMatch.Push("ELSEIF");
@@ -210,7 +210,7 @@ namespace MinorShift.Emuera.GameProc
 					case "ELSEIF":
 						if (string.IsNullOrEmpty(token2))
 						{
-							ParserMediator.Warn(token + "に引数がありません", position, 1);
+							ParserMediator.Warn(token + "에 인수가 없습니다", position, 1);
 							break;
 						}
 						if (ppMatch.Count == 0 || ppMatch.Pop() != "ELSEIF")
@@ -225,7 +225,7 @@ namespace MinorShift.Emuera.GameProc
 					case "ELSE":
 						if (!string.IsNullOrEmpty(token2))
 						{
-							ParserMediator.Warn(token + "に余分な引数があります", position, 1);
+							ParserMediator.Warn(token + "에 불필요한 인수가 있습니다", position, 1);
 							break;
 						}
 						if (ppMatch.Count == 0 || ppMatch.Pop() != "ELSEIF")
@@ -242,7 +242,7 @@ namespace MinorShift.Emuera.GameProc
 						{
 							if (!string.IsNullOrEmpty(token2))
 							{
-								ParserMediator.Warn(token + "に余分な引数があります", position, 1);
+								ParserMediator.Warn(token + "에 불필요한 인수가 있습니다", position, 1);
 								break;
 							}
 							string match = ppMatch.Count == 0 ? "" : ppMatch.Pop();
@@ -260,7 +260,7 @@ namespace MinorShift.Emuera.GameProc
 						{
 							if (!string.IsNullOrEmpty(token2))
 							{
-								ParserMediator.Warn(token + "に余分な引数があります", position, 1);
+								ParserMediator.Warn(token + "에 불필요한 인수가 있습니다", position, 1);
 								break;
 							}
 							string match = ppMatch.Count == 0 ? "" : ppMatch.Pop();
@@ -378,7 +378,7 @@ namespace MinorShift.Emuera.GameProc
                                     if (seniorLabel != null)
                                     {
                                         //output.NewLine();
-                                        ParserMediator.Warn("関数@" + label.LabelName + "は既に定義(" + seniorLabel.Position.Filename + "の" + seniorLabel.Position.LineNo.ToString() + "行目)されています", position, 1);
+                                        ParserMediator.Warn("함수 @" + label.LabelName + "은(는) 이미 정의되어 있습니다(" + seniorLabel.Position.Filename + "의 " + seniorLabel.Position.LineNo.ToString() + "행)", position, 1);
                                         funcCount = -1;
                                     }
 								}
@@ -398,7 +398,7 @@ namespace MinorShift.Emuera.GameProc
                                 if (lastLabelLine != null && !labelDic.AddLabelDollar(gotoLabel))
                                 {
                                     ScriptPosition pos = labelDic.GetLabelDollar(gotoLabel.LabelName, lastLabelLine).Position;
-                                    ParserMediator.Warn("ラベル名$" + gotoLabel.LabelName + "は既に同じ関数内(" + pos.Filename + "の" + pos.LineNo.ToString() + "行目)で使用されています", position, 2);
+                                    ParserMediator.Warn("라벨명 $" + gotoLabel.LabelName + "은(는) 이미 같은 함수 내(" + pos.Filename + "의 " + pos.LineNo.ToString() + "행)에서 사용되고 있습니다", position, 2);
                                 }
                             }
                         }
@@ -472,7 +472,7 @@ namespace MinorShift.Emuera.GameProc
 					string errmes = exc.Message;
 					if (!(exc is EmueraException))
 						errmes = exc.GetType().ToString() + ":" + errmes;
-					ParserMediator.Warn("関数@" + label.LabelName + " の引数のエラー:" + errmes, label, 2, true, false);
+					ParserMediator.Warn("함수 @" + label.LabelName + " 인수 오류: " + errmes, label, 2, true, false);
 					label.ErrMes = "ロード時に解析に失敗した関数が呼び出されました";
                     label.IsError = true;
 				}
@@ -497,7 +497,7 @@ namespace MinorShift.Emuera.GameProc
 			if (label.IsEvent)
 			{
 				if (!wc.EOL)
-					ParserMediator.Warn("イベント関数@" + label.LabelName + " に引数は設定できません", label, 2, true, false);
+					ParserMediator.Warn("이벤트 함수 @" + label.LabelName + " 에는 인수를 설정할 수 없습니다", label, 2, true, false);
 				//label.SubNames = subNames;
 				label.Arg = args;
 				label.Def = defs;
@@ -513,7 +513,7 @@ namespace MinorShift.Emuera.GameProc
 				SymbolWord symbol = wc.Current as SymbolWord;
 				wc.ShiftNext();
                 if (symbol == null)
-				{ errMes = "引数の書式が間違っています"; goto err; }
+				{ errMes = "인수 서식이 잘못되었습니다"; goto err; }
 				if (symbol.Type == '[')//TODO:subNames 結局実装しないかも
 				{
 					IOperandTerm[] subNamesRow = ExpressionParser.ReduceArguments(wc, ArgsEndWith.RightBracket, false);
@@ -531,7 +531,7 @@ namespace MinorShift.Emuera.GameProc
 					}
 					symbol = wc.Current as SymbolWord;
 					if ((!wc.EOL) && (symbol == null))
-					{ errMes = "引数の書式が間違っています"; goto err; }
+					{ errMes = "인수 서식이 잘못되었습니다"; goto err; }
 					wc.ShiftNext();
 				}
 				if (!wc.EOL)
@@ -542,7 +542,7 @@ namespace MinorShift.Emuera.GameProc
 					else if (symbol.Type == '(')
 						argsRow = ExpressionParser.ReduceArguments(wc, ArgsEndWith.RightParenthesis, true);
 					else
-					{ errMes = "引数の書式が間違っています"; goto err; }
+					{ errMes = "인수 서식이 잘못되었습니다"; goto err; }
 					int length = argsRow.Length / 2;
 					args = new VariableTerm[length];
                     defs = new SingleTerm[length];
@@ -565,7 +565,7 @@ namespace MinorShift.Emuera.GameProc
                         for (int j = 0; j < i; j++)
                         {
                             if (vTerm.checkSameTerm(args[j]))
-                                ParserMediator.Warn("第" +  Strings.StrConv((i + 1).ToString(), VbStrConv.Wide, Config.Language) + "引数\"" + vTerm.GetFullString() + "\"はすでに第" + Strings.StrConv((j + 1).ToString(), VbStrConv.Wide, Config.Language) + "引数として宣言されています", label, 1, false, false);
+                                ParserMediator.Warn("제" +  Strings.StrConv((i + 1).ToString(), VbStrConv.Wide, Config.Language) + "인수 \"" + vTerm.GetFullString() + "\"은(는) 이미 제" + Strings.StrConv((j + 1).ToString(), VbStrConv.Wide, Config.Language) + "인수로 선언되었습니다", label, 1, false, false);
                         }
 						if (vTerm.Identifier.Code == VariableCode.ARG)
 						{
@@ -608,7 +608,7 @@ namespace MinorShift.Emuera.GameProc
 				}
 			}
 			if (!wc.EOL)
-			{ errMes = "引数の書式が間違っています"; goto err; }
+			{ errMes = "인수 서식이 잘못되었습니다"; goto err; }
 
             //label.SubNames = subNames;
 			label.Arg = args;
@@ -617,7 +617,7 @@ namespace MinorShift.Emuera.GameProc
 			label.ArgsLength = maxArgs;
 			return;
 		err:
-			ParserMediator.Warn("関数@" + label.LabelName + " の引数のエラー:" + errMes, label, 2, true, false);
+			ParserMediator.Warn("함수 @" + label.LabelName + " 인수 오류: " + errMes, label, 2, true, false);
 			return;
 		}
 
@@ -706,7 +706,7 @@ namespace MinorShift.Emuera.GameProc
 					if (ignoreAll || ignore)
 						ignoredFNCWarningCount++;
 					else
-						ParserMediator.Warn("関数@" + label.LabelName + "は定義されていますが一度も呼び出されません", label, 1, false, false);
+						ParserMediator.Warn("함수 @" + label.LabelName + "은(는) 정의되어 있지만 한 번도 호출되지 않습니다", label, 1, false, false);
 					if (!ignoreUncalledFunction)
 						checkFunctionWithCatch(label);
 					else
@@ -932,7 +932,7 @@ namespace MinorShift.Emuera.GameProc
 						if ((func.FunctionCode != FunctionCode.DATA) && (func.FunctionCode != FunctionCode.DATAFORM) && (func.FunctionCode != FunctionCode.DATALIST)
 							&& (func.FunctionCode != FunctionCode.ENDLIST) && (func.FunctionCode != FunctionCode.ENDDATA))
 						{
-							ParserMediator.Warn(baseFunc.Function.Name + "構文に使用できない命令\'" + func.Function.Name + "\'が含まれています", func, 2, true, false);
+							ParserMediator.Warn(baseFunc.Function.Name + "구문에 사용할 수 없는 명령 \'" + func.Function.Name + "\'이(가) 포함되어 있습니다", func, 2, true, false);
 							continue;
 						}
 					}
@@ -940,7 +940,7 @@ namespace MinorShift.Emuera.GameProc
 					{
 						if ((func.FunctionCode != FunctionCode.DATA) && (func.FunctionCode != FunctionCode.DATAFORM) && (func.FunctionCode != FunctionCode.ENDLIST))
 						{
-							ParserMediator.Warn("DATALIST構文に使用できない命令\'" + func.Function.Name + "\'が含まれています", func, 2, true, false);
+							ParserMediator.Warn("DATALIST 구문에 사용할 수 없는 명령 \'" + func.Function.Name + "\'이(가) 포함되어 있습니다", func, 2, true, false);
 							continue;
 						}
 					}
@@ -948,7 +948,7 @@ namespace MinorShift.Emuera.GameProc
 					{
 						if ((func.FunctionCode != FunctionCode.FUNC) && (func.FunctionCode != FunctionCode.ENDFUNC))
 						{
-							ParserMediator.Warn(baseFunc.Function.Name + "構文に使用できない命令\'" + func.Function.Name + "\'が含まれています", func, 2, true, false);
+							ParserMediator.Warn(baseFunc.Function.Name + "구문에 사용할 수 없는 명령 \'" + func.Function.Name + "\'이(가) 포함되어 있습니다", func, 2, true, false);
 							continue;
 						}
 					}
@@ -956,7 +956,7 @@ namespace MinorShift.Emuera.GameProc
 					{
 						if ((baseFunc.IfCaseList.Count == 0) && (func.FunctionCode != FunctionCode.CASE) && (func.FunctionCode != FunctionCode.CASEELSE) && (func.FunctionCode != FunctionCode.ENDSELECT))
 						{
-							ParserMediator.Warn("SELECTCASE構文の分岐の外に命令\'" + func.Function.Name + "\'が含まれています", func, 2, true, false);
+							ParserMediator.Warn("SELECTCASE 구문 분기 밖에 명령 \'" + func.Function.Name + "\'이(가) 포함되어 있습니다", func, 2, true, false);
 							continue;
 						}
 					}
@@ -1053,7 +1053,7 @@ namespace MinorShift.Emuera.GameProc
 						}
 						if (pairLine == null)
 						{
-							ParserMediator.Warn("REPEAT, FOR, WHILE, DOの中以外で" + func.Function.Name + "文が使われました", func, 2, true, false);
+							ParserMediator.Warn("REPEAT, FOR, WHILE, DO 안이 아닌 곳에서 " + func.Function.Name + "문이 사용되었습니다", func, 2, true, false);
 							break;
 						}
 						func.JumpTo = pairLine;
@@ -1066,11 +1066,11 @@ namespace MinorShift.Emuera.GameProc
 							InstructionLine ifLine = nestStack.Count == 0 ? null : nestStack.Peek();
 							if ((ifLine == null) || (ifLine.FunctionCode != FunctionCode.IF))
 							{
-								ParserMediator.Warn("IF～ENDIFの外で" + func.Function.Name + "文が使われました", func, 2, true, false);
+								ParserMediator.Warn("IF~ENDIF 밖에서 " + func.Function.Name + "문이 사용되었습니다", func, 2, true, false);
                                 break;
 							}
 							if (ifLine.IfCaseList[ifLine.IfCaseList.Count - 1].FunctionCode == FunctionCode.ELSE)
-								ParserMediator.Warn("ELSE文より後で" + func.Function.Name + "文が使われました", func, 1, false, false);
+								ParserMediator.Warn("ELSE문 뒤에서 " + func.Function.Name + "문이 사용되었습니다", func, 1, false, false);
 							ifLine.IfCaseList.Add(func);
 						}
 						break;
@@ -1095,7 +1095,7 @@ namespace MinorShift.Emuera.GameProc
 							InstructionLine selectLine = nestStack.Count == 0 ? null : nestStack.Peek();
 							if ((selectLine == null) || (selectLine.FunctionCode != FunctionCode.SELECTCASE && SelectcaseStack.Count == 0))
 							{
-								ParserMediator.Warn("SELECTCASE～ENDSELECTの外で" + func.Function.Name + "文が使われました", func, 2, true, false);
+								ParserMediator.Warn("SELECTCASE~ENDSELECT 밖에서 " + func.Function.Name + "문이 사용되었습니다", func, 2, true, false);
 								break;
 							}
                             else if (selectLine.FunctionCode != FunctionCode.SELECTCASE && SelectcaseStack.Count > 0)
@@ -1112,7 +1112,7 @@ namespace MinorShift.Emuera.GameProc
                             }
 							if ((selectLine.IfCaseList.Count > 0) &&
 								(selectLine.IfCaseList[selectLine.IfCaseList.Count - 1].FunctionCode == FunctionCode.CASEELSE))
-								ParserMediator.Warn("CASEELSE文より後で" + func.Function.Name + "文が使われました", func, 1, false, false);
+								ParserMediator.Warn("CASEELSE문 뒤에서 " + func.Function.Name + "문이 사용되었습니다", func, 1, false, false);
 							selectLine.IfCaseList.Add(func);
 						}
 						break;
@@ -1297,7 +1297,7 @@ namespace MinorShift.Emuera.GameProc
                             InstructionLine pdata = (nestStack.Count == 0) ? null : nestStack.Peek();
                             if ((pdata == null) || (!pdata.Function.IsPrintData() && pdata.FunctionCode != FunctionCode.DATALIST && pdata.FunctionCode != FunctionCode.STRDATA))
                             {
-                                ParserMediator.Warn("対応するPRINTDATA系命令のない" + func.Function.Name + "です", func, 2, true, false);
+                                ParserMediator.Warn("대응하는 PRINTDATA 계열 명령이 없는 " + func.Function.Name + "입니다", func, 2, true, false);
                                 break;
                             }
                             List<InstructionLine> iList = new List<InstructionLine>();
@@ -1315,7 +1315,7 @@ namespace MinorShift.Emuera.GameProc
                             InstructionLine pline = (nestStack.Count == 0) ? null : nestStack.Peek();
                             if ((pline == null) || ((!pline.Function.IsPrintData()) && (pline.FunctionCode != FunctionCode.STRDATA)))
                             {
-                                ParserMediator.Warn("対応するPRINTDATA系命令もしくはSTRDATAのない" + func.Function.Name + "です", func, 2, true, false);
+                                ParserMediator.Warn("대응하는 PRINTDATA 계열 명령 또는 STRDATA가 없는 " + func.Function.Name + "입니다", func, 2, true, false);
                                 break;
                             }
                             if (pline.FunctionCode == FunctionCode.DATALIST)
@@ -1348,7 +1348,7 @@ namespace MinorShift.Emuera.GameProc
 							if ((pFunc == null) ||
 								(pFunc.FunctionCode != FunctionCode.TRYCALLLIST && pFunc.FunctionCode != FunctionCode.TRYJUMPLIST && pFunc.FunctionCode != FunctionCode.TRYGOTOLIST))
 							{
-								ParserMediator.Warn("対応するTRYCALLLIST系命令のない" + func.Function.Name + "です", func, 2, true, false);
+								ParserMediator.Warn("대응하는 TRYCALLLIST 계열 명령이 없는 " + func.Function.Name + "입니다", func, 2, true, false);
 								break;
 							}
                             if (func.Argument == null)
@@ -1377,7 +1377,7 @@ namespace MinorShift.Emuera.GameProc
 						if ((pf == null) ||
 							(pf.FunctionCode != FunctionCode.TRYCALLLIST && pf.FunctionCode != FunctionCode.TRYJUMPLIST && pf.FunctionCode != FunctionCode.TRYGOTOLIST))
 						{
-							ParserMediator.Warn("対応するTRYCALLLIST系命令のない" + func.Function.Name + "です", func, 2, true, false);
+							ParserMediator.Warn("대응하는 TRYCALLLIST 계열 명령이 없는 " + func.Function.Name + "입니다", func, 2, true, false);
 							break;
 						}
 						pf.JumpTo = func;
@@ -1401,7 +1401,7 @@ namespace MinorShift.Emuera.GameProc
 						if ((pfunc == null) ||
 							(pfunc.FunctionCode != FunctionCode.NOSKIP))
 						{
-							ParserMediator.Warn("対応するNOSKIP系命令のない" + func.Function.Name + "です", func, 2, true, false);
+							ParserMediator.Warn("대응하는 NOSKIP 계열 명령이 없는 " + func.Function.Name + "입니다", func, 2, true, false);
 							break;
 						}
 						//エラーハンドリング用
@@ -1419,7 +1419,7 @@ namespace MinorShift.Emuera.GameProc
 				string funcName = func.Function.Name;
 				string funcMatch = FunctionIdentifier.getMatchFunction(func.FunctionCode);
 				if (func != null)
-					ParserMediator.Warn(funcName + "に対応する" + funcMatch + "が見つかりません", func, 2, true, false);
+					ParserMediator.Warn(funcName + "에 대응하는 " + funcMatch + "을(를) 찾을 수 없습니다", func, 2, true, false);
 				else
 					ParserMediator.Warn("ディフォルトエラー（Emuera設定漏れ）", func, 2, true, false);
 			}

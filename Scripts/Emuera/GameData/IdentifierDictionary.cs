@@ -194,13 +194,13 @@ namespace MinorShift.Emuera
 			//1.721 記号をサポートしない方向に変更
 			if (labelName.IndexOfAny(badSymbolAsIdentifier) >= 0)
 			{
-				errMes = "ラベル名" + labelName + "に\"_\"以外の記号が含まれています";
+				errMes = "라벨명 " + labelName + "에 \"_\" 이외의 기호가 포함되어 있습니다";
 				warnLevel = 1;
 				return;
 			}
 			if (char.IsDigit(labelName[0]) && (labelName[0].ToString()).Length == LangManager.GetStrlenLang(labelName[0].ToString()))
 			{
-                errMes = "ラベル名" + labelName + "が半角数字から始まっています";
+                errMes = "라벨명 " + labelName + "이(가) 반각 숫자로 시작합니다";
 				warnLevel = 0;
 				return;
 			}
@@ -217,42 +217,42 @@ namespace MinorShift.Emuera
 					case DefinedNameType.Reserved:
 						if (Config.AllowFunctionOverloading)
 						{
-							errMes = "関数名" + labelName + "はEmueraの予約語と衝突しています。Emuera専用構文の構文解析に支障をきたす恐れがあります";
+							errMes = "함수명" + labelName + "은(는) Emuera 예약어와 충돌합니다. Emuera 전용 구문의 해석에 문제가 생길 수 있습니다";
 							warnLevel = 1;
 						}
 						else
 						{
-							errMes = "関数名" + labelName + "はEmueraの予約語です";
+							errMes = "함수명" + labelName + "은(는) Emuera 예약어입니다";
 							warnLevel = 2;
 						}
 						break;
 					case DefinedNameType.SystemMethod:
 						if (Config.AllowFunctionOverloading)
 						{
-							errMes = "関数名" + labelName + "はEmueraの式中関数を上書きします";
+							errMes = "함수명" + labelName + "은(는) Emuera 식중 함수를 덮어씁니다";
 							warnLevel = 1;
 						}
 						else
 						{
-							errMes = "関数名" + labelName + "はEmueraの式中関数名として使われています";
+							errMes = "함수명" + labelName + "은(는) Emuera 식중 함수 이름으로 사용되고 있습니다";
 							warnLevel = 2;
 						}
 						break;
 					case DefinedNameType.SystemVariable:
-						errMes = "関数名" + labelName + "はEmueraの変数で使われています";
+						errMes = "함수명" + labelName + "은(는) Emuera 변수에 사용되고 있습니다";
 						warnLevel = 1;
 						break;
 					case DefinedNameType.SystemInstrument:
-						errMes = "関数名" + labelName + "はEmueraの変数もしくは命令で使われています";
+						errMes = "함수명" + labelName + "은(는) Emuera 변수 또는 명령에 사용되고 있습니다";
 						warnLevel = 1;
 						break;
 					case DefinedNameType.UserMacro:
 						//字句解析がうまくいっていれば本来あり得ないはず
-						errMes = "関数名" + labelName + "はマクロに使用されています";
+						errMes = "함수명" + labelName + "은(는) 매크로에 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserRefMethod:
-						errMes = "関数名" + labelName + "は参照型関数の名称に使用されています";
+						errMes = "함수명" + labelName + "은(는) 참조형 함수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 				}
@@ -270,7 +270,7 @@ namespace MinorShift.Emuera
 			//1.721 記号をサポートしない方向に変更
 			if (varName.IndexOfAny(badSymbolAsIdentifier) >= 0)
 			{
-				errMes = "変数名" + varName + "に\"_\"以外の記号が含まれています";
+				errMes = "변수명" + varName + "에 \"_\" 이외의 기호가 포함되어 있습니다";
 				warnLevel = 2;
 				return;
 			}
@@ -287,29 +287,29 @@ namespace MinorShift.Emuera
 				switch (nametype)
 				{
 					case DefinedNameType.Reserved:
-						errMes = "変数名" + varName + "はEmueraの予約語です";
+						errMes = "변수명" + varName + "은(는) Emuera 예약어입니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.SystemInstrument:
 					case DefinedNameType.SystemMethod:
 						//代入文が使えなくなるために命令名との衝突は致命的。
-						errMes = "変数名" + varName + "はEmueraの命令名として使われています";
+						errMes = "변수명" + varName + "은(는) Emuera 명령 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.SystemVariable:
-						errMes = "変数名" + varName + "はEmueraの変数名として使われています";
+						errMes = "변수명" + varName + "은(는) Emuera 변수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserMacro:
-						errMes = "変数名" + varName + "は既にマクロ名に使用されています";
+						errMes = "변수명" + varName + "은(는) 이미 매크로 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserGlobalVariable:
-						errMes = "変数名" + varName + "はユーザー定義の広域変数名に使用されています";
+						errMes = "변수명" + varName + "은(는) 사용자 정의 광역 변수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserRefMethod:
-						errMes = "変数名" + varName + "は参照型関数の名称に使用されています";
+						errMes = "변수명" + varName + "은(는) 참조형 함수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 				}
@@ -320,7 +320,7 @@ namespace MinorShift.Emuera
 		{
 			if (macroName.IndexOfAny(badSymbolAsIdentifier) >= 0)
 			{
-				errMes = "マクロ名" + macroName + "に\"_\"以外の記号が含まれています";
+				errMes = "매크로명" + macroName + "에 \"_\" 이외의 기호가 포함되어 있습니다";
 				warnLevel = 2;
 				return;
 			}
@@ -330,30 +330,30 @@ namespace MinorShift.Emuera
 				switch (nametype)
 				{
 					case DefinedNameType.Reserved:
-						errMes = "マクロ名" + macroName + "はEmueraの予約語です";
+						errMes = "매크로명" + macroName + "은(는) Emuera 예약어입니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.SystemInstrument:
 					case DefinedNameType.SystemMethod:
 						//命令名を上書きした時が面倒なのでとりあえず許可しない
-						errMes = "マクロ名" + macroName + "はEmueraの命令名として使われています";
+						errMes = "매크로명" + macroName + "은(는) Emuera 명령 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.SystemVariable:
 						//別に上書きしてもいいがとりあえず許可しないでおく。いずれ解放するかもしれない
-						errMes = "マクロ名" + macroName + "はEmueraの変数名として使われています";
+						errMes = "매크로명" + macroName + "은(는) Emuera 변수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserMacro:
-						errMes = "マクロ名" + macroName + "は既にマクロ名に使用されています";
+						errMes = "매크로명" + macroName + "은(는) 이미 매크로 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserGlobalVariable:
-						errMes = "マクロ名" + macroName + "はユーザー定義の広域変数名に使用されています";
+						errMes = "매크로명" + macroName + "은(는) 사용자 정의 광역 변수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserRefMethod:
-						errMes = "マクロ名" + macroName + "は参照型関数の名称に使用されています";
+						errMes = "매크로명" + macroName + "은(는) 참조형 함수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 				}
@@ -371,13 +371,13 @@ namespace MinorShift.Emuera
 			//1.721 記号をサポートしない方向に変更
 			if (varName.IndexOfAny(badSymbolAsIdentifier) >= 0)
 			{
-				errMes = "変数名" + varName + "に\"_\"以外の記号が含まれています";
+				errMes = "변수명" + varName + "에 \"_\" 이외의 기호가 포함되어 있습니다";
 				warnLevel = 2;
 				return;
 			}
 			if (char.IsDigit(varName[0]))
 			{
-				errMes = "変数名" + varName + "が半角数字から始まっています";
+				errMes = "변수명" + varName + "이(가) 반각 숫자로 시작합니다";
 				warnLevel = 2;
 				return;
 			}
@@ -387,32 +387,32 @@ namespace MinorShift.Emuera
 				switch(nametype)
 				{
 					case DefinedNameType.Reserved:
-						errMes = "変数名" + varName + "はEmueraの予約語です";
+						errMes = "변수명" + varName + "은(는) Emuera 예약어입니다";
 						warnLevel = 2;
 						return;
 					case DefinedNameType.SystemInstrument:
 					case DefinedNameType.SystemMethod:
 						//代入文が使えなくなるために命令名との衝突は致命的。
-						errMes = "変数名" + varName + "はEmueraの命令名として使われています";
+						errMes = "변수명" + varName + "은(는) Emuera 명령 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						return;
 					case DefinedNameType.SystemVariable:
 						//システム変数の上書きは不可
-                        errMes = "変数名" + varName + "はEmueraの変数名として使われています";
+                        errMes = "변수명" + varName + "은(는) Emuera 변수 이름으로 사용되고 있습니다";
                         warnLevel = 2;
 						break;
 					case DefinedNameType.UserMacro:
 						//字句解析がうまくいっていれば本来あり得ないはず
-						errMes = "変数名" + varName + "はマクロに使用されています";
+						errMes = "변수명" + varName + "은(는) 매크로에 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserGlobalVariable:
 						//広域変数の上書きは禁止しておく
-						errMes = "変数名" + varName + "はユーザー定義の広域変数名に使用されています";
+						errMes = "변수명" + varName + "은(는) 사용자 정의 광역 변수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
 					case DefinedNameType.UserRefMethod:
-						errMes = "変数名" + varName + "は参照型関数の名称に使用されています";
+						errMes = "변수명" + varName + "은(는) 참조형 함수 이름으로 사용되고 있습니다";
 						warnLevel = 2;
 						break;
                 }
@@ -643,7 +643,7 @@ namespace MinorShift.Emuera
 							throw new CodeEE("関数名\"" + str + "\"が変数のように使われています");
 						break;
 					case DefinedNameType.UserMacro:
-						throw new CodeEE("予期しないマクロ名\"" + str + "\"です");
+						throw new CodeEE("예기치 않은 매크로명 \"" + str + "\"입니다");
 					case DefinedNameType.SystemInstrument:
 						if (isFunc)
 							throw new CodeEE("命令名\"" + str + "\"が関数のように使われています");
