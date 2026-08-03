@@ -792,7 +792,7 @@ namespace MinorShift.Emuera.GameView
 			if (state == ConsoleState.Running)
 			{//RunningならProcessは処理を継続するべき
 				state = ConsoleState.Error;
-                PrintError("emueraのエラー：プログラムの状態を特定できません");
+                PrintError("Emuera 오류: 프로그램 상태를 특정할 수 없습니다");
 			}
 			if (state == ConsoleState.Error && !noOutputLog)
 				OutputLog(Program.ExeDir + "emuera.log");
@@ -1073,7 +1073,7 @@ namespace MinorShift.Emuera.GameView
 			catch (System.ComponentModel.Win32Exception)
 			{
 				uEmuera.Media.SystemSounds.Hand.Play();
-				PrintError("エディタを開くことができませんでした");
+				PrintError("에디터를 열 수 없었습니다");
 				forceUpdateGeneration();
 			}
 			return;
@@ -1165,14 +1165,14 @@ namespace MinorShift.Emuera.GameView
 		{
 			if(timer.Enabled)
 			{
-				PrintError("タイマー系命令の待ち時間中はコマンドを入力できません");
+				PrintError("타이머 계열 명령의 대기 중에는 명령을 입력할 수 없습니다");
 				PrintError("");//タイマー表示処理に消されちゃうかもしれないので
 				RefreshStrings(true);
 				return;
 			}
 			if (IsInProcess)
 			{
-				PrintError("スクリプト実行中はコマンドを入力できません");
+				PrintError("스크립트 실행 중에는 명령을 입력할 수 없습니다");
 				RefreshStrings(true);
 				return;
 			}
@@ -1207,7 +1207,7 @@ namespace MinorShift.Emuera.GameView
 			{
 				if (!Program.DebugMode)
 				{
-					PrintError("デバッグウインドウは-Debug引数付きで起動したときのみ使えます");
+					PrintError("디버그 창은 -Debug 인수로 실행했을 때만 사용할 수 있습니다");
 					RefreshStrings(true);
 					return;
 				}
@@ -1217,7 +1217,7 @@ namespace MinorShift.Emuera.GameView
 			{
 				if (!Config.UseDebugCommand)
 				{
-					PrintError("デバッグコマンドを使用できない設定になっています");
+					PrintError("디버그 명령을 사용할 수 없도록 설정되어 있습니다");
 					RefreshStrings(true);
 					return;
 				}
@@ -1860,11 +1860,11 @@ namespace MinorShift.Emuera.GameView
             prevState = state;
 			prevReq = inputReq;
 			state = ConsoleState.Initializing;
-			PrintSingleLine("ERB再読み込み中……", true);
+			PrintSingleLine("ERB 다시 읽는 중……", true);
 			force_temporary = true;
 			emuera.ReloadErb();
 			force_temporary = false;
-            PrintSingleLine("再読み込み完了", true);
+            PrintSingleLine("다시 읽기 완료", true);
 			RefreshStrings(true);
             //強制的にボタン世代が切り替わるのを防ぐ
             updatedGeneration = true;
@@ -1910,11 +1910,11 @@ namespace MinorShift.Emuera.GameView
 			prevState = state;
 			prevReq = inputReq;
 			state = ConsoleState.Initializing;
-            PrintSingleLine("ERB再読み込み中……", true);
+            PrintSingleLine("ERB 다시 읽는 중……", true);
 			force_temporary = true;
 			emuera.ReloadPartialErb(path);
 			force_temporary = false;
-            PrintSingleLine("再読み込み完了", true);
+            PrintSingleLine("다시 읽기 완료", true);
 			RefreshStrings(true);
             //強制的にボタン世代が切り替わるのを防ぐ
             updatedGeneration = true;
@@ -1961,11 +1961,11 @@ namespace MinorShift.Emuera.GameView
 			prevState = state;
 			prevReq = inputReq;
 			state = ConsoleState.Initializing;
-            PrintSingleLine("ERB再読み込み中……", true);
+            PrintSingleLine("ERB 다시 읽는 중……", true);
 			force_temporary = true;
             emuera.ReloadPartialErb(paths);
 			force_temporary = false;
-            PrintSingleLine("再読み込み完了", true);
+            PrintSingleLine("다시 읽기 완료", true);
 			RefreshStrings(true);
             //強制的にボタン世代が切り替わるのを防ぐ
             updatedGeneration = true;

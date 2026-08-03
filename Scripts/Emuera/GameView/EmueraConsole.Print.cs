@@ -237,16 +237,16 @@ namespace MinorShift.Emuera.GameView
 			{
 				if (position.LineNo >= 0)
 				{
-					PrintErrorButton(string.Format("警告Lv{0}:{1}:{2}行目:{3}", level, position.Filename, position.LineNo, str), position);
+					PrintErrorButton(string.Format("경고 Lv{0}:{1}:{2}행:{3}", level, position.Filename, position.LineNo, str), position);
 					GlobalStatic.Process.printRawLine(position);
 				}
 				else
-					PrintErrorButton(string.Format("警告Lv{0}:{1}:{2}", level, position.Filename, str), position);
+					PrintErrorButton(string.Format("경고 Lv{0}:{1}:{2}", level, position.Filename, str), position);
 
 			}
 			else
 			{
-				PrintError(string.Format("警告Lv{0}:{1}", level, str));
+				PrintError(string.Format("경고 Lv{0}:{1}", level, str));
 			}
 			force_temporary = b;
 		}
@@ -616,7 +616,7 @@ namespace MinorShift.Emuera.GameView
 			{
 				if (window.Created)
 				{
-					PrintSystemLine("※※※ログファイルを" + filename + "に出力しました※※※");
+					PrintSystemLine("※※※ 로그 파일을 " + filename + "에 출력했습니다 ※※※");
 					RefreshStrings(true);
 				}
 				return true;

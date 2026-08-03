@@ -2480,16 +2480,16 @@ namespace MinorShift.Emuera.GameData.Function
             {
                 Int64 i = arguments[0].GetIntValue(exm);
                 if ((i < 0) || (i > 0xFFFF))
-                    throw new CodeEE("UNICODE関数に範囲外の値(" + i.ToString() + ")が渡されました");
+                    throw new CodeEE("UNICODE 함수에 범위를 벗어난 값(" + i.ToString() + ")이 전달되었습니다");
                 //改行関係以外の制御文字は警告扱いに変更
                 //とはいえ、改行以外の制御文字を意図的に渡すのはそもそもコーディングに問題がありすぎるので、エラーでもいい気はする
                 if ((i < 0x001F && i != 0x000A && i != 0x000D) || (i >= 0x007F && i <= 0x009F))
                 {
                     //コード実行中の場合
                     if(GlobalStatic.Process.getCurrentLine != null)
-                        GlobalStatic.Console.PrintSystemLine("注意:" + GlobalStatic.Process.getCurrentLine.Position.Filename + "の" + GlobalStatic.Process.getCurrentLine.Position.LineNo.ToString() + "行目でUNICODE関数に制御文字に対応する値(0x" + String.Format("{0:X}", i) + ")が渡されました");
+                        GlobalStatic.Console.PrintSystemLine("주의: " + GlobalStatic.Process.getCurrentLine.Position.Filename + " " + GlobalStatic.Process.getCurrentLine.Position.LineNo.ToString() + "행에서 UNICODE 함수에 제어 문자에 해당하는 값(0x" + String.Format("{0:X}", i) + ")이 전달되었습니다");
                     else
-                        ParserMediator.Warn("UNICODE関数に制御文字に対応する値(0x" + String.Format("{0:X}", i) + ")が渡されました", GlobalStatic.Process.scaningLine, 1, false, false, null);
+                        ParserMediator.Warn("UNICODE 함수에 제어 문자에 해당하는 값(0x" + String.Format("{0:X}", i) + ")이 전달되었습니다", GlobalStatic.Process.scaningLine, 1, false, false, null);
 
                     return "";
                 }

@@ -66,7 +66,7 @@ namespace MinorShift.Emuera.GameProc
 					if(MessageBox.Show("コンフィグファイルに異常があります\nEmueraを終了しますか","コンフィグエラー", MessageBoxButtons.YesNo)
 						== DialogResult.Yes)
 					{
-						console.PrintSystemLine("コンフィグファイルに異常があり、終了が選択されたため処理を終了しました");
+						console.PrintSystemLine("설정 파일에 문제가 있고 종료가 선택되어 처리를 중단했습니다");
 						return false;
 					}
 				}
@@ -74,7 +74,7 @@ namespace MinorShift.Emuera.GameProc
 				if (!Content.AppContents.LoadContents())
 				{
 					ParserMediator.FlushWarningList();
-					console.PrintSystemLine("リソースフォルダ読み込み中に異常が発見されたため処理を終了します");
+					console.PrintSystemLine("리소스 폴더를 읽는 중 문제가 발견되어 처리를 중단합니다");
 					return false;
 				}
 				ParserMediator.FlushWarningList();
@@ -84,7 +84,7 @@ namespace MinorShift.Emuera.GameProc
                     if (File.Exists(Program.ExeDir + "macro.txt"))
                     {
                         if (Config.DisplayReport)
-							console.PrintSystemLine("macro.txt読み込み中・・・");
+							console.PrintSystemLine("macro.txt 읽는 중...");
                         KeyMacro.LoadMacroFile(Program.ExeDir + "macro.txt");
                     }
 				}
@@ -94,7 +94,7 @@ namespace MinorShift.Emuera.GameProc
 					if (File.Exists(Program.CsvDir + "_Replace.csv"))
 					{
 						if (Config.DisplayReport)
-							console.PrintSystemLine("_Replace.csv読み込み中・・・");
+							console.PrintSystemLine("_Replace.csv 읽는 중...");
 						ConfigData.Instance.LoadReplaceFile(Program.CsvDir + "_Replace.csv");
 						if (ParserMediator.HasWarning)
 						{
@@ -102,7 +102,7 @@ namespace MinorShift.Emuera.GameProc
 							if (MessageBox.Show("_Replace.csvに異常があります\nEmueraを終了しますか", "_Replace.csvエラー", MessageBoxButtons.YesNo)
 								== DialogResult.Yes)
 							{
-								console.PrintSystemLine("_Replace.csvに異常があり、終了が選択されたため処理を終了しました");
+								console.PrintSystemLine("_Replace.csv에 문제가 있고 종료가 선택되어 처리를 중단했습니다");
 								return false;
 							}
 						}
@@ -118,11 +118,11 @@ namespace MinorShift.Emuera.GameProc
 					if (File.Exists(Program.CsvDir + "_Rename.csv"))
                     {
                         if (Config.DisplayReport || Program.AnalysisMode)
-							console.PrintSystemLine("_Rename.csv読み込み中・・・");
+							console.PrintSystemLine("_Rename.csv 읽는 중...");
 						ParserMediator.LoadEraExRenameFile(Program.CsvDir + "_Rename.csv");
                     }
                     else
-                        console.PrintError("csv\\_Rename.csvが見つかりません");
+                        console.PrintError("csv\\_Rename.csv를 찾을 수 없습니다");
                 }
                 if (!Config.DisplayReport)
                 {
@@ -134,7 +134,7 @@ namespace MinorShift.Emuera.GameProc
                 if (!gamebase.LoadGameBaseCsv(Program.CsvDir + "GAMEBASE.CSV"))
                 {
 					ParserMediator.FlushWarningList();
-                    console.PrintSystemLine("GAMEBASE.CSVの読み込み中に問題が発生したため処理を終了しました");
+                    console.PrintSystemLine("GAMEBASE.CSV를 읽는 중 문제가 발생하여 처리를 중단했습니다");
                     return false;
                 }
 				console.SetWindowTitle(gamebase.ScriptWindowTitle);
@@ -168,7 +168,7 @@ namespace MinorShift.Emuera.GameProc
 				if (!hLoader.LoadHeaderFiles(Program.ErbDir, Config.DisplayReport))
 				{
 					ParserMediator.FlushWarningList();
-					console.PrintSystemLine("ERHの読み込み中にエラーが発生したため処理を終了しました");
+					console.PrintSystemLine("ERH를 읽는 중 오류가 발생하여 처리를 중단했습니다");
 					return false;
 				}
 				LexicalAnalyzer.UseMacro = idDic.UseMacro();
@@ -187,7 +187,7 @@ namespace MinorShift.Emuera.GameProc
 			catch (Exception e)
 			{
                 handleException(e, null, true);
-				console.PrintSystemLine("初期化中に致命的なエラーが発生したため処理を終了しました");
+				console.PrintSystemLine("초기화 중 치명적인 오류가 발생하여 처리를 중단했습니다");
 				return false;
 			}
 			if (labelDic == null)
@@ -422,17 +422,17 @@ namespace MinorShift.Emuera.GameProc
 			console.ThrowError(playSound);
 			if (exc is CodeEE)
 			{
-				console.PrintError("関数の終端でエラーが発生しました:" + Program.ExeName);
+				console.PrintError("함수 종단에서 오류가 발생했습니다:" + Program.ExeName);
 				console.PrintError(exc.Message);
 			}
 			else if (exc is ExeEE)
 			{
-				console.PrintError("関数の終端でEmueraのエラーが発生しました:" + Program.ExeName);
+				console.PrintError("함수 종단에서 Emuera 오류가 발생했습니다:" + Program.ExeName);
 				console.PrintError(exc.Message);
 			}
 			else
 			{
-				console.PrintError("関数の終端で予期しないエラーが発生しました:" + Program.ExeName);
+				console.PrintError("함수 종단에서 예기치 않은 오류가 발생했습니다:" + Program.ExeName);
 				console.PrintError(exc.GetType().ToString() + ":" + exc.Message);
 				string[] stack = exc.StackTrace.Split('\n');
 				for (int i = 0; i < stack.Length; i++)
@@ -456,7 +456,7 @@ namespace MinorShift.Emuera.GameProc
 			if (position != null)
 			{
 				if (position.LineNo >= 0)
-					posString = position.Filename + "の" + position.LineNo.ToString() + "行目で";
+					posString = position.Filename + " " + position.LineNo.ToString() + "행에서 ";
 				else
 					posString = position.Filename + "で";
 					
@@ -467,42 +467,42 @@ namespace MinorShift.Emuera.GameProc
 				{
                     if (current is InstructionLine procline && procline.FunctionCode == FunctionCode.THROW)
                     {
-                        console.PrintErrorButton(posString + "THROWが発生しました", position);
+                        console.PrintErrorButton(posString + "THROW가 발생했습니다", position);
                         printRawLine(position);
-                        console.PrintError("THROW内容：" + exc.Message);
+                        console.PrintError("THROW 내용: " + exc.Message);
                     }
                     else
                     {
-                        console.PrintErrorButton(posString + "エラーが発生しました:" + Program.ExeName, position);
+                        console.PrintErrorButton(posString + "오류가 발생했습니다:" + Program.ExeName, position);
 						printRawLine(position);
-						console.PrintError("エラー内容：" + exc.Message);
+						console.PrintError("오류 내용: " + exc.Message);
                     }
-                    console.PrintError("現在の関数：@" + current.ParentLabelLine.LabelName + "（" + current.ParentLabelLine.Position.Filename + "の" + current.ParentLabelLine.Position.LineNo.ToString() + "行目）");
-                    console.PrintError("関数呼び出しスタック：");
+                    console.PrintError("현재 함수: @" + current.ParentLabelLine.LabelName + "（" + current.ParentLabelLine.Position.Filename + " " + current.ParentLabelLine.Position.LineNo.ToString() + "행)");
+                    console.PrintError("함수 호출 스택:");
                     LogicalLine parent;
                     int depth = 0;
                     while ((parent = state.GetReturnAddressSequensial(depth++)) != null)
                     {
                         if (parent.Position != null)
                         {
-                            console.PrintErrorButton("↑" + parent.Position.Filename + "の" + parent.Position.LineNo.ToString() + "行目（関数@" + parent.ParentLabelLine.LabelName + "内）", parent.Position);
+                            console.PrintErrorButton("↑" + parent.Position.Filename + " " + parent.Position.LineNo.ToString() + "행 (함수 @" + parent.ParentLabelLine.LabelName + " 내)", parent.Position);
                         }
                     } 
 				}
 				else
 				{
-					console.PrintError(posString + "エラーが発生しました:" + Program.ExeName);
+					console.PrintError(posString + "오류가 발생했습니다:" + Program.ExeName);
 					console.PrintError(exc.Message);
 				}
 			}
 			else if (exc is ExeEE)
 			{
-				console.PrintError(posString + "Emueraのエラーが発生しました:" + Program.ExeName);
+				console.PrintError(posString + "Emuera 오류가 발생했습니다:" + Program.ExeName);
 				console.PrintError(exc.Message);
 			}
 			else
             {
-				console.PrintError(posString + "予期しないエラーが発生しました:" + Program.ExeName);
+				console.PrintError(posString + "예기치 않은 오류가 발생했습니다:" + Program.ExeName);
 				console.PrintError(exc.GetType().ToString() + ":" + exc.Message);
 				string[] stack = exc.StackTrace.Split('\n');
 				for (int i = 0; i < stack.Length; i++)

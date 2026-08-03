@@ -57,42 +57,42 @@ namespace MinorShift.Emuera.GameProc
 					string file = erbFiles[i].Value;
 #if UEMUERA_DEBUG
 					if (displayReport)
-						output.PrintSystemLine("経過時間:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:" + filename + "読み込み中・・・");
+						output.PrintSystemLine("경과 시간:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:" + filename + " 읽는 중...");
 #else
 					if (displayReport)
-						output.PrintSystemLine(filename + "読み込み中・・・");
+						output.PrintSystemLine(filename + " 읽는 중...");
 #endif
 					//System.Windows.Forms.//Application.DoEvents();
 					loadErb(file, filename, isOnlyEvent);
 				}
 				ParserMediator.FlushWarningList();
 #if UEMUERA_DEBUG
-				output.PrintSystemLine("経過時間:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:");
+				output.PrintSystemLine("경과 시간:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:");
 #endif
 				if (displayReport)
-					output.PrintSystemLine("ユーザー定義関数のリストを構築中・・・");
+					output.PrintSystemLine("사용자 정의 함수 목록 구축 중...");
 				setLabelsArg();
 				ParserMediator.FlushWarningList();
 				labelDic.Initialized = true;
 #if UEMUERA_DEBUG
-				output.PrintSystemLine("経過時間:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:");
+				output.PrintSystemLine("경과 시간:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:");
 #endif
 				if (displayReport)
-					output.PrintSystemLine("スクリプトの構文チェック中・・・");
+					output.PrintSystemLine("스크립트 구문 검사 중...");
 				checkScript();
 				ParserMediator.FlushWarningList();
 
 #if UEMUERA_DEBUG
-				output.PrintSystemLine("経過時間:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:");
+				output.PrintSystemLine("경과 시간:" + (WinmmTimer.TickCount - starttime).ToString("D4") + "ms:");
 #endif
 				if (displayReport)
-					output.PrintSystemLine("ロード完了");
+					output.PrintSystemLine("불러오기 완료");
 			}
 			catch (Exception e)
 			{
 				ParserMediator.FlushWarningList();
 				uEmuera.Media.SystemSounds.Hand.Play();
-				output.PrintError("予期しないエラーが発生しました:" + Program.ExeName);
+				output.PrintError("예기치 않은 오류가 발생했습니다:" + Program.ExeName);
 				output.PrintError(e.GetType().ToString() + ":" + e.Message);
 				return false;
 			}
@@ -122,7 +122,7 @@ namespace MinorShift.Emuera.GameProc
 				else
 					fname = fpath;
 				if (Program.AnalysisMode)
-					output.PrintSystemLine(fname + "読み込み中・・・");
+					output.PrintSystemLine(fname + " 읽는 중...");
 				//System.Windows.Forms.//Application.DoEvents();
                 loadErb(fpath, fname, isOnlyEvent);
 			}
@@ -305,7 +305,7 @@ namespace MinorShift.Emuera.GameProc
 			EraStreamReader eReader = new EraStreamReader(Config.UseRenameFile && ParserMediator.RenameDic != null);
 			if (!eReader.Open(filepath, filename))
 			{
-				output.PrintError(eReader.Filename + "のオープンに失敗しました");
+				output.PrintError(eReader.Filename + " 열기에 실패했습니다");
 				return;
 			}
 			try
@@ -666,7 +666,7 @@ namespace MinorShift.Emuera.GameProc
 			if (useCallForm)
 			{//callform系が使われたら全ての関数が呼び出されたとみなす。
                 if (Program.AnalysisMode)
-					output.PrintSystemLine("CALLFORM系命令が使われたため、呼び出されない関数のチェックは行われません。");
+					output.PrintSystemLine("CALLFORM 계열 명령이 사용되어, 호출되지 않는 함수 검사는 수행하지 않습니다.");
 				foreach (FunctionLabelLine label in labelList)
 				{
 					if (label.Depth != labelDepth)
@@ -724,50 +724,50 @@ namespace MinorShift.Emuera.GameProc
 			}
 			if (Program.AnalysisMode && (warningDic.Keys.Count > 0 || GlobalStatic.tempDic.Keys.Count > 0))
 			{
-				output.PrintError("・定義が見つからなかった関数: 他のファイルで定義されている場合はこの警告は無視できます");
+				output.PrintError("・정의를 찾지 못한 함수: 다른 파일에 정의되어 있다면 이 경고는 무시해도 됩니다");
 				if (warningDic.Keys.Count > 0)
 				{
-					output.PrintError("　○一般関数:");
+					output.PrintError("　○ 일반 함수:");
 					foreach (string labelName in warningDic.Keys)
 					{
-						output.PrintError("　　" + labelName + ": " + warningDic[labelName].ToString() + "回");
+						output.PrintError("　　" + labelName + ": " + warningDic[labelName].ToString() + "회");
 					}
 				}
 				if (GlobalStatic.tempDic.Keys.Count > 0)
 				{
-					output.PrintError("　○文中関数:");
+					output.PrintError("　○ 식중 함수:");
 					foreach (string labelName in GlobalStatic.tempDic.Keys)
 					{
-						output.PrintError("　　" + labelName + ": " + GlobalStatic.tempDic[labelName].ToString() + "回");
+						output.PrintError("　　" + labelName + ": " + GlobalStatic.tempDic[labelName].ToString() + "회");
 					}
 				}
 			}
 			else
 			{
 				if ((ignoredFNCWarningCount > 0) && (Config.DisplayWarningLevel <= 1) && (notCalledWarning != DisplayWarningFlag.IGNORE))
-					output.PrintError(string.Format("警告Lv1:定義された関数が一度も呼び出されていない事に関する警告を{0}件無視しました", ignoredFNCWarningCount));
+					output.PrintError(string.Format("경고 Lv1: 정의된 함수가 한 번도 호출되지 않은 것에 관한 경고 {0}건을 무시했습니다", ignoredFNCWarningCount));
 				if ((ignoredFNFWarningCount > 0) && (Config.DisplayWarningLevel <= 2) && (notCalledWarning != DisplayWarningFlag.IGNORE))
-					output.PrintError(string.Format("警告Lv2:定義されていない関数を呼び出した事に関する警告を{0}件無視しました", ignoredFNFWarningCount));
+					output.PrintError(string.Format("경고 Lv2: 정의되지 않은 함수를 호출한 것에 관한 경고 {0}건을 무시했습니다", ignoredFNFWarningCount));
 			}
 			ParserMediator.FlushWarningList();
 			if (Config.DisplayReport)
-				output.PrintError(string.Format("非コメント行数:{0}, 全関数合計:{1}, 被呼出関数合計:{2}", enabledLineCount, labelDic.Count, usedLabelCount));
+				output.PrintError(string.Format("주석 아닌 행 수:{0}, 전체 함수 합계:{1}, 호출된 함수 합계:{2}", enabledLineCount, labelDic.Count, usedLabelCount));
 			if (Config.AllowFunctionOverloading && Config.WarnFunctionOverloading)
 			{
 				List<string> overloadedList = GlobalStatic.IdentifierDictionary.GetOverloadedList(labelDic);
 				if (overloadedList.Count > 0)
 				{
 					output.NewLine();
-					output.PrintError("＊＊＊＊＊警告＊＊＊＊＊");
+					output.PrintError("＊＊＊＊＊ 경고 ＊＊＊＊＊");
 					foreach (string funcname in overloadedList)
 					{
-						output.PrintSystemLine("  システム関数\"" + funcname + "\"がユーザー定義関数によって上書きされています");
+						output.PrintSystemLine("  시스템 함수 \"" + funcname + "\"가 사용자 정의 함수로 덮어써졌습니다");
 					}
-					output.PrintSystemLine("  上記の関数を利用するスクリプトは意図通りに動かない可能性があります");
+					output.PrintSystemLine("  위 함수를 사용하는 스크립트는 의도대로 동작하지 않을 수 있습니다");
 					output.NewLine();
-					output.PrintSystemLine("  ※この警告は該当する式中関数を利用しているEmuera専用スクリプト向けの警告です。");
-					output.PrintSystemLine("  eramaker用のスクリプトの動作には影響しません。");
-					output.PrintSystemLine("  今後この警告が不要ならばコンフィグの「システム関数が上書きされたとき警告を表示する」をOFFにして下さい。");
+					output.PrintSystemLine("  ※ 이 경고는 해당 식중 함수를 사용하는 Emuera 전용 스크립트를 위한 것입니다.");
+					output.PrintSystemLine("  eramaker용 스크립트의 동작에는 영향이 없습니다.");
+					output.PrintSystemLine("  이 경고가 필요 없으면 설정의 「システム関数が上書きされたとき警告を表示する」를 OFF로 하세요.");
 					output.PrintSystemLine("＊＊＊＊＊＊＊＊＊＊＊＊");
 				}
 			}

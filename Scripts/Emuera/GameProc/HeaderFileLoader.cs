@@ -46,7 +46,7 @@ namespace MinorShift.Emuera.GameProc
 					string filename = headerFiles[i].Key;
 					string file = headerFiles[i].Value;
 					if (displayReport)
-						output.PrintSystemLine(filename + "読み込み中・・・");
+						output.PrintSystemLine(filename + " 읽는 중...");
 					noError = loadHeaderFile(file, filename);
 					if (!noError)
 						break;
@@ -80,7 +80,7 @@ namespace MinorShift.Emuera.GameProc
 
 			if (!eReader.Open(filepath, filename))
 			{
-				throw new CodeEE(eReader.Filename + "のオープンに失敗しました");
+				throw new CodeEE(eReader.Filename + " 열기에 실패했습니다");
 				//return false;
 			}
 			try

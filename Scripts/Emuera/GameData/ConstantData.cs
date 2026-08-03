@@ -188,12 +188,12 @@ namespace MinorShift.Emuera.GameData
 			EraStreamReader eReader = new EraStreamReader(false);
 			if (!eReader.Open(csvPath))
 			{
-				output.PrintError(eReader.Filename + "のオープンに失敗しました");
+				output.PrintError(eReader.Filename + " 열기에 실패했습니다");
 				return;
 			}
 			ScriptPosition position = null;
 			if (disp)
-				output.PrintSystemLine(eReader.Filename + "読み込み中・・・");
+				output.PrintSystemLine(eReader.Filename + " 읽는 중...");
 			try
 			{
 				StringStream st = null;
@@ -208,9 +208,9 @@ namespace MinorShift.Emuera.GameData
 			{
 				uEmuera.Media.SystemSounds.Hand.Play();
 				if (position != null)
-					ParserMediator.Warn("予期しないエラーが発生しました", position, 3);
+					ParserMediator.Warn("예기치 않은 오류가 발생했습니다", position, 3);
 				else
-					output.PrintError("予期しないエラーが発生しました");
+					output.PrintError("예기치 않은 오류가 발생했습니다");
 				return;
 			}
 			finally
@@ -1069,12 +1069,12 @@ check1break:
 			EraStreamReader eReader = new EraStreamReader(false);
 			if (!eReader.Open(csvPath, csvName))
 			{
-				output.PrintError(eReader.Filename + "のオープンに失敗しました");
+				output.PrintError(eReader.Filename + " 열기에 실패했습니다");
 				return;
 			}
 			ScriptPosition position = null;
 			if (disp)
-				output.PrintSystemLine(eReader.Filename + "読み込み中・・・");
+				output.PrintSystemLine(eReader.Filename + " 읽는 중...");
 			try
 			{
 				Int64 index = -1;
@@ -1136,9 +1136,9 @@ check1break:
 			{
 				uEmuera.Media.SystemSounds.Hand.Play();
 				if (position != null)
-					ParserMediator.Warn("予期しないエラーが発生しました", position, 3);
+					ParserMediator.Warn("예기치 않은 오류가 발생했습니다", position, 3);
 				else
-					output.PrintError("予期しないエラーが発生しました");
+					output.PrintError("예기치 않은 오류가 발생했습니다");
 				return;
 			}
 			finally
@@ -1372,13 +1372,13 @@ check1break:
 			EraStreamReader eReader = new EraStreamReader(false);
 			if (!eReader.Open(csvPath))
 			{
-				output.PrintError(eReader.Filename + "のオープンに失敗しました");
+				output.PrintError(eReader.Filename + " 열기에 실패했습니다");
 				return;
 			}
 			ScriptPosition position = null;
 
 			if (disp || Program.AnalysisMode)
-				output.PrintSystemLine(eReader.Filename + "読み込み中・・・");
+				output.PrintSystemLine(eReader.Filename + " 읽는 중...");
 			try
 			{
 				StringStream st = null;
@@ -1426,9 +1426,9 @@ check1break:
 			{
 				uEmuera.Media.SystemSounds.Hand.Play();
 				if (position != null)
-					ParserMediator.Warn("予期しないエラーが発生しました", position, 3);
+					ParserMediator.Warn("예기치 않은 오류가 발생했습니다", position, 3);
 				else
-					output.PrintError("予期しないエラーが発生しました");
+					output.PrintError("예기치 않은 오류가 발생했습니다");
 				return;
 			}
 			finally

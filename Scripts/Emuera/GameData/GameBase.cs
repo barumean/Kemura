@@ -93,7 +93,7 @@ namespace MinorShift.Emuera.GameData
 			EraStreamReader eReader = new EraStreamReader(false);
 			if (!eReader.Open(basePath))
 			{
-				//output.PrintLine(eReader.Filename + "のオープンに失敗しました");
+				//output.PrintLine(eReader.Filename + " 열기에 실패했습니다");
 				return true;
 			}
 			try

@@ -46,8 +46,8 @@ namespace MinorShift.Emuera.GameProc
 					{
 						if ((userDefinedSkip) && (func.Function.IsInput()))
 						{
-							console.PrintError("表示スキップ中にデフォルト値を持たないINPUTに遭遇しました");
-							console.PrintError("INPUTに必要な処理をNOSKIP～ENDNOSKIPで囲むか、SKIPDISP 0～SKIPDISP 1で囲ってください");
+							console.PrintError("표시 스킵 중에 기본값이 없는 INPUT을 만났습니다");
+							console.PrintError("INPUT에 필요한 처리를 NOSKIP~ENDNOSKIP 또는 SKIPDISP 0~SKIPDISP 1로 감싸주세요");
 							throw new CodeEE("無限ループに入る可能性が高いため実行を終了します");
 						}
 						continue;
@@ -319,7 +319,7 @@ namespace MinorShift.Emuera.GameProc
 							throw new CodeEE("SAVEDATAのセーブテキストに改行文字が与えられました（セーブデータが破損するため改行文字は使えません）");
 						if (!vEvaluator.SaveTo((int)target, savemes))
 						{
-							console.PrintError("SAVEDATA命令によるセーブ中に予期しないエラーが発生しました");
+							console.PrintError("SAVEDATA 명령에 의한 저장 중 예기치 않은 오류가 발생했습니다");
 						}
 					}
 					break;
