@@ -8,6 +8,19 @@
     -->
     <TargetFramework>net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
+
+    <!--
+      project.godot 의 [dotnet] project/assembly_name="Kemura" 와 반드시 일치해야 한다.
+      지정하지 않으면 MSBuild가 프로젝트 파일명(kemura.csproj)을 써서 kemura.dll 을
+      만들고, Godot은 Kemura.dll 을 찾으므로 어셈블리를 로드하지 못한다.
+      그 결과 모든 C# 스크립트가
+        "Cannot instantiate C# script because the associated class could not be found"
+      로 실패해 화면에 아무것도 뜨지 않는다.
+
+      Windows는 대소문자를 구분하지 않아 우연히 동작했지만,
+      Linux와 Android는 구분하므로 실기에서만 깨졌다.
+    -->
+    <AssemblyName>Kemura</AssemblyName>
     <RootNamespace>Kemura</RootNamespace>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
