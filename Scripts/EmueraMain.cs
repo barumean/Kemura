@@ -24,6 +24,10 @@ public partial class EmueraMain : Node
         uEmuera.Logger.warn = s => GD.PushWarning(s?.ToString() ?? "");
         uEmuera.Logger.error = s => GD.PushError(s?.ToString() ?? "");
 
+        // SHIFT-JIS製 emuera.config のキー名を解決するための変換テーブル。
+        // ゲーム読み込みより前に入れておく必要がある。
+        ConfigMaps.Load();
+
         // 絶対パス("/root/Main/...")を埋め込むと、このシーンを子として
         // インスタンス化した瞬間に壊れる。兄弟ノードは相対パスで引く。
         content = GetNodeOrNull<EmueraContent>("../EmueraContent");

@@ -19,8 +19,9 @@ uEmuera(Unity 포트)를 Godot 4.6 + .NET으로 이식한 프로젝트입니다.
 | 클릭 가능한 선택지 버튼 | ✅ 구현 (BBCode `[url]` + `meta_clicked`) |
 | 숫자/문자열 입력 | ✅ 구현 (하단 입력 바) |
 | 터치 / 마우스 / 키보드 진행 | ✅ 구현 |
+| SHIFT-JIS `emuera.config` 키 인식 | ✅ 변환 테이블 로더 이식 완료 |
+| 일본어 폰트 | ✅ `Fonts/msgothic.ttf` 포함 (라이선스 주의 — 아래 참조) |
 | 실기(Android) 동작 검증 | ⚠️ **미검증** — 실기 테스트가 필요합니다 |
-| 일본어 폰트 | ⚠️ 별도 배치 필요 ([Fonts/README.md](Fonts/README.md)) |
 | 이미지/스프라이트 표시 | ⚠️ 부분 구현 (텍스처 캐시는 동작, 화면 배치는 미구현) |
 | APK 서명 | ⚠️ 릴리스는 keystore 직접 설정 필요 |
 
@@ -55,14 +56,21 @@ Kemura/
 │   ├── EmueraThread.cs     # Emuera 엔진 스레드
 │   ├── FirstWindow.cs      # 게임 선택 + 권한 처리
 │   ├── SpriteManager.cs    # 텍스처 캐시
+│   ├── ConfigMaps.cs       # SHIFT-JIS config 키 변환 테이블 로더
 │   ├── GenericUtils.cs     # 표시 계층 브리지
 │   ├── FontUtils.cs        # 폰트 탐색
 │   ├── Emuera/             # era 스크립트 엔진 (이식)
 │   ├── uEmuera/            # Godot 호환 레이어 (이식)
 │   └── Shaders/color_matrix.gdshader
-├── Fonts/                  # 폰트 직접 배치 (README 참조)
-└── Assets/                 # 구 Unity 프로젝트 (미사용 · 삭제 예정)
+├── Fonts/msgothic.ttf      # 일본어 폰트 (라이선스 주의: Fonts/README.md)
+└── Text/                   # config 키 변환 테이블 (3파일 1:1 대응, 97행)
 ```
+
+> 구 Unity 프로젝트(`Assets/`, `Packages/`, `ProjectSettings/`)는 삭제했습니다.
+> Emuera 엔진 소스가 이중으로 존재해 어느 쪽을 수정해야 하는지 알 수 없는
+> 상태였습니다. 필요하면 git 이력에서 복구할 수 있습니다.
+> 삭제 전에 실제로 쓰이는 자산(`msgothic.ttf`, config 변환 테이블 3개)만
+> `Fonts/`와 `Text/`로 옮겼습니다.
 
 > Android 권한은 `export_presets.cfg`의 `permissions/*` 키로 지정합니다.
 > 이전에 있던 `android/AndroidManifest.xml`은 Godot이 **읽지 않는 위치**였기
@@ -86,10 +94,11 @@ dotnet build kemura.csproj -c Release
 
 CI와 동일한 검사입니다. 여기서 실패하면 에디터에서도 실행되지 않습니다.
 
-### 폰트 배치
+### 폰트
 
-`Fonts/NotoSansJP-Regular.ttf`를 넣으세요. 없으면 일본어가 □로 표시됩니다.
-자세한 내용은 [Fonts/README.md](Fonts/README.md).
+`Fonts/msgothic.ttf`가 이미 포함되어 있어 추가 작업은 없습니다.
+단 **공개 배포 시에는 Noto Sans JP로 교체해야 합니다**
+(MS Gothic 재배포는 라이선스 위반). [Fonts/README.md](Fonts/README.md) 참조.
 
 ### 데스크톱 실행
 
