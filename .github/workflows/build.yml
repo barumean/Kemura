@@ -8,18 +8,18 @@ on:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # C#のコンパイル。Godot.NET.SdkとGodotSharpはNuGetから取れるので、
-  # Godot本体を入れずにビルドできる。
+  # C# 컴파일. Godot.NET.Sdk 와 GodotSharp 는 NuGet에서 받으므로
+  # Godot 본체 없이 빌드할 수 있다.
   #
-  # このジョブが無かったために「48,000行を追加したがそもそもコンパイルできない」
-  # 状態がmainにマージされていた。ここが最重要のゲート。
+  # 이 잡이 없어서 "48,000줄을 추가했지만 애초에 컴파일되지 않는" 상태가
+  # main에 머지돼 있었다. 여기가 가장 중요한 게이트다.
   # ---------------------------------------------------------------------------
   dotnet-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # GodotSharp 4.7.x は net8.0 のみ提供。SDKも8系で揃える。
+      # GodotSharp 4.7.x 는 net8.0 만 제공. SDK도 8계열로 맞춘다.
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
@@ -33,22 +33,37 @@ jobs:
       - name: Build (Release)
         run: dotnet build kemura.csproj -c Release --no-restore
 
-      # 新規ブリッジコード(Scripts/*.cs)の警告はゼロを維持する。
-      # 移植済みエンジン配下の警告は .editorconfig で抑止している。
-      - name: Warnings in bridge code must be zero
+      # 경고 총량을 눈에 보이게 남긴다.
+      # 오류 1건을 찾으려고 95줄을 훑는 상황을 막기 위한 것이며,
+      # .editorconfig 의 억제 설정이 실제로 먹는지 검증하는 수단이기도 하다.
+      - name: Report warning count
         run: |
           dotnet build kemura.csproj -c Release --no-restore --no-incremental \
             -v normal 2>&1 | tee build.log
-          if grep -E '^/home/runner/work/[^ ]*/Scripts/[A-Za-z0-9_]+\.cs\([0-9]+,[0-9]+\): warning' build.log; then
-            echo "::error::新規コードに警告があります"
+          total=$(grep -cE '\): warning ' build.log || true)
+          echo "### 경고 $total 건" >> "$GITHUB_STEP_SUMMARY"
+          grep -oE '\): warning [A-Z]+[0-9]+' build.log | sort | uniq -c | sort -rn \
+            | tee -a "$GITHUB_STEP_SUMMARY" || true
+          echo "총 경고: $total"
+
+      # 신규 브리지 코드(Scripts/*.cs 최상위)의 경고는 0을 유지한다.
+      # 이식된 엔진 하위의 경고는 .editorconfig 로 억제한다.
+      - name: Warnings in bridge code must be zero
+        run: |
+          if grep -E '/Scripts/[A-Za-z0-9_]+\.cs\([0-9]+,[0-9]+\): warning' build.log; then
+            echo "::error::신규 코드에 경고가 있습니다"
             exit 1
           fi
+          echo "브리지 코드 경고 없음"
 
   # ---------------------------------------------------------------------------
-  # シーン/リソースの検証。.tscnの参照切れやスクリプト添付ミスはdotnet buildでは
-  # 検出できないため、Godotのヘッドレスインポートを走らせる。
+  # 씬/리소스 검증 + 실제 실행 스모크 테스트.
+  #
+  # --import 만으로는 런타임 씬 생성 실패를 잡지 못한다. 실제로 그래서
+  # 컴파일과 임포트를 모두 통과한 커밋이 실기에서 실행 즉시 종료됐고,
+  # CI는 초록이었다. 아래 "Smoke run" 단계가 그 구멍을 메운다.
   # ---------------------------------------------------------------------------
-  godot-import:
+  godot-run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,10 +74,43 @@ jobs:
           use-dotnet: true
           include-templates: false
 
+      - name: Build C# assembly
+        run: dotnet build kemura.csproj -c Debug
+
       - name: Import project (headless)
         run: |
-          godot --headless --import --quit-after 200 2>&1 | tee import.log || true
+          godot --headless --import --quit-after 300 2>&1 | tee import.log || true
           if grep -iE 'SCRIPT ERROR|Failed loading resource|Cannot open file|Parse Error' import.log; then
-            echo "::error::シーン/リソースの読み込みに失敗しています"
+            echo "::error::씬/리소스 로딩 실패"
             exit 1
           fi
+
+      # 메인 씬을 실제로 인스턴스화하고 몇 초 돌린다.
+      # _Ready 안의 예외, 노드 경로 오류, 씬 생성 실패가 여기서 드러난다.
+      - name: Smoke run (headless)
+        run: |
+          set -o pipefail
+          godot --headless --quit-after 600 2>&1 | tee run.log || true
+
+          # 씬이 실제로 초기화됐다는 증거. FirstWindow.SetStatus 가 찍는다.
+          if ! grep -q '\[FirstWindow\]' run.log; then
+            echo "::error::메인 씬이 초기화되지 않았습니다 ([FirstWindow] 로그 없음)"
+            exit 1
+          fi
+
+          # 런타임 오류 신호
+          if grep -iE 'SCRIPT ERROR|Unhandled exception|NullReferenceException|Cannot call method|Invalid call|Attempt to call|Condition ".*" is true\. (Returning|Breaking)' run.log; then
+            echo "::error::실행 중 오류가 발생했습니다"
+            exit 1
+          fi
+          echo "스모크 런 통과"
+
+      - name: Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-run-log
+          path: |
+            run.log
+            import.log
+          if-no-files-found: ignore

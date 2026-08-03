@@ -7,54 +7,24 @@ charset = utf-8-bom
 insert_final_newline = true
 
 # ---------------------------------------------------------------------------
-# 移植された Emuera エンジン / uEmuera 互換レイヤー
+# 이식된 Emuera 엔진 / uEmuera 호환 레이어
 #
-# csproj では <Nullable>enable</Nullable> にしているが、移植元の約48,000行は
-# null許容注釈が一切付いていないため、そのままだと CS8618/CS8625 等が数百件
-# 出て「本当に見るべき警告」が埋もれてしまう(=nullable有効化が飾りになる)。
+# csproj는 <Nullable>enable</Nullable>이지만 이식 원본 약 48,000줄에는
+# null 허용 주석이 전혀 없다. 그대로 두면 CS8618/CS8625 등이 수십~수백 건
+# 쏟아져 "정말 봐야 할 오류"가 묻힌다.
+# 실제로 그 때문에 오류 1건을 찾으려고 95줄을 훑어야 했다.
 #
-# 従ってエンジン側だけ nullable 診断を切り、新規に書いたブリッジコード
-# (Scripts/*.cs のトップレベル) では完全なチェックを効かせる。
-# エンジン側を実際に注釈し終えたらこのセクションを削除する。
+# 따라서 엔진 쪽만 진단을 끄고, 새로 작성한 브리지 코드
+# (Scripts/*.cs 최상위)에서는 전체 검사를 유지한다.
+#
+# 글롭 주의: `Scripts/Emuera/**/*.cs` 는 폴더에 직접 들어있는 파일
+# (Scripts/Emuera/Program.cs 등)을 매칭하지 못한다. `**` 단독을 써야
+# 하위 전체 + 직속 파일이 모두 잡힌다. 이전 버전의 실제 버그였다.
 # ---------------------------------------------------------------------------
-[Scripts/Emuera/**/*.cs]
-dotnet_diagnostic.CS8600.severity = none
-dotnet_diagnostic.CS8601.severity = none
-dotnet_diagnostic.CS8602.severity = none
-dotnet_diagnostic.CS8603.severity = none
-dotnet_diagnostic.CS8604.severity = none
-dotnet_diagnostic.CS8605.severity = none
-dotnet_diagnostic.CS8607.severity = none
-dotnet_diagnostic.CS8608.severity = none
-dotnet_diagnostic.CS8609.severity = none
-dotnet_diagnostic.CS8610.severity = none
-dotnet_diagnostic.CS8611.severity = none
-dotnet_diagnostic.CS8612.severity = none
-dotnet_diagnostic.CS8613.severity = none
-dotnet_diagnostic.CS8614.severity = none
-dotnet_diagnostic.CS8615.severity = none
-dotnet_diagnostic.CS8616.severity = none
-dotnet_diagnostic.CS8617.severity = none
-dotnet_diagnostic.CS8618.severity = none
-dotnet_diagnostic.CS8619.severity = none
-dotnet_diagnostic.CS8620.severity = none
-dotnet_diagnostic.CS8621.severity = none
-dotnet_diagnostic.CS8622.severity = none
-dotnet_diagnostic.CS8624.severity = none
-dotnet_diagnostic.CS8625.severity = none
-dotnet_diagnostic.CS8629.severity = none
-dotnet_diagnostic.CS8631.severity = none
-dotnet_diagnostic.CS8632.severity = none
-dotnet_diagnostic.CS8633.severity = none
-dotnet_diagnostic.CS8634.severity = none
-dotnet_diagnostic.CS8643.severity = none
-dotnet_diagnostic.CS8644.severity = none
-dotnet_diagnostic.CS8645.severity = none
-dotnet_diagnostic.CS8653.severity = none
-dotnet_diagnostic.CS8654.severity = none
-dotnet_diagnostic.CS8655.severity = none
 
-[Scripts/uEmuera/**/*.cs]
+[Scripts/Emuera/**]
+
+# nullable 관련 (CS8600~CS8655)
 dotnet_diagnostic.CS8600.severity = none
 dotnet_diagnostic.CS8601.severity = none
 dotnet_diagnostic.CS8602.severity = none
@@ -90,3 +60,66 @@ dotnet_diagnostic.CS8645.severity = none
 dotnet_diagnostic.CS8653.severity = none
 dotnet_diagnostic.CS8654.severity = none
 dotnet_diagnostic.CS8655.severity = none
+# 인터페이스/재정의 구현의 nullable 불일치. 이전 목록에서 빠져 있었다.
+dotnet_diagnostic.CS8765.severity = none
+dotnet_diagnostic.CS8766.severity = none
+dotnet_diagnostic.CS8767.severity = none
+dotnet_diagnostic.CS8768.severity = none
+dotnet_diagnostic.CS8769.severity = none
+
+# 이식 과정에서 P/Invoke를 걷어내며 남은 미사용 필드·변수.
+# 엔진 쪽 사문화 코드이므로 지금 손댈 대상이 아니다.
+dotnet_diagnostic.CS0168.severity = none
+dotnet_diagnostic.CS0169.severity = none
+dotnet_diagnostic.CS0414.severity = none
+dotnet_diagnostic.CS0649.severity = none
+dotnet_diagnostic.CA2200.severity = none
+
+[Scripts/uEmuera/**]
+
+dotnet_diagnostic.CS8600.severity = none
+dotnet_diagnostic.CS8601.severity = none
+dotnet_diagnostic.CS8602.severity = none
+dotnet_diagnostic.CS8603.severity = none
+dotnet_diagnostic.CS8604.severity = none
+dotnet_diagnostic.CS8605.severity = none
+dotnet_diagnostic.CS8607.severity = none
+dotnet_diagnostic.CS8608.severity = none
+dotnet_diagnostic.CS8609.severity = none
+dotnet_diagnostic.CS8610.severity = none
+dotnet_diagnostic.CS8611.severity = none
+dotnet_diagnostic.CS8612.severity = none
+dotnet_diagnostic.CS8613.severity = none
+dotnet_diagnostic.CS8614.severity = none
+dotnet_diagnostic.CS8615.severity = none
+dotnet_diagnostic.CS8616.severity = none
+dotnet_diagnostic.CS8617.severity = none
+dotnet_diagnostic.CS8618.severity = none
+dotnet_diagnostic.CS8619.severity = none
+dotnet_diagnostic.CS8620.severity = none
+dotnet_diagnostic.CS8621.severity = none
+dotnet_diagnostic.CS8622.severity = none
+dotnet_diagnostic.CS8624.severity = none
+dotnet_diagnostic.CS8625.severity = none
+dotnet_diagnostic.CS8629.severity = none
+dotnet_diagnostic.CS8631.severity = none
+dotnet_diagnostic.CS8632.severity = none
+dotnet_diagnostic.CS8633.severity = none
+dotnet_diagnostic.CS8634.severity = none
+dotnet_diagnostic.CS8643.severity = none
+dotnet_diagnostic.CS8644.severity = none
+dotnet_diagnostic.CS8645.severity = none
+dotnet_diagnostic.CS8653.severity = none
+dotnet_diagnostic.CS8654.severity = none
+dotnet_diagnostic.CS8655.severity = none
+dotnet_diagnostic.CS8765.severity = none
+dotnet_diagnostic.CS8766.severity = none
+dotnet_diagnostic.CS8767.severity = none
+dotnet_diagnostic.CS8768.severity = none
+dotnet_diagnostic.CS8769.severity = none
+
+dotnet_diagnostic.CS0168.severity = none
+dotnet_diagnostic.CS0169.severity = none
+dotnet_diagnostic.CS0414.severity = none
+dotnet_diagnostic.CS0649.severity = none
+dotnet_diagnostic.CA2200.severity = none
