@@ -115,25 +115,145 @@ CI와 동일한 검사입니다. 여기서 실패하면 에디터에서도 실�
 godot --path .
 ```
 
-### Android APK
+### Android APK 패키징
 
-현재 프리셋은 **gradle 빌드를 끈 상태**(`gradle_build/use_gradle_build=false`)입니다.
-Godot 기본 내보내기 템플릿을 쓰므로 빌드 템플릿 설치가 필요 없습니다.
+현재 프리셋은 **gradle 빌드를 끈 상태**(`gradle_build/use_gradle_build=false`)라
+Godot 기본 내보내기 템플릿을 씁니다. **빌드 템플릿 설치가 필요 없습니다.**
+단 APK 서명에 Android SDK의 `apksigner`가 필요하므로 SDK 자체는 있어야 합니다.
 
-```bash
-# 1. Godot 에디터에서 Android 내보내기 템플릿 다운로드
-#    Editor > Manage Export Templates
-# 2. 디버그 APK (에디터의 디버그 keystore 사용)
+#### 1단계: 사전 준비 (최초 1회)
+
+**JDK 17** — https://adoptium.net (Temurin 17 LTS)
+
+**Android SDK** — 두 가지 방법 중 하나:
+
+| 방법 | 내용 |
+|---|---|
+| Android Studio | 설치하면 SDK가 함께 깔림. 가장 간단 |
+| Command line tools | https://developer.android.com/studio#command-tools <br>압축 해제 후 `sdkmanager "platform-tools" "build-tools;34.0.0"` 실행 |
+
+기본 SDK 경로 (Windows): `C:\Users\<사용자명>\AppData\Local\Android\Sdk`
+
+**내보내기 템플릿** — Godot 에디터에서
+`Editor > Manage Export Templates > Download and Install`
+(설치된 Godot과 **정확히 같은 버전**이어야 합니다)
+
+#### 2단계: 디버그 keystore 생성 (최초 1회)
+
+디버그 APK도 서명이 필요합니다. JDK의 `keytool`로 만듭니다:
+
+```powershell
+keytool -keyalg RSA -genkeypair -alias androiddebugkey ^
+  -keypass android -keystore debug.keystore -storepass android ^
+  -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+```
+
+> `keytool`을 못 찾으면 JDK의 `bin` 폴더를 PATH에 넣거나 전체 경로로 실행하세요.
+> 예: `"C:\Program Files\Eclipse Adoptium\jdk-17...\bin\keytool.exe"`
+
+Android Studio를 설치했다면 이미 있을 수 있습니다:
+`C:\Users\<사용자명>\.android\debug.keystore`
+
+#### 3단계: Godot 에디터 설정 (최초 1회)
+
+`Editor > Editor Settings > Export > Android`
+
+| 항목 | 값 |
+|---|---|
+| Java SDK Path | JDK 설치 폴더 (`bin`의 부모) |
+| Android SDK Path | SDK 폴더 (`platform-tools`의 부모) |
+| Debug Keystore | 2단계에서 만든 `debug.keystore` 경로 |
+| Debug Keystore User | `androiddebugkey` |
+| Debug Keystore Pass | `android` |
+
+#### 4단계: 내보내기
+
+**에디터에서:** `Project > Export > Android` 선택 → `Export Project`
+→ 저장 위치 `build/kemura.apk`
+
+**CLI에서:**
+```powershell
 godot --headless --path . --export-debug Android build/kemura.apk
 ```
 
-릴리스 빌드는 `export_presets.cfg`의 `keystore/release*`를 채워야 합니다.
-(`package/signed=true`로 되어 있으므로 keystore 없이는 릴리스 내보내기가 실패합니다.
-서명되지 않은 APK는 Android에 설치할 수 없습니다.)
+> CLI로 하기 전에 한 번은 에디터로 프로젝트를 열어 임포트를 끝내야 합니다
+> (`.godot/` 캐시 생성). C# 어셈블리도 먼저 빌드되어 있어야 합니다.
+
+#### 5단계: 설치
+
+```powershell
+adb install -r build\kemura.apk
+```
+
+USB 디버깅이 켜져 있어야 합니다 (설정 → 개발자 옵션). `adb`는 SDK의
+`platform-tools`에 있습니다.
+
+또는 APK 파일을 기기로 복사해 파일 관리자에서 탭 → "출처를 알 수 없는 앱" 허용.
+
+#### 설치 후 필수 설정
+
+**설정 → 앱 → Kemura → 권한 → 파일 및 미디어 → 모든 파일 접근 허용**
+
+Android 11+ 에서 `MANAGE_EXTERNAL_STORAGE`는 앱 내 팝업으로 받을 수 없습니다.
+게임 목록이 비어 보이면 이것부터 확인하세요.
+
+게임은 `/storage/emulated/0/emuera/게임이름/ERB/` 에 넣습니다.
+
+---
+
+### 릴리스 빌드 (스토어 배포용)
+
+디버그 keystore로 서명한 APK는 배포할 수 없습니다. 릴리스 keystore를 따로 만듭니다:
+
+```powershell
+keytool -keyalg RSA -genkeypair -alias kemura ^
+  -keystore release.keystore -validity 10000 -deststoretype pkcs12
+```
+
+`export_presets.cfg`의 다음 항목을 채웁니다 (**저장소에 커밋하지 마세요**):
+
+```
+keystore/release="release.keystore 절대경로"
+keystore/release_user="kemura"
+keystore/release_password="설정한 비밀번호"
+```
+
+> 비밀번호를 파일에 쓰는 대신 환경 변수를 쓸 수 있습니다:
+> `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`,
+> `GODOT_ANDROID_KEYSTORE_RELEASE_USER`,
+> `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD`
+
+```powershell
+godot --headless --path . --export-release Android build/kemura-release.apk
+```
+
+Google Play는 AAB를 요구합니다. 그때는 gradle 빌드가 필요합니다:
+`export_presets.cfg`에서 `gradle_build/use_gradle_build=true`,
+`gradle_build/export_format=1` 로 바꾸고
+`Project > Install Android Build Template` 실행 후 내보내세요.
+
+또한 스토어 배포 시 `Fonts/msgothic.ttf`를 Noto Sans JP로 교체해야 합니다
+(MS Gothic 재배포는 라이선스 위반 — [Fonts/README.md](Fonts/README.md)).
+
+---
+
+### 자주 막히는 지점
+
+| 증상 | 원인 / 해결 |
+|---|---|
+| `Android SDK path must be configured` | 3단계 미완료 |
+| `Could not find keytool` / 서명 실패 | JDK 미설치 또는 Java SDK Path 오류 |
+| `No export template found` | 템플릿 버전이 에디터 버전과 다름 |
+| `Cannot instantiate C# script...` | C# 어셈블리 미빌드. `dotnet build kemura.csproj` 먼저 실행 |
+| 앱이 켜지자마자 종료 | `adb logcat -s godot:V DEBUG:V` 로 로그 확인 |
+| 게임 목록이 비어 있음 | "모든 파일 접근" 권한 미허용 |
+| 일본어가 □로 표시 | `Fonts/` 에 폰트 없음 |
 
 manifest를 직접 커스터마이즈해야 한다면 gradle 빌드를 켜고
 `Project > Install Android Build Template`을 실행한 뒤
 `android/build/src/com/godot/game/AndroidManifest.xml`을 수정하세요.
+(현재 권한은 `export_presets.cfg`의 `permissions/*` 로 지정되어 있어
+manifest 수정 없이도 동작합니다.)
 
 ---
 
