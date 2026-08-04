@@ -332,8 +332,9 @@ Google Play는 AAB를 요구합니다. 그때는 gradle 빌드가 필요합니�
 
 | 증상 | 원인 / 해결 |
 |---|---|
-| **`'android'은(는) 내부 또는 외부 명령이 아닙니다`** | **Android 빌드 템플릿 미설치.** `Project > Install Android Build Template` 실행 (1.5단계) |
+| **`'android'은(는) 내부 또는 외부 명령이 아닙니다`** | **Android 빌드 템플릿 미설치.** `Project > Install Android Build Template` 실행 (1.5단계).<br>확인: `dir android\build\gradlew.bat` 이 존재해야 함 |
 | `Android build template not installed` | 위와 동일 |
+| **`Unrecognized UID: "uid://..."`** <br> `Error opening file ''` | **낡은 `.godot/` 캐시.** 이미 사라진 리소스의 UID를 붙들고 있음.<br>Godot 종료 후 `rmdir /s /q .godot obj bin` → 다시 열어 재임포트 |
 | `Android SDK path must be configured` | 3단계 미완료 |
 | `Could not find keytool` / 서명 실패 | JDK 미설치, 또는 Java SDK Path가 JDK 17이 아님 |
 | `Unsupported class file major version` <br> `Unsupported Java` | **JDK 버전 불일치**. 21/24/25가 잡혀 있음 → `JAVA_HOME` 과 에디터 설정 **양쪽** 을 17로 |
@@ -346,6 +347,19 @@ Google Play는 AAB를 요구합니다. 그때는 gradle 빌드가 필요합니�
 | 앱이 켜지자마자 종료 | `adb logcat -s godot:V DEBUG:V` 로 로그 확인 |
 | 게임 목록이 비어 있음 | "모든 파일 접근" 권한 미허용 |
 | 일본어가 □로 표시 | `Fonts/` 에 폰트 없음 |
+
+#### `.import` / `.uid` 파일은 커밋하세요
+
+Godot이 처음 프로젝트를 열면 `*.import`(임포트 설정)와 `*.uid`(리소스 식별자)를
+생성합니다. `.gitignore` 에서 일부러 제외해 두었으니 **생성된 뒤 커밋**하세요.
+
+```powershell
+git add -A -- "*.import" "*.uid"
+git commit -m "Godot import metadata 추가"
+```
+
+커밋하지 않으면 머신마다 UID가 새로 생성되어 `.tscn` 의 `ext_resource` 참조가
+어긋나고, 위의 `Unrecognized UID` 오류가 반복됩니다.
 
 #### 진단용 한 줄 점검
 
