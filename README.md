@@ -146,26 +146,50 @@ Android에서만 깨지는 형태로 나타납니다.
 
 ### JDK 17 을 정확히 써야 하는 이유
 
-`JDK 17 이상`이 아닙니다. JDK 21/24를 쓰면 `apksigner`·`keytool` 호출 단계에서
-실패하는 사례가 흔합니다.
+`JDK 17 이상`이 아닙니다. JDK 21/24/25 를 쓰면 gradle 빌드가
+`Unsupported class file major version` 또는 `Unsupported Java` 로 실패합니다.
+Godot이 쓰는 Android Gradle Plugin이 JDK 17 기준입니다.
 
-또한 **다른 도구가 설치한 JDK가 `JAVA_HOME` 을 점유하고 있으면 Godot이 그것을
-집습니다.** 예를 들어 Unity를 설치했다면:
+**JDK가 여러 개 설치된 경우가 가장 흔한 실패 원인입니다.** 예:
 
 ```
-JAVA_HOME = C:\Program Files\Unity\Hub\Editor\2022.3.62f3\...\OpenJDK
+JDK 25 설치  +  JDK 17 설치  →  Godot/gradle 이 25를 집어서 실패
+JAVA_HOME = C:\Program Files\Unity\Hub\Editor\2022.3.x\...\OpenJDK  (Unity 잔재)
 ```
 
-이 경우 Temurin 17을 따로 설치하고 **Godot 에디터 설정에서 경로를 직접 지정**하세요
-(환경 변수를 고치는 것보다 확실합니다).
+**해결 — 세 곳을 모두 17로 맞추세요:**
+
+1. **Godot 에디터 설정**
+   `Editor Settings > Export > Android > Java SDK Path`
+   → JDK 17 폴더 (예: `C:\Program Files\Eclipse Adoptium\jdk-17.0.13.11-hotspot`)
+
+2. **`JAVA_HOME` 환경 변수** — gradle이 이것을 우선 봅니다
+   ```powershell
+   # 현재 값 확인
+   echo $env:JAVA_HOME
+   # 영구 설정 (관리자 PowerShell)
+   [Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Eclipse Adoptium\jdk-17.0.13.11-hotspot", "Machine")
+   ```
+   설정 후 **Godot을 완전히 종료하고 다시 실행**해야 반영됩니다.
+
+3. **확인**
+   ```powershell
+   java -version          # openjdk version "17.x.x"
+   echo $env:JAVA_HOME    # JDK 17 경로
+   ```
+
+> `android/build/gradle.properties` 에 `org.gradle.java.home` 을 직접 적어
+> 강제할 수도 있습니다. 다른 방법이 안 통할 때 쓰는 최후 수단입니다.
 
 ---
 
 ### Android APK 패키징
 
-현재 프리셋은 **gradle 빌드를 끈 상태**(`gradle_build/use_gradle_build=false`)라
-Godot 기본 내보내기 템플릿을 씁니다. **빌드 템플릿 설치가 필요 없습니다.**
-단 APK 서명에 Android SDK의 `apksigner`가 필요하므로 SDK 자체는 있어야 합니다.
+> **C# 프로젝트는 gradle 빌드가 필수입니다.**
+> `.NET` 런타임을 APK에 통합하려면 gradle을 거쳐야 하므로,
+> `gradle_build/use_gradle_build=true` 이고 **Android 빌드 템플릿을 설치해야** 합니다.
+> 설치하지 않으면 `'android'은(는) 내부 또는 외부 명령이 아닙니다` 오류가 납니다
+> (Godot이 없는 `android/gradlew` 를 실행하려 한 것).
 
 #### 1단계: 사전 준비 (최초 1회)
 
@@ -182,17 +206,28 @@ Godot 기본 내보내기 템플릿을 씁니다. **빌드 템플릿 설치가 �
 | Command line tools | https://developer.android.com/studio#command-tools <br>압축 해제 후 아래 명령 실행 |
 
 ```powershell
-sdkmanager "platform-tools" "build-tools;34.0.0"
+sdkmanager "platform-tools" "build-tools;35.0.0" "platforms;android-35" "cmdline-tools;latest"
 ```
 
-> gradle 빌드를 껐으므로 `platforms;android-XX` 는 **필요 없습니다.**
-> `platform-tools`(adb)와 `build-tools`(apksigner)만 있으면 됩니다.
+gradle 빌드를 쓰므로 `platforms;android-35` 도 **필요합니다**
+(`export_presets.cfg` 의 `gradle_build/target_sdk="35"` 와 맞춰야 함).
 
 기본 SDK 경로 (Windows): `C:\Users\<사용자명>\AppData\Local\Android\Sdk`
 
 **내보내기 템플릿** — Godot 에디터에서
 `Editor > Manage Export Templates > Download and Install`
 (설치된 Godot과 **정확히 같은 버전**이어야 합니다)
+
+#### 1.5단계: Android 빌드 템플릿 설치 (최초 1회, C#에 필수)
+
+Godot 에디터에서 `Project > Install Android Build Template`
+
+이것이 `android/build/` 폴더에 gradle 프로젝트(`gradlew`, `src/`, `build.gradle`)를
+생성합니다. **이 단계를 빠뜨리면 내보내기가 `'android'... 명령이 아닙니다` 로 실패합니다.**
+
+> 실행 전에 `Editor Settings > Export > Android` 의 SDK/JDK 경로가
+> 먼저 설정되어 있어야 합니다(3단계).
+> 순서가 꼬였으면 `android/` 폴더를 지우고 다시 설치하세요.
 
 #### 2단계: 디버그 keystore 생성 (최초 1회)
 
@@ -297,9 +332,11 @@ Google Play는 AAB를 요구합니다. 그때는 gradle 빌드가 필요합니�
 
 | 증상 | 원인 / 해결 |
 |---|---|
+| **`'android'은(는) 내부 또는 외부 명령이 아닙니다`** | **Android 빌드 템플릿 미설치.** `Project > Install Android Build Template` 실행 (1.5단계) |
+| `Android build template not installed` | 위와 동일 |
 | `Android SDK path must be configured` | 3단계 미완료 |
 | `Could not find keytool` / 서명 실패 | JDK 미설치, 또는 Java SDK Path가 JDK 17이 아님 |
-| `Unsupported class file major version` | **JDK 버전 불일치**. 21/24가 잡혀 있음 → 17 지정 |
+| `Unsupported class file major version` <br> `Unsupported Java` | **JDK 버전 불일치**. 21/24/25가 잡혀 있음 → `JAVA_HOME` 과 에디터 설정 **양쪽** 을 17로 |
 | `apksigner not found` | `build-tools` 미설치 → `sdkmanager "build-tools;34.0.0"` |
 | `No export template found` | 템플릿 버전이 에디터 버전과 다름 |
 | `NU1102: Unable to find package Godot.NET.Sdk` | csproj의 SDK 버전이 실제 Godot 버전과 다름 |
