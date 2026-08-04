@@ -90,7 +90,8 @@ Kemura/
   https://dotnet.microsoft.com/download/dotnet/8.0
   - `GodotSharp` 4.7.x는 `net8.0`만 제공하므로 8.0으로 맞춥니다.
   - 설치 확인: `dotnet --list-sdks` 에 항목이 나와야 합니다.
-- Android 내보내기: **JDK 17+**, Android SDK (Godot 에디터 설정에서 경로 지정)
+- Android 내보내기: **JDK 17 (정확히 17)**, Android SDK
+  — 자세한 버전 요구사항은 아래 [버전 요구사항](#버전-요구사항) 표 참조
 
 > `kemura.csproj`의 `Godot.NET.Sdk` 버전은 설치한 Godot 버전과 맞춰야 합니다.
 > 현재 `4.7.0`. 에디터 버전은 Godot의 **Help → About**에서 확인하세요.
@@ -115,6 +116,51 @@ CI와 동일한 검사입니다. 여기서 실패하면 에디터에서도 실�
 godot --path .
 ```
 
+## 버전 요구사항
+
+**버전이 하나라도 어긋나면 빌드가 실패합니다.** 아래가 검증된 조합입니다.
+
+| 구성요소 | 필요 버전 | 확인 명령 | 근거 |
+|---|---|---|---|
+| Godot | **4.7** (.NET 에디션) | Help → About | `project.godot` 의 `config/features` |
+| `Godot.NET.Sdk` | **4.7.0** | `kemura.csproj` 1행 | 에디터 버전과 일치해야 함 |
+| .NET SDK | **8.0** | `dotnet --list-sdks` | GodotSharp 4.7.x 는 `lib/net8.0` **만** 제공 |
+| `TargetFramework` | **net8.0** | `kemura.csproj` | 위와 동일 |
+| JDK | **17 (정확히 17)** | `java -version` | Godot 4.x Android 내보내기 요구사항 |
+| Android SDK build-tools | **34.0.0** 이상 | `sdkmanager --list_installed` | APK 서명(`apksigner`)에 필요 |
+| 내보내기 템플릿 | **에디터와 동일 버전** | Editor → Manage Export Templates | 버전 불일치 시 내보내기 실패 |
+
+### net9.0 을 쓰면 안 되는 이유
+
+NuGet 패키지를 직접 확인한 결과입니다:
+
+```
+GodotSharp 4.7.0  →  lib/net8.0   (net9.0 없음)
+GodotSharp 4.7.1  →  lib/net8.0   (net9.0 없음)
+```
+
+Godot이 Android APK에 동봉하는 .NET 런타임도 8계열입니다. `net9.0`으로 빌드하면
+컴파일은 통과해도 **실행 즉시 "더 새로운 런타임 필요"로 종료**됩니다.
+데스크톱에서는 시스템에 .NET 9 런타임이 있으면 우연히 동작하므로,
+Android에서만 깨지는 형태로 나타납니다.
+
+### JDK 17 을 정확히 써야 하는 이유
+
+`JDK 17 이상`이 아닙니다. JDK 21/24를 쓰면 `apksigner`·`keytool` 호출 단계에서
+실패하는 사례가 흔합니다.
+
+또한 **다른 도구가 설치한 JDK가 `JAVA_HOME` 을 점유하고 있으면 Godot이 그것을
+집습니다.** 예를 들어 Unity를 설치했다면:
+
+```
+JAVA_HOME = C:\Program Files\Unity\Hub\Editor\2022.3.62f3\...\OpenJDK
+```
+
+이 경우 Temurin 17을 따로 설치하고 **Godot 에디터 설정에서 경로를 직접 지정**하세요
+(환경 변수를 고치는 것보다 확실합니다).
+
+---
+
 ### Android APK 패키징
 
 현재 프리셋은 **gradle 빌드를 끈 상태**(`gradle_build/use_gradle_build=false`)라
@@ -123,14 +169,24 @@ Godot 기본 내보내기 템플릿을 씁니다. **빌드 템플릿 설치가 �
 
 #### 1단계: 사전 준비 (최초 1회)
 
-**JDK 17** — https://adoptium.net (Temurin 17 LTS)
+**JDK 17** — https://adoptium.net (Temurin **17** LTS. 21/24 아님)
+
+**.NET SDK 8.0** — https://dotnet.microsoft.com/download/dotnet/8.0
+(**SDK** 열에서 받으세요. Runtime 아님)
 
 **Android SDK** — 두 가지 방법 중 하나:
 
 | 방법 | 내용 |
 |---|---|
 | Android Studio | 설치하면 SDK가 함께 깔림. 가장 간단 |
-| Command line tools | https://developer.android.com/studio#command-tools <br>압축 해제 후 `sdkmanager "platform-tools" "build-tools;34.0.0"` 실행 |
+| Command line tools | https://developer.android.com/studio#command-tools <br>압축 해제 후 아래 명령 실행 |
+
+```powershell
+sdkmanager "platform-tools" "build-tools;34.0.0"
+```
+
+> gradle 빌드를 껐으므로 `platforms;android-XX` 는 **필요 없습니다.**
+> `platform-tools`(adb)와 `build-tools`(apksigner)만 있으면 됩니다.
 
 기본 SDK 경로 (Windows): `C:\Users\<사용자명>\AppData\Local\Android\Sdk`
 
@@ -242,12 +298,34 @@ Google Play는 AAB를 요구합니다. 그때는 gradle 빌드가 필요합니�
 | 증상 | 원인 / 해결 |
 |---|---|
 | `Android SDK path must be configured` | 3단계 미완료 |
-| `Could not find keytool` / 서명 실패 | JDK 미설치 또는 Java SDK Path 오류 |
+| `Could not find keytool` / 서명 실패 | JDK 미설치, 또는 Java SDK Path가 JDK 17이 아님 |
+| `Unsupported class file major version` | **JDK 버전 불일치**. 21/24가 잡혀 있음 → 17 지정 |
+| `apksigner not found` | `build-tools` 미설치 → `sdkmanager "build-tools;34.0.0"` |
 | `No export template found` | 템플릿 버전이 에디터 버전과 다름 |
-| `Cannot instantiate C# script...` | C# 어셈블리 미빌드. `dotnet build kemura.csproj` 먼저 실행 |
+| `NU1102: Unable to find package Godot.NET.Sdk` | csproj의 SDK 버전이 실제 Godot 버전과 다름 |
+| `No .NET SDKs were found` | 런타임만 설치됨 → **SDK** 8.0 설치 |
+| `net9.0 ... requires a newer runtime` (실행 시) | `TargetFramework`가 net9.0 → **net8.0** 으로 |
+| `Cannot instantiate C# script...` | C# 어셈블리 미빌드 또는 `AssemblyName` 불일치. `dotnet build kemura.csproj` 실행 후 `<AssemblyName>Kemura</AssemblyName>` 확인 |
 | 앱이 켜지자마자 종료 | `adb logcat -s godot:V DEBUG:V` 로 로그 확인 |
 | 게임 목록이 비어 있음 | "모든 파일 접근" 권한 미허용 |
 | 일본어가 □로 표시 | `Fonts/` 에 폰트 없음 |
+
+#### 진단용 한 줄 점검
+
+빌드 전에 이것만 돌려도 버전 문제 대부분이 걸러집니다:
+
+```powershell
+java -version; dotnet --list-sdks; findstr /n "Godot.NET.Sdk TargetFramework AssemblyName" kemura.csproj
+```
+
+기대값:
+```
+openjdk version "17.x.x"
+8.0.xxx [C:\Program Files\dotnet\sdk]
+1:<Project Sdk="Godot.NET.Sdk/4.7.0">
+9:    <TargetFramework>net8.0</TargetFramework>
+23:    <AssemblyName>Kemura</AssemblyName>
+```
 
 manifest를 직접 커스터마이즈해야 한다면 gradle 빌드를 켜고
 `Project > Install Android Build Template`을 실행한 뒤
