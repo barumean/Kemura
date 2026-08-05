@@ -348,6 +348,98 @@ Google Play는 AAB를 요구합니다. 그때는 gradle 빌드가 필요합니�
 | 게임 목록이 비어 있음 | "모든 파일 접근" 권한 미허용 |
 | 일본어가 □로 표시 | `Fonts/` 에 폰트 없음 |
 
+### Gradle 이 Windows 에서 실패할 때
+
+```
+Could not move temporary workspace (...groovy-dsl\<hash>-<uuid>)
+                    to immutable location (...groovy-dsl\<hash>)
+```
+
+Gradle 이 임시 폴더를 최종 위치로 원자적 이동(rename)하려는데 Windows 가
+거부한 것입니다. **Godot 과 무관한 Gradle 의 알려진 Windows 문제**입니다.
+
+원인은 거의 항상 셋 중 하나입니다.
+
+| 원인 | 설명 |
+|---|---|
+| 실시간 검사(백신) | Gradle 이 쓴 파일을 백신이 즉시 스캔하며 핸들을 잡아 rename 실패. **가장 흔함** |
+| Gradle 데몬 잔존 | 이전 실행의 데몬이 캐시를 붙들고 있음 |
+| 캐시 손상 | 중단된 빌드가 반쯤 쓴 파일을 남김 |
+
+#### 순서대로 시도
+
+**1. 데몬 종료 + 캐시 삭제** (대부분 여기서 해결)
+
+```powershell
+# Godot 종료 후
+taskkill /f /im java.exe
+rmdir /s /q %USERPROFILE%\.gradle\caches
+```
+
+**2. Windows Defender 예외 추가** — 재발 방지에 가장 효과적
+
+`Windows 보안 > 바이러스 및 위협 방지 > 설정 관리 > 제외 항목 추가`
+에 아래 **폴더** 를 추가합니다.
+
+```
+%USERPROFILE%\.gradle
+<프로젝트 폴더>\android
+```
+
+또는 관리자 PowerShell 에서:
+
+```powershell
+Add-MpPreference -ExclusionPath "$env:USERPROFILE\.gradle"
+Add-MpPreference -ExclusionPath "C:\Users\yooshin\Kemura\android"
+```
+
+**3. Gradle 캐시를 짧고 안 스캔되는 경로로 옮기기**
+
+경로가 길면 Windows 260자 제한에도 걸립니다.
+
+```powershell
+[Environment]::SetEnvironmentVariable("GRADLE_USER_HOME", "C:\gradle", "Machine")
+```
+
+설정 후 Godot 을 완전히 재시작하세요.
+
+**4. 데몬 없이 실행**
+
+`android/build/gradle.properties` 에 추가:
+
+```properties
+org.gradle.daemon=false
+org.gradle.parallel=false
+```
+
+> `android/` 는 `.gitignore` 대상이라 이 수정은 로컬에만 남습니다.
+> 빌드 템플릿을 다시 설치하면 사라지므로 재적용이 필요합니다.
+
+#### Docker 는 필요 없습니다 — CI 로 빌드하세요
+
+Docker 로 Android 빌드 환경을 꾸릴 수는 있지만, Godot 에디터가 gradle
+프로젝트를 생성하는 구조라 설정이 번거롭습니다. **더 간단한 방법은 CI 입니다.**
+
+`.github/workflows/android.yml` 을 추가해 두었습니다. Linux 러너에서는
+위 파일 락 문제가 발생하지 않습니다.
+
+```
+GitHub 저장소 > Actions > android-apk > Run workflow
+```
+
+완료되면 `kemura-debug-apk` 아티팩트를 내려받아 기기에 설치하면 됩니다.
+`v` 로 시작하는 태그를 푸시해도 자동 실행됩니다.
+
+```powershell
+git tag v0.3.0 && git push --tags
+```
+
+이 워크플로는 에디터의 `Install Android Build Template` 과 같은 일을
+스크립트로 합니다 — 내보내기 템플릿 안의 `android_source.zip` 을
+`android/build/` 에 풀어놓을 뿐입니다.
+
+---
+
 #### `.import` / `.uid` 파일은 커밋하세요
 
 Godot이 처음 프로젝트를 열면 `*.import`(임포트 설정)와 `*.uid`(리소스 식별자)를

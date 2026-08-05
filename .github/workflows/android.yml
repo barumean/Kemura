@@ -1,0 +1,126 @@
+name: android-apk
+
+# Windows 로컬 빌드에서 Gradle 이 다음 오류로 실패하는 경우가 있다.
+#   Could not move temporary workspace (...) to immutable location (...)
+# 실시간 검사(백신)나 잔존 Gradle 데몬이 캐시 파일 핸들을 붙들어
+# 원자적 rename 이 거부되는 Windows 고유 문제다.
+#
+# Linux 러너에서는 이 문제가 발생하지 않으므로, APK 빌드를 CI 로 옮겨
+# 로컬 환경에 막히지 않고 산출물을 얻을 수 있게 한다.
+# Docker 를 따로 쓸 필요가 없다.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: 4.7.0
+      # Godot 4.2+ 는 keystore 를 환경 변수로 받는다.
+      GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
+      GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+      GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 17 — Godot 의 Android Gradle Plugin 이 요구하는 버전.
+      # 21/25 를 쓰면 Unsupported class file major version 으로 실패한다.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # include-templates: true → android_source.zip 을 포함한 내보내기
+      # 템플릿을 받는다. 빌드 템플릿 설치에 이 zip 이 필요하다.
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          use-dotnet: true
+          include-templates: true
+
+      - name: Build C# assembly
+        run: dotnet build kemura.csproj -c Release
+
+      # 에디터의 "Project > Install Android Build Template" 과 같은 일을 한다.
+      # 그 메뉴는 내보내기 템플릿에 들어있는 android_source.zip 을
+      # android/build/ 에 풀어놓을 뿐이다.
+      - name: Install Android build template
+        run: |
+          set -euo pipefail
+          src=$(find "$HOME/.local/share/godot/export_templates" \
+                     -name 'android_source.zip' | head -n1)
+          if [ -z "$src" ]; then
+            echo "::error::android_source.zip 을 찾을 수 없습니다. 내보내기 템플릿 설치 실패."
+            find "$HOME/.local/share/godot" -maxdepth 3 -type d || true
+            exit 1
+          fi
+          echo "template: $src"
+          mkdir -p android/build
+          unzip -oq "$src" -d android/build
+          test -f android/build/gradlew || { echo "::error::gradlew 없음"; exit 1; }
+          chmod +x android/build/gradlew
+          echo "빌드 템플릿 설치 완료"
+
+      - name: Generate debug keystore
+        run: |
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey \
+            -keypass android -keystore debug.keystore -storepass android \
+            -dname "CN=Android Debug,O=Android,C=US" -validity 9999 \
+            -deststoretype pkcs12
+
+      # 헤드리스 Godot 은 에디터 설정 파일에서 SDK/JDK 경로를 읽는다.
+      # Godot 4 는 메이저 버전 단위 파일명(editor_settings-4.tres)을 쓴다.
+      - name: Configure Godot editor settings
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$GITHUB_WORKSPACE/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "JAVA_HOME=$JAVA_HOME"
+
+      # 내보내기 전에 한 번 임포트해 .godot/ 캐시를 만든다.
+      - name: Import project
+        run: godot --headless --import --quit-after 300 2>&1 | tail -20 || true
+
+      - name: Export APK (debug)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          godot --headless --export-debug Android build/kemura.apk 2>&1 | tee export.log
+          test -f build/kemura.apk || { echo "::error::APK 생성 실패"; exit 1; }
+          ls -la build/
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kemura-debug-apk
+          path: build/kemura.apk
+          if-no-files-found: error
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-logs
+          path: |
+            export.log
+            android/build/build/**/*.txt
+          if-no-files-found: ignore
