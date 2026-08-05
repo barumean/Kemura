@@ -16,15 +16,26 @@ obj/
 .vs/
 *.user
 
-# Android build template / export output
-# (Godotの「Androidビルドテンプレートをインストール」で生成される)
-android/.gradle/
-android/.idea/
-android/build/.gradle/
-android/build/build/
+# ---------------------------------------------------------------------------
+# Android 빌드 템플릿 / 내보내기 산출물
+#
+# android/ 전체를 제외한다. Godot 의
+#   Project > Install Android Build Template
+# 로 언제든 재생성되는 생성물이고, Godot 버전에 묶여 있어 커밋해두면
+# 에디터를 올릴 때마다 충돌한다. 각 머신에서 위 메뉴를 한 번 실행하면 된다.
+#
+# 주의: C# 프로젝트는 gradle 빌드가 필수이므로 이 폴더가 로컬에 반드시
+# 있어야 한다. 없으면 내보내기가
+#   'android'은(는) 내부 또는 외부 명령... 이 아닙니다
+# 로 실패한다. 확인: dir android\build\gradlew.bat
+# ---------------------------------------------------------------------------
+android/
+
 build/
 *.apk
 *.aab
+
+# 서명 키는 절대 커밋하지 않는다
 *.keystore
 *.jks
 
