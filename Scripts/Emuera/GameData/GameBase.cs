@@ -163,7 +163,11 @@ namespace MinorShift.Emuera.GameData
                             // 例外を投げ、それが下のcatchに飲まれてGAMEBASE.CSVの
                             // 残り(コード・バージョン・タイトル等)が全て失われていた。
                             // バージョン判定だけを飛ばして読み込みは続ける。
-                            string engineVer = GlobalStatic.MainWindow?.InternalEmueraVer;
+                            // エンジン自身のバージョンはビルド定数であって
+                            // ウィンドウの状態ではない。GlobalStatic.MainWindow
+                            // 経由で読むと、ウィンドウ生成前にCSVを読む経路では
+                            // 常にnullになりバージョン判定が丸ごと飛んでいた。
+                            string engineVer = uEmuera.Window.MainWindow.uEmueraVer;
                             if (!Regex.IsMatch(engineVer ?? "", @"^\d+\.\d+\.\d+\.\d+$"))
                             {
                                 ParserMediator.Warn("엔진 버전을 알 수 없어 버전 판정을 건너뜁니다", pos, 1);
