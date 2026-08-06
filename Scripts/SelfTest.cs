@@ -211,7 +211,7 @@ internal static class SelfTest
 
         // 엔진 버전 문자열이 System.Version 으로 파싱 가능해야 한다.
         // 비어 있으면 new Version("") 이 예외를 던져 GAMEBASE 파싱이 중단됐다.
-        var engineVer = uEmuera.MainWindow.uEmueraVer;
+        var engineVer = uEmuera.Window.MainWindow.uEmueraVer;
         bool verOk = System.Text.RegularExpressions.Regex.IsMatch(
             engineVer ?? "", @"^\d+\.\d+\.\d+\.\d+$");
         Check(verOk, $"엔진 버전 문자열이 '수.수.수.수' 형식이다 (실제 '{engineVer}')");
