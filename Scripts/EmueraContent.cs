@@ -32,6 +32,10 @@ public partial class EmueraContent : Control
     // Emueraスレッド → メインスレッドの受け渡し用
     readonly ConcurrentQueue<ConsoleDisplayLine> pendingLines = new();
 
+    // 엔진이 콘솔을 만들기 전에 죽으면 AddLine 경로가 아예 열리지 않는다.
+    // 그 경우에도 원인을 화면에 띄우기 위한 별도 큐(BBCode 문자열).
+    readonly ConcurrentQueue<string> pendingNotices = new();
+
     bool isInProcess;
     int lastButtonGeneration = -1;
 
@@ -326,9 +330,25 @@ public partial class EmueraContent : Control
         Callable.From(DrainPendingLines).CallDeferred();
     }
 
+    /// <summary>
+    /// 엔진 스레드에서 치명적 오류를 화면에 직접 띄운다.
+    ///
+    /// Android에는 볼 수 있는 콘솔이 없다. 지금까지 로드 실패는
+    /// GD.PushError 로만 남아서 사용자에게는 "빈 화면"으로만 보였고,
+    /// PC에서는 stdout 으로 원인이 보였기 때문에 증상이 달랐다.
+    /// </summary>
+    internal void ShowFatal(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        GD.PushError("[Kemura] " + message);
+        pendingNotices.Enqueue(message);
+        Callable.From(DrainPendingLines).CallDeferred();
+    }
+
     public void Clear()
     {
         while (pendingLines.TryDequeue(out _)) { }
+        while (pendingNotices.TryDequeue(out _)) { }
         Callable.From(ClearDeferred).CallDeferred();
     }
 
@@ -407,6 +427,11 @@ public partial class EmueraContent : Control
             AppendLineNode(line);
             added = true;
         }
+        while (pendingNotices.TryDequeue(out var notice))
+        {
+            AppendNoticeNode(notice);
+            added = true;
+        }
         if (!added) return;
 
         TrimToCap();
@@ -440,6 +465,33 @@ public partial class EmueraContent : Control
         lineNodes.Add(label);
     }
 
+    /// <summary>
+    /// 오류 안내를 붙인다. lines/lineNodes 는 엔진의 행 번호와 1:1로
+    /// 대응해야 하므로(GetLine/RemoveLines가 인덱스로 접근한다) 여기에
+    /// 섞지 않고 따로 관리한다.
+    /// </summary>
+    void AppendNoticeNode(string message)
+    {
+        var label = new RichTextLabel
+        {
+            BbcodeEnabled = true,
+            FitContent = true,
+            ScrollActive = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            SelectionEnabled = true,
+            MouseFilter = MouseFilterEnum.Pass,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        ApplyFontTo(label);
+        // BBCode로 해석되면 안 되므로 '[' 를 이스케이프한다
+        label.Text = "[color=#ff6b6b]" + message.Replace("[", "[lb]") + "[/color]";
+
+        textContainer!.AddChild(label);
+        noticeNodes.Add(label);
+    }
+
+    readonly List<RichTextLabel> noticeNodes = new();
+
     void TrimToCap()
     {
         int overflow = lines.Count - MaxCachedLines;
@@ -456,6 +508,9 @@ public partial class EmueraContent : Control
             node.QueueFree();
         lineNodes.Clear();
         lines.Clear();
+        foreach (var node in noticeNodes)
+            node.QueueFree();
+        noticeNodes.Clear();
     }
 
     /// <summary>

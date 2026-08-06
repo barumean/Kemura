@@ -34,6 +34,10 @@ public static class GenericUtils
     static EmueraContent? _content;
     internal static void SetContent(EmueraContent? c) => _content = c;
 
+    /// <summary>엔진 스레드에서 화면에 치명적 오류를 띄울 때 쓴다.</summary>
+    internal static void ShowFatal(string message)
+        => _content?.ShowFatal(message);
+
     internal static void AddText(ConsoleDisplayLine line, bool old)
         => _content?.AddLine(line, old);
 

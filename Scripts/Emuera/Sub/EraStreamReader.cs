@@ -32,7 +32,11 @@ namespace MinorShift.Emuera.Sub
 			//    throw new ExeEE("破棄したオブジェクトを再利用しようとした");
 			//if ((reader != null) || (stream != null) || (filepath != null))
 			//    throw new ExeEE("使用中のオブジェクトを別用途に再利用しようとした");
-			filepath = path;
+			// 엔진은 파일명을 대문자로 하드코딩한다("GAMEBASE.CSV" 등).
+			// Windows는 대소문자를 무시하지만 Android/Linux는 구분하므로,
+			// 실제 파일이 gamebase.csv 인 게임이 실기에서만 열리지 않았다.
+			// 정확한 경로가 있으면 그대로 쓰고, 없을 때만 대소문자를 무시해 찾는다.
+			filepath = PathResolver.ResolveFile(path);
 			filename = name;
 			nextNo = 0;
 			curNo = 0;

@@ -155,6 +155,8 @@ public partial class FirstWindow : Control
     /// <summary>ゲームフォルダを再走査する。</summary>
     public void Rescan()
     {
+        // 앱을 켠 채로 게임을 복사해 넣는 경우가 흔하므로 캐시를 버리고 다시 훑는다
+        PathResolver.ClearCache();
         gamePaths.Clear();
         gameList?.Clear();
 
@@ -213,13 +215,19 @@ public partial class FirstWindow : Control
             SetStatus($"{gamePaths.Count}개 게임 발견");
     }
 
+    /// <summary>
+    /// ERB 폴더(또는 emuera.config)를 가진 폴더만 게임으로 본다.
+    ///
+    /// Android/Linux는 대소문자를 구분하므로 Erb/ 처럼 섞인 표기의 게임은
+    /// 목록에 아예 나타나지 않았다(Windows에서는 나타났다). PathResolver로
+    /// 대소문자를 무시해 찾는다.
+    /// </summary>
     static bool IsValidGameDir(string dir)
     {
         try
         {
-            return Directory.Exists(Path.Combine(dir, "ERB")) ||
-                   Directory.Exists(Path.Combine(dir, "erb")) ||
-                   File.Exists(Path.Combine(dir, "emuera.config"));
+            return Directory.Exists(PathResolver.ResolveDirectory(Path.Combine(dir, "erb"))) ||
+                   File.Exists(PathResolver.ResolveFile(Path.Combine(dir, "emuera.config")));
         }
         catch
         {
@@ -324,7 +332,12 @@ public partial class FirstWindow : Control
 
         string gamePath = gamePaths[idx] + "/";
         if (!main.StartGame(gamePath))
-            SetStatus("게임을 시작할 수 없습니다.");
+        {
+            // 이유를 그대로 보여준다. 예전에는 "시작할 수 없습니다"만 남기고
+            // 실제 원인은 로그로만 갔기 때문에 Android에서 진단이 불가능했다.
+            var why = main.LastStartError;
+            SetStatus(string.IsNullOrEmpty(why) ? "게임을 시작할 수 없습니다." : why);
+        }
     }
 
     void SetStatus(string msg)

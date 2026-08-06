@@ -38,6 +38,25 @@ namespace MinorShift.Emuera
 
 		*/
 		/// <summary>
+		/// ゲームフォルダ配下のサブフォルダを大文字小文字を無視して解決する。
+		/// 見つからない場合は小文字の想定パスを返すので、呼び出し側の
+		/// 「フォルダが見つかりません」処理がそのまま動く。
+		/// </summary>
+		static string ResolveGameSubDir(string name)
+		{
+			var lower = ExeDir + name.ToLowerInvariant() + "/";
+			if (Directory.Exists(lower))
+				return lower;
+			var upper = ExeDir + name.ToUpperInvariant() + "/";
+			if (Directory.Exists(upper))
+				return upper;
+			var resolved = PathResolver.ResolveDirectory(lower);
+			if (Directory.Exists(resolved))
+				return resolved.TrimEnd('/', '\\') + "/";
+			return lower;
+		}
+
+		/// <summary>
 		/// アプリケーションのメイン エントリ ポイントです。
 		/// </summary>
 		//[STAThread]
@@ -54,26 +73,14 @@ namespace MinorShift.Emuera
 			ExeDir = @"";
 			
 #endif
-			CsvDir = ExeDir + "csv/";
-			if (!Directory.Exists(CsvDir)){
-				CsvDir = ExeDir + "CSV/";
-			}
-			ErbDir = ExeDir + "erb/";
-			if (!Directory.Exists(ErbDir)){
-				ErbDir = ExeDir + "ERB/";
-			}
-			DebugDir = ExeDir + "debug/";
-			if (!Directory.Exists(DebugDir)){
-				DebugDir = ExeDir + "DEBUG/";
-			}
-			DatDir = ExeDir + "dat/";
-			if (!Directory.Exists(DatDir)){
-				DatDir = ExeDir + "DAT/";
-			}
-			ContentDir = ExeDir + "resources/";
-			if (!Directory.Exists(ContentDir)){
-				ContentDir = ExeDir + "RESOURCES/";
-			}
+			// 소문자 → 대문자 → 그 외 대소문자 조합 순으로 찾는다.
+			// Windows는 대소문자를 무시하므로 두 번의 시도로 충분했지만,
+			// Android/Linux 에서는 Csv/ 같은 혼합 표기를 놓친다.
+			CsvDir = ResolveGameSubDir("csv");
+			ErbDir = ResolveGameSubDir("erb");
+			DebugDir = ResolveGameSubDir("debug");
+			DatDir = ResolveGameSubDir("dat");
+			ContentDir = ResolveGameSubDir("resources");
 			//エラー出力用
 			//1815 .exeが東方板のNGワードに引っかかるそうなので除去
 			//ExeName = Path.GetFileNameWithoutExtension(Sys.ExeName);

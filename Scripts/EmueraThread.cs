@@ -117,6 +117,10 @@ public class EmueraThread
         {
             // バックグラウンドスレッドの未処理例外はプロセスを落とすため必ず捕える
             uEmuera.Logger.Error($"EmueraThread crashed: {e}");
+            // Android には見えるコンソールが無い。画面に出さないと
+            // ユーザーには「何も起きない」ようにしか見えない。
+            GenericUtils.ShowFatal(
+                $"게임을 불러오는 중 오류가 발생했습니다.\n{e.GetType().Name}: {e.Message}");
         }
         finally
         {

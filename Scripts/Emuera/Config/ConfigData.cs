@@ -451,6 +451,9 @@ static ConfigData() { }
 
 		private bool loadConfig(string confPath, bool fix)
 		{
+			// emuera.config 의 실제 파일명이 Emuera.config 처럼 다른 대소문자일 수
+			// 있다. Windows는 무시하지만 Android/Linux는 구분하므로 여기서 해결한다.
+			confPath = PathResolver.ResolveFile(confPath);
 			if (!File.Exists(confPath))
 				return false;
 			EraStreamReader eReader = new EraStreamReader(false);

@@ -46,11 +46,14 @@ size_flags_vertical = 0
 [node name="LineEdit" type="LineEdit" parent="EmueraContent/Layout/InputBar"]
 layout_mode = 2
 size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 72)
 placeholder_text = "입력"
 caret_blink = true
 
 [node name="SubmitButton" type="Button" parent="EmueraContent/Layout/InputBar"]
 layout_mode = 2
+custom_minimum_size = Vector2(110, 72)
+theme_override_font_sizes/font_size = 30
 text = "확인"
 
 [node name="MenuButton" type="Button" parent="EmueraContent"]
@@ -58,12 +61,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -66.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 54.0
+offset_left = -92.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 92.0
 grow_horizontal = 0
 text = "≡"
+theme_override_font_sizes/font_size = 40
 
 [node name="MenuLayer" type="Control" parent="EmueraContent"]
 visible = false
@@ -101,32 +105,38 @@ layout_mode = 2
 
 [node name="RestartButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(300, 58)
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 30
 text = "다시 시작"
 
 [node name="SaveLogButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(300, 58)
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 30
 text = "로그 저장"
 
 [node name="FontButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(300, 58)
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 30
 text = "글자 크기 설정"
 
 [node name="QuitToListButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(300, 58)
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 30
 text = "게임 종료 (목록으로)"
 
 [node name="QuitAppButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(300, 58)
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 30
 text = "앱 종료"
 
 [node name="CloseButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(300, 58)
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 30
 text = "닫기"
 
 [node name="FontLayer" type="Control" parent="EmueraContent"]
@@ -169,19 +179,22 @@ alignment = 1
 
 [node name="SmallerButton" type="Button" parent="EmueraContent/FontLayer/Center/Panel/VBox/Row"]
 layout_mode = 2
-custom_minimum_size = Vector2(80, 58)
+custom_minimum_size = Vector2(96, 76)
+theme_override_font_sizes/font_size = 32
 text = "A-"
 
 [node name="FontValue" type="Label" parent="EmueraContent/FontLayer/Center/Panel/VBox/Row"]
 layout_mode = 2
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(110, 0)
+theme_override_font_sizes/font_size = 32
 text = "28"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="LargerButton" type="Button" parent="EmueraContent/FontLayer/Center/Panel/VBox/Row"]
 layout_mode = 2
-custom_minimum_size = Vector2(80, 58)
+custom_minimum_size = Vector2(96, 76)
+theme_override_font_sizes/font_size = 32
 text = "A+"
 
 [node name="Sample" type="Label" parent="EmueraContent/FontLayer/Center/Panel/VBox"]
@@ -192,7 +205,8 @@ autowrap_mode = 3
 
 [node name="FontCloseButton" type="Button" parent="EmueraContent/FontLayer/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(320, 58)
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 30
 text = "닫기"
 
 [node name="ProcessLabel" type="Label" parent="EmueraContent"]

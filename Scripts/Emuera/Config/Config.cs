@@ -184,7 +184,9 @@ namespace MinorShift.Emuera
 			if (TextDrawingMode != TextDrawingMode.WINAPI)
 				DrawingParam_ShapePositionShift = Math.Max(2, FontSize / 6);
 			DrawableWidth = WindowX - DrawingParam_ShapePositionShift;
-			ForceSavDir = Program.ExeDir + "sav\\";
+			// '\' は Windows専用の区切り。Androidではリテラルに "sav\" という名前の
+			// フォルダが作られてしまう(元コードのまま移植された不具合)。
+			ForceSavDir = Program.ExeDir + "sav/";
 			if (UseSaveFolder)
 				SavDir = Program.ExeDir + "sav/";
 			else

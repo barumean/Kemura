@@ -19,8 +19,12 @@ config/icon="res://icon.svg"
 
 [display]
 
-window/size/viewport_width=1080
-window/size/viewport_height=1920
+; 기준 해상도. canvas_items 스트레치는 이 크기로 UI를 그린 뒤 화면에 맞춰
+; 확대한다. 1080 기준이면 최신 폰(1440 이상)에서 버튼이 물리적으로 너무 작아
+; 터치하기 어렵다(권장 최소 터치 영역 48dp ≈ 9mm).
+; 720 기준으로 낮추면 같은 픽셀 수의 UI가 1.5배 크게 표시된다.
+window/size/viewport_width=720
+window/size/viewport_height=1280
 window/size/resizable=false
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
