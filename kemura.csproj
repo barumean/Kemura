@@ -1,12 +1,15 @@
 <Project Sdk="Godot.NET.Sdk/4.7.0">
   <PropertyGroup>
     <!--
-      GodotSharp 4.7.x は net8.0 のみを提供している (lib/net8.0 だけ)。
-      Android用に net9.0 を条件付きで指定していたが、Godotが同梱する
-      Android向け.NETランタイムは8系なので、net9.0でビルドすると実行時に
-      「より新しいランタイムが必要」で落ちる。全プラットフォームで net8.0。
+      Godot 4.7 の .NET エディションは net9.0 を前提にビルド・エクスポートする。
+      エディタが期待するTFMと一致させること。
+
+      以前ここには「GodotSharpが lib/net8.0 しか提供しないので net8.0」と
+      書いてあったが、これは誤り。net9.0 のプロジェクトは net8.0 の
+      ライブラリをそのまま参照できるので、lib/net8.0 の存在は
+      プロジェクト側のTFMを net8.0 に縛る理由にならない。
     -->
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
 
     <!--

@@ -38,7 +38,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
 
       # include-templates: true → android_source.zip 을 포함한 내보내기
       # 템플릿을 받는다. 빌드 템플릿 설치에 이 zip 이 필요하다.

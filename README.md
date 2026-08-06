@@ -1,8 +1,8 @@
 # Kemura
 
-**Emuera era-script 게임 에뮬레이터 (Godot 4.7 + C# / net8.0)**
+**Emuera era-script 게임 에뮬레이터 (Godot 4.7 + C# / net9.0)**
 
-uEmuera(Unity 포트)를 Godot 4.7 + .NET 8으로 이식한 프로젝트입니다.
+uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
 
 ---
 
@@ -45,7 +45,7 @@ uEmuera(Unity 포트)를 Godot 4.7 + .NET 8으로 이식한 프로젝트입니�
 ```
 Kemura/
 ├── project.godot           # Godot 4.7 프로젝트 설정 (main_scene = main.tscn)
-├── kemura.csproj           # .NET (net8.0, Godot.NET.Sdk 4.7.0)
+├── kemura.csproj           # .NET (net9.0, Godot.NET.Sdk 4.7.0)
 ├── kemura.sln
 ├── main.tscn               # 루트 씬: EmueraContent + FirstWindow + EmueraMain
 ├── first_window.tscn       # 게임 선택 UI (main.tscn에 인스턴스로 포함)
@@ -88,9 +88,9 @@ Kemura/
   - 파일명에 `mono` / `dotnet`이 들어간 것. 일반판은 C#을 실행할 수 없습니다.
   - 압축을 풀 때 **`GodotSharp/` 폴더를 exe와 같은 위치에 유지**해야 합니다.
     exe만 옮기면 `Microsoft.Build.Framework를 찾을 수 없음` 오류가 납니다.
-- **.NET SDK 8.0** — 런타임(Runtime)이 아니라 **SDK**여야 합니다:
-  https://dotnet.microsoft.com/download/dotnet/8.0
-  - `GodotSharp` 4.7.x는 `net8.0`만 제공하므로 8.0으로 맞춥니다.
+- **.NET SDK 9.0** — 런타임(Runtime)이 아니라 **SDK**여야 합니다:
+  https://dotnet.microsoft.com/download/dotnet/9.0
+  - Godot 4.7 (.NET 에디션) 이 net9.0 을 전제로 빌드/내보내기합니다.
   - 설치 확인: `dotnet --list-sdks` 에 항목이 나와야 합니다.
 - Android 내보내기: **JDK 17 (정확히 17)**, Android SDK
   — 자세한 버전 요구사항은 아래 [버전 요구사항](#버전-요구사항) 표 참조
@@ -126,25 +126,22 @@ godot --path .
 |---|---|---|---|
 | Godot | **4.7** (.NET 에디션) | Help → About | `project.godot` 의 `config/features` |
 | `Godot.NET.Sdk` | **4.7.0** | `kemura.csproj` 1행 | 에디터 버전과 일치해야 함 |
-| .NET SDK | **8.0** | `dotnet --list-sdks` | GodotSharp 4.7.x 는 `lib/net8.0` **만** 제공 |
-| `TargetFramework` | **net8.0** | `kemura.csproj` | 위와 동일 |
+| .NET SDK | **9.0** | `dotnet --list-sdks` | Godot 4.7 (.NET) 이 net9.0 전제 |
+| `TargetFramework` | **net9.0** | `kemura.csproj` | 위와 동일 |
 | JDK | **17 (정확히 17)** | `java -version` | Godot 4.x Android 내보내기 요구사항 |
 | Android SDK build-tools | **34.0.0** 이상 | `sdkmanager --list_installed` | APK 서명(`apksigner`)에 필요 |
 | 내보내기 템플릿 | **에디터와 동일 버전** | Editor → Manage Export Templates | 버전 불일치 시 내보내기 실패 |
 
-### net9.0 을 쓰면 안 되는 이유
+### TargetFramework 는 net9.0 입니다
 
-NuGet 패키지를 직접 확인한 결과입니다:
+Godot 4.7 (.NET 에디션) 은 net9.0 을 전제로 C# 을 빌드하고 내보냅니다.
+에디터가 기대하는 TFM 과 어긋나면 내보내기 단계에서 걸립니다.
 
-```
-GodotSharp 4.7.0  →  lib/net8.0   (net9.0 없음)
-GodotSharp 4.7.1  →  lib/net8.0   (net9.0 없음)
-```
-
-Godot이 Android APK에 동봉하는 .NET 런타임도 8계열입니다. `net9.0`으로 빌드하면
-컴파일은 통과해도 **실행 즉시 "더 새로운 런타임 필요"로 종료**됩니다.
-데스크톱에서는 시스템에 .NET 9 런타임이 있으면 우연히 동작하므로,
-Android에서만 깨지는 형태로 나타납니다.
+> **이전 README 의 설명은 틀렸습니다.** "GodotSharp 4.7.x 가 `lib/net8.0` 만
+> 제공하므로 net8.0 을 써야 한다"고 적혀 있었지만, 이는 근거가 되지 않습니다.
+> net9.0 프로젝트는 net8.0 라이브러리를 그대로 참조할 수 있으므로
+> `lib/net8.0` 의 존재가 프로젝트의 TFM 을 net8.0 으로 묶지 않습니다.
+> `.NET SDK` 와 `TargetFramework` 는 **에디터가 요구하는 버전**에 맞춥니다.
 
 ### JDK 17 을 정확히 써야 하는 이유
 
@@ -197,7 +194,7 @@ JAVA_HOME = C:\Program Files\Unity\Hub\Editor\2022.3.x\...\OpenJDK  (Unity 잔�
 
 **JDK 17** — https://adoptium.net (Temurin **17** LTS. 21/24 아님)
 
-**.NET SDK 8.0** — https://dotnet.microsoft.com/download/dotnet/8.0
+**.NET SDK 9.0** — https://dotnet.microsoft.com/download/dotnet/9.0
 (**SDK** 열에서 받으세요. Runtime 아님)
 
 **Android SDK** — 두 가지 방법 중 하나:
@@ -343,8 +340,8 @@ Google Play는 AAB를 요구합니다. 그때는 gradle 빌드가 필요합니�
 | `apksigner not found` | `build-tools` 미설치 → `sdkmanager "build-tools;34.0.0"` |
 | `No export template found` | 템플릿 버전이 에디터 버전과 다름 |
 | `NU1102: Unable to find package Godot.NET.Sdk` | csproj의 SDK 버전이 실제 Godot 버전과 다름 |
-| `No .NET SDKs were found` | 런타임만 설치됨 → **SDK** 8.0 설치 |
-| `net9.0 ... requires a newer runtime` (실행 시) | `TargetFramework`가 net9.0 → **net8.0** 으로 |
+| `No .NET SDKs were found` | 런타임만 설치됨 → **SDK** 9.0 설치 |
+| `... requires a newer runtime` (실행 시) | 설치된 .NET 런타임이 `TargetFramework`보다 낮음. **SDK 9.0** 설치 확인 |
 | `Cannot instantiate C# script...` | C# 어셈블리 미빌드 또는 `AssemblyName` 불일치. `dotnet build kemura.csproj` 실행 후 `<AssemblyName>Kemura</AssemblyName>` 확인 |
 | 앱이 켜지자마자 종료 | `adb logcat -s godot:V DEBUG:V` 로 로그 확인 |
 | 게임 목록이 비어 있음 | "모든 파일 접근" 권한 미허용 |
@@ -466,9 +463,9 @@ java -version; dotnet --list-sdks; findstr /n "Godot.NET.Sdk TargetFramework Ass
 기대값:
 ```
 openjdk version "17.x.x"
-8.0.xxx [C:\Program Files\dotnet\sdk]
+9.0.xxx [C:\Program Files\dotnet\sdk]
 1:<Project Sdk="Godot.NET.Sdk/4.7.0">
-9:    <TargetFramework>net8.0</TargetFramework>
+9:    <TargetFramework>net9.0</TargetFramework>
 23:    <AssemblyName>Kemura</AssemblyName>
 ```
 
