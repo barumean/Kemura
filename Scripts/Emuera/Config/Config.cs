@@ -274,7 +274,7 @@ namespace MinorShift.Emuera
 				return;
 			}
 			bool existGlobal = File.Exists(Program.ExeDir + "global.sav");
-			string[] savFiles = Directory.GetFiles(Program.ExeDir, "save*.sav", SearchOption.TopDirectoryOnly);
+			string[] savFiles = PathResolver.GetFiles(Program.ExeDir, "save*.sav", SearchOption.TopDirectoryOnly);
 			if (!existGlobal && savFiles.Length == 0)
 				return;
 			DialogResult result = MessageBox.Show("savフォルダを作成しました\n現在のデータをsavフォルダ内に移動しますか？", "データ移動", MessageBoxButtons.YesNo);
@@ -291,7 +291,7 @@ namespace MinorShift.Emuera
 			{
 				if (File.Exists(Program.ExeDir + "global.sav"))
 					File.Move(Program.ExeDir + "global.sav", SavDir + "global.sav");
-				savFiles = Directory.GetFiles(Program.ExeDir, "save*.sav", SearchOption.TopDirectoryOnly);
+				savFiles = PathResolver.GetFiles(Program.ExeDir, "save*.sav", SearchOption.TopDirectoryOnly);
 				foreach (string oldpath in savFiles)
 					File.Move(oldpath, SavDir + Path.GetFileName(oldpath));
 			}
@@ -325,8 +325,8 @@ namespace MinorShift.Emuera
 			SearchOption option = SearchOption.TopDirectoryOnly;
 			if (SearchSubdirectory)
 				option = SearchOption.AllDirectories;
-			string[] erbFiles = Directory.GetFiles(Program.ErbDir, "*.ERB", option);
-			string[] csvFiles = Directory.GetFiles(Program.CsvDir, "*.CSV", option);
+			string[] erbFiles = PathResolver.GetFiles(Program.ErbDir, "*.ERB", option);
+			string[] csvFiles = PathResolver.GetFiles(Program.CsvDir, "*.CSV", option);
 			long[] writetimes = new long[erbFiles.Length + csvFiles.Length];
 			for (int i = 0; i < erbFiles.Length; i++)
 				if (Path.GetExtension(erbFiles[i]).Equals(".ERB", StringComparison.OrdinalIgnoreCase))
@@ -389,7 +389,9 @@ namespace MinorShift.Emuera
 					RelativePath += "/";//末尾が\又は/で終わるように。後でFile名を直接加算できるようにしておく
 			}
 			//filepathsは完全パスである
-			string[] filepaths = Directory.GetFiles(dir, pattern, SearchOption.TopDirectoryOnly);
+			//Directory.GetFilesはLinux/Androidでパターンの大文字小文字も区別するため、
+			//"*.ERB"で小文字拡張子のファイルが1件も拾えなかった(Windowsでは拾えた)。
+			string[] filepaths = PathResolver.GetFiles(dir, pattern, SearchOption.TopDirectoryOnly);
 			if (sort)
 				Array.Sort(filepaths, ignoreCaseComparer);
 			for (int i = 0; i < filepaths.Length; i++)

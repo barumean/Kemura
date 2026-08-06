@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 
 /// <summary>
 /// 대소문자를 무시해 실제 파일 경로를 찾아준다.
@@ -106,7 +108,99 @@ internal static class PathResolver
     /// </summary>
     internal static void ClearCache()
     {
+        // globCache 는 게임과 무관한 패턴 캐시이므로 비우지 않는다
         lock (sync)
             dirCache.Clear();
+    }
+
+    // ----------------------------------------------------------------------
+    // 대소문자를 무시하는 파일 검색
+    // ----------------------------------------------------------------------
+
+    /// <summary>
+    /// Directory.GetFiles 의 대소문자 무시 버전.
+    ///
+    /// Windows에서는 GetFiles(dir, "*.ERB") 가 erb/Erb/ERB 를 모두 잡지만,
+    /// Linux/Android에서는 <b>패턴까지 대소문자를 구분</b>하므로 확장자가
+    /// 소문자인 게임에서 ERB 파일이 0개로 나온다. 엔진 곳곳이 이 호출로
+    /// 스크립트와 CSV를 찾기 때문에, 게임이 통째로 로드되지 않았다.
+    ///
+    /// 원본은 "*.ERB" 로 찾고 결과가 비면 "*.erb" 로 한 번 더 찾는 식으로
+    /// 대응했지만, ".Erb" 같은 혼합 표기는 여전히 놓친다. 여기서 한 번에
+    /// 처리하므로 호출부의 재시도는 제거해야 한다(남겨두면 같은 파일이
+    /// 두 번 잡혀 중복 정의 오류가 난다).
+    /// </summary>
+    internal static string[] GetFiles(string dir, string pattern, SearchOption option)
+    {
+        var root = ResolveDirectory(dir);
+        if (!Directory.Exists(root))
+            return Array.Empty<string>();
+
+        var rx = GetGlob(pattern);
+        var result = new List<string>();
+        Collect(root, rx, option == SearchOption.AllDirectories, result);
+        return result.ToArray();
+    }
+
+    static void Collect(string dir, Regex rx, bool recurse, List<string> into)
+    {
+        try
+        {
+            foreach (var path in Directory.EnumerateFiles(dir))
+            {
+                if (rx.IsMatch(Path.GetFileName(path)))
+                    into.Add(path);
+            }
+        }
+        catch (Exception e)
+        {
+            // 하위 폴더 하나를 못 읽어도 전체 검색을 중단하지 않는다
+            uEmuera.Logger.Warn($"PathResolver.GetFiles: '{dir}' 를 읽을 수 없습니다: {e.Message}");
+            return;
+        }
+
+        if (!recurse)
+            return;
+        try
+        {
+            foreach (var sub in Directory.EnumerateDirectories(dir))
+                Collect(sub, rx, true, into);
+        }
+        catch (Exception e)
+        {
+            uEmuera.Logger.Warn($"PathResolver.GetFiles: '{dir}' 의 하위 폴더를 읽을 수 없습니다: {e.Message}");
+        }
+    }
+
+    static readonly Dictionary<string, Regex> globCache = new(StringComparer.Ordinal);
+
+    static Regex GetGlob(string pattern)
+    {
+        lock (sync)
+        {
+            if (globCache.TryGetValue(pattern, out var cached))
+                return cached;
+        }
+        var rx = new Regex(GlobToRegex(pattern),
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        lock (sync)
+            globCache[pattern] = rx;
+        return rx;
+    }
+
+    static string GlobToRegex(string pattern)
+    {
+        var sb = new StringBuilder("^");
+        foreach (var c in pattern)
+        {
+            switch (c)
+            {
+                case '*': sb.Append(".*"); break;
+                case '?': sb.Append('.'); break;
+                default: sb.Append(Regex.Escape(c.ToString())); break;
+            }
+        }
+        sb.Append('$');
+        return sb.ToString();
     }
 }

@@ -437,7 +437,9 @@ static ConfigData() { }
 			
 			Config.SetConfig(this);
 			bool needSave = false;
-			if (!File.Exists(configPath))
+			// 파일명이 Emuera.config 처럼 다른 대소문자일 수 있다. 그대로 두면
+			// Android에서 없다고 보고 emuera.config 를 하나 더 쓰게 된다.
+			if (!File.Exists(PathResolver.ResolveFile(configPath)))
 				needSave = true;
 			if (Config.CheckUpdate())
 			{

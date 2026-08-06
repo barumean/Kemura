@@ -183,6 +183,8 @@ namespace MinorShift.Emuera.GameData
 
 		private void loadVariableSizeData(string csvPath, bool disp)
 		{
+			// 대소문자가 달라도 찾도록 실제 경로로 해석한다(Android/Linux 대응)
+			csvPath = PathResolver.ResolveFile(csvPath);
 			if (!File.Exists(csvPath))
 				return;
 			EraStreamReader eReader = new EraStreamReader(false);
@@ -1008,20 +1010,13 @@ check1break:
 		{
 			if (!Directory.Exists(csvDir))
 				return;
+			// Config.GetFilesは大文字小文字を無視して検索する(PathResolver経由)。
+			// 以前はここで "Chara*.CSV" / "CHARA*.csv" / "Chara*.csv" と4回
+			// 検索していたが、そのブロックはUNITY_ANDROID限定で、Godot移植後は
+			// 一度も有効にならなかった(=Androidでキャラデータが読めなかった)。
 			List<KeyValuePair<string, string>> csvPaths = Config.GetFiles(csvDir, "CHARA*.CSV");
 			for (int i = 0; i < csvPaths.Count; i++)
 				loadCharacterDataFile(csvPaths[i].Value, csvPaths[i].Key, disp);
-#if(UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-            csvPaths = Config.GetFiles(csvDir, "Chara*.CSV");
-            for(int i = 0; i < csvPaths.Count; i++)
-                loadCharacterDataFile(csvPaths[i].Value, csvPaths[i].Key, disp);
-            csvPaths = Config.GetFiles(csvDir, "CHARA*.csv");
-            for(int i = 0; i < csvPaths.Count; i++)
-                loadCharacterDataFile(csvPaths[i].Value, csvPaths[i].Key, disp);
-            csvPaths = Config.GetFiles(csvDir, "Chara*.csv");
-            for(int i = 0; i < csvPaths.Count; i++)
-                loadCharacterDataFile(csvPaths[i].Value, csvPaths[i].Key, disp);
-#endif
             SortCharacterTmplList();
 
             var count = CharacterTmplList.Count;
@@ -1364,7 +1359,8 @@ check1break:
 
 		private void loadDataTo(string csvPath, int targetIndex, Int64[] targetI, bool disp)
 		{
-
+			// 대소문자가 달라도 찾도록 실제 경로로 해석한다(Android/Linux 대응)
+			csvPath = PathResolver.ResolveFile(csvPath);
 			if (!File.Exists(csvPath))
 				return;
 			string[] target = names[targetIndex];

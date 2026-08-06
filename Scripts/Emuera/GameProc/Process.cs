@@ -81,7 +81,7 @@ namespace MinorShift.Emuera.GameProc
 				//キーマクロ読み込み
                 if (Config.UseKeyMacro && !Program.AnalysisMode)
                 {
-                    if (File.Exists(Program.ExeDir + "macro.txt"))
+                    if (File.Exists(PathResolver.ResolveFile(Program.ExeDir + "macro.txt")))
                     {
                         if (Config.DisplayReport)
 							console.PrintSystemLine("macro.txt 읽는 중...");
@@ -91,11 +91,13 @@ namespace MinorShift.Emuera.GameProc
 				//_replace.csv読み込み
                 if (Config.UseReplaceFile && !Program.AnalysisMode)
                 {
-					if (File.Exists(Program.CsvDir + "_Replace.csv"))
+					// 대소문자가 달라도 찾도록 실제 경로로 해석한다(Android/Linux 대응)
+					var replacePath = PathResolver.ResolveFile(Program.CsvDir + "_Replace.csv");
+					if (File.Exists(replacePath))
 					{
 						if (Config.DisplayReport)
 							console.PrintSystemLine("_Replace.csv 읽는 중...");
-						ConfigData.Instance.LoadReplaceFile(Program.CsvDir + "_Replace.csv");
+						ConfigData.Instance.LoadReplaceFile(replacePath);
 						if (ParserMediator.HasWarning)
 						{
 							ParserMediator.FlushWarningList();
@@ -115,11 +117,12 @@ namespace MinorShift.Emuera.GameProc
 				//_rename.csv読み込み
 				if (Config.UseRenameFile)
                 {
-					if (File.Exists(Program.CsvDir + "_Rename.csv"))
+					var renamePath = PathResolver.ResolveFile(Program.CsvDir + "_Rename.csv");
+					if (File.Exists(renamePath))
                     {
                         if (Config.DisplayReport || Program.AnalysisMode)
 							console.PrintSystemLine("_Rename.csv 읽는 중...");
-						ParserMediator.LoadEraExRenameFile(Program.CsvDir + "_Rename.csv");
+						ParserMediator.LoadEraExRenameFile(renamePath);
                     }
                     else
                         console.PrintError("csv\\_Rename.csv를 찾을 수 없습니다");

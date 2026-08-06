@@ -1905,7 +1905,7 @@ namespace MinorShift.Emuera.GameData.Variable
 			string searchPattern = "var_" + pattern + ".dat";
 			if (charadat)
 				searchPattern = "chara_" + pattern + ".dat";
-			string[] pathes = Directory.GetFiles(Program.DatDir, searchPattern, SearchOption.TopDirectoryOnly);
+			string[] pathes = PathResolver.GetFiles(Program.DatDir, searchPattern, SearchOption.TopDirectoryOnly);
 			foreach (string path in pathes)
 			{
 				if (!Path.GetExtension(path).Equals(".dat", StringComparison.OrdinalIgnoreCase))

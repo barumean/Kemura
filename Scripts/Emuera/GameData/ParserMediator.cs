@@ -43,6 +43,8 @@ namespace MinorShift.Emuera
 				RenameDic.Clear();
 			//とにかく辞書を作る。辞書がnullのときは UseRenameFileがNOの時のみ
 			RenameDic = new Dictionary<string, string>();
+			// 대소문자가 달라도 찾도록 실제 경로로 해석한다(Android/Linux 대응)
+			filepath = PathResolver.ResolveFile(filepath);
 			EraStreamReader eReader = new EraStreamReader(false);
 			if ((!File.Exists(filepath)) || (!eReader.Open(filepath)))
 			{

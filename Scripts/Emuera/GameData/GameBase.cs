@@ -85,6 +85,8 @@ namespace MinorShift.Emuera.GameData
 		/// <returns>読み込み続行するなら真、エラー終了なら偽</returns>
 		public bool LoadGameBaseCsv(string basePath)
 		{
+			// 대소문자가 달라도 찾도록 실제 경로로 해석한다(Android/Linux 대응)
+			basePath = PathResolver.ResolveFile(basePath);
             if (!File.Exists(basePath))
             {
                 return true;

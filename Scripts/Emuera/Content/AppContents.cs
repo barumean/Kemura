@@ -87,10 +87,10 @@ namespace MinorShift.Emuera.Content
 			try
 			{
 				//resourcesフォルダ内の全てのcsvファイルを探索する
-				List<string> csvFiles = new List<string>(Directory.GetFiles(Program.ContentDir, "*.csv", SearchOption.TopDirectoryOnly));
-#if(UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-                csvFiles.AddRange(Directory.GetFiles(Program.ContentDir, "*.CSV", SearchOption.TopDirectoryOnly));
-#endif
+				// PathResolver.GetFilesはパターンの大文字小文字を無視する。
+				// 元の "*.CSV" 追加検索はUNITY_ANDROID限定で無効だった。
+				List<string> csvFiles = new List<string>(
+					PathResolver.GetFiles(Program.ContentDir, "*.csv", SearchOption.TopDirectoryOnly));
                 var count = csvFiles.Count;
                 for(var i=0; i<count; ++i)
 				{
@@ -207,7 +207,8 @@ namespace MinorShift.Emuera.Content
 			//親画像のロードConstImage
 			if (!resourceDic.ContainsKey(parentName))
 			{
-				string filepath = parentName;
+				// 대소문자가 달라도 찾도록 실제 경로로 해석한다(Android/Linux 대응)
+				string filepath = PathResolver.ResolveFile(parentName);
 				if (!File.Exists(filepath))
 				{
 					ParserMediator.Warn("指定された画像ファイルが見つかりませんでした:" + arg2, sp, 1);
