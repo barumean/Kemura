@@ -212,30 +212,29 @@ namespace uEmuera
                 return content_files;
             content_files = new Dictionary<string, string>();
 
-            var contentdir = MinorShift._Library.Sys.ExeDir + "resources/";
+            var contentdir = PathResolver.ResolveDirectory(
+                MinorShift._Library.Sys.ExeDir + "resources/");
             if(!Directory.Exists(contentdir))
                 return content_files;
 
+            // PathResolver.GetFiles はパターンの大文字小文字を無視する。
+            // 以前は小文字パターンで検索し、Android限定で大文字パターンを
+            // 追加検索していたが、".Png" のような混在表記は取りこぼした。
+            // なお両方を残すと同じファイルが2回入り、下の
+            // content_files.Add() が重複キーで例外になる。
             List<string> bmpfilelist = new List<string>();
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.png", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.bmp", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.jpg", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.gif", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.webp", SearchOption.TopDirectoryOnly));
-#if GODOT_ANDROID
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.PNG", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.BMP", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.JPG", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.GIF", SearchOption.TopDirectoryOnly));
-            bmpfilelist.AddRange(Directory.GetFiles(contentdir, "*.WEBP", SearchOption.TopDirectoryOnly));
-
-#endif
+            foreach(var ext in new[]{ "png", "bmp", "jpg", "gif", "webp" })
+                bmpfilelist.AddRange(PathResolver.GetFiles(
+                    contentdir, "*." + ext, SearchOption.TopDirectoryOnly));
             var filecount = bmpfilelist.Count;
             for(int i=0; i<filecount; ++i)
             {
                 var filename = bmpfilelist[i];
                 string name = Path.GetFileName(filename).ToUpper();
-                content_files.Add(name, filename);
+                // Add() は重複キーで例外を投げる。大文字小文字だけが違う
+                // ファイル(a.png と A.PNG)はAndroid/Linuxでは共存できるので、
+                // そこでリソース読み込み全体が落ちてはいけない。
+                content_files[name] = filename;
             }
             return content_files;
         }
@@ -255,13 +254,10 @@ namespace uEmuera
             if(content_files.Count == 0)
                 return;
 
-            var contentdir = MinorShift._Library.Sys.ExeDir + "resources/";
-            List<string> csvFiles = new List<string>(Directory.GetFiles(
+            var contentdir = PathResolver.ResolveDirectory(
+                MinorShift._Library.Sys.ExeDir + "resources/");
+            List<string> csvFiles = new List<string>(PathResolver.GetFiles(
                 contentdir, "*.csv", SearchOption.TopDirectoryOnly));
-#if GODOT_ANDROID
-            csvFiles.AddRange(Directory.GetFiles(
-                contentdir, "*.CSV", SearchOption.TopDirectoryOnly));
-#endif
             resource_csv_lines_ = new Dictionary<string, string[]>();
 
             var encoder = MinorShift.Emuera.Config.Encode;
@@ -339,13 +335,10 @@ namespace uEmuera
             if(content_files.Count == 0)
                 return;
 
-            var contentdir = MinorShift._Library.Sys.ExeDir + "resources/";
-            List<string> csvFiles = new List<string>(Directory.GetFiles(
+            var contentdir = PathResolver.ResolveDirectory(
+                MinorShift._Library.Sys.ExeDir + "resources/");
+            List<string> csvFiles = new List<string>(PathResolver.GetFiles(
                 contentdir, "*.csv", SearchOption.TopDirectoryOnly));
-#if GODOT_ANDROID
-            csvFiles.AddRange(Directory.GetFiles(
-                contentdir, "*.CSV", SearchOption.TopDirectoryOnly));
-#endif
             resource_csv_lines_ = new Dictionary<string, string[]>();
 
             var encoder = MinorShift.Emuera.Config.Encode;
