@@ -30,6 +30,15 @@ public partial class EmueraMain : Node
         // ゲーム読み込みより前に入れておく必要がある。
         ConfigMaps.Load();
 
+        // --kemura-selftest: 대소문자 파일 해석을 실제 파일로 검증하고 종료한다.
+        // CI가 Linux(대소문자 구분)에서 도는데도 이 버그를 놓쳤기 때문에 넣었다.
+        if (SelfTest.Requested())
+        {
+            int code = SelfTest.Run();
+            GetTree().Quit(code);
+            return;
+        }
+
         // 絶対パス("/root/Main/...")を埋め込むと、このシーンを子として
         // インスタンス化した瞬間に壊れる。兄弟ノードは相対パスで引く。
         content = GetNodeOrNull<EmueraContent>("../EmueraContent");

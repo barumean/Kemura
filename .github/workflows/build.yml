@@ -105,6 +105,22 @@ jobs:
           fi
           echo "스모크 런 통과"
 
+      # 대소문자 파일 해석 검증.
+      #
+      # "PC에서는 되는데 실기에서만 게임이 안 열린다"의 원인은 파일명
+      # 대소문자였는데, CI는 Linux(=대소문자 구분)에서 도는데도 초록이었다.
+      # 컴파일과 임포트만 봤기 때문이다. 실제 파일을 만들어 검색되는지
+      # 확인하지 않으면 같은 회귀를 또 놓친다.
+      - name: Case-insensitive path resolution self-test
+        run: |
+          set -o pipefail
+          godot --headless -- --kemura-selftest 2>&1 | tee selftest.log || true
+          grep '\[SelfTest\]' selftest.log || true
+          if ! grep -q '\[SelfTest\] ALL PASS' selftest.log; then
+            echo "::error::대소문자 경로 해석 자기 검증 실패"
+            exit 1
+          fi
+
       - name: Upload run log
         if: always()
         uses: actions/upload-artifact@v4
@@ -113,4 +129,5 @@ jobs:
           path: |
             run.log
             import.log
+            selftest.log
           if-no-files-found: ignore
