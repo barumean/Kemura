@@ -647,6 +647,13 @@ namespace MinorShift.Emuera.GameData.Variable
 			if (array.Length > 0) array[0] = 1;
 			array = dataIntegerArray[(int)VariableCode.__LOWERCASE__ & (int)VariableCode.PBAND];
 			if (array.Length > 0) array[0] = Config.PbandDef;
+			// NOITEM の出所は VariableCode.cs のコメント通り GAMEBASE.CSV の
+			// 「アイテムなし」だが、初期化だけが抜けていた。PBAND/EJACと同じく
+			// エンジンが与える初期値であり、ゲーム側は NOITEM を読んで
+			// アイテム所持チェックを省く。未指定なら DefaultNoItem は 0 なので、
+			// 「アイテムなし」を書いていないゲームの挙動は一切変わらない。
+			array = dataIntegerArray[(int)VariableCode.__LOWERCASE__ & (int)VariableCode.NOITEM];
+			if (array.Length > 0) array[0] = gamebase.DefaultNoItem;
 			array = dataIntegerArray[(int)VariableCode.__LOWERCASE__ & (int)VariableCode.EJAC];
 			if (array.Length > 0) array[0] = 10000;
 

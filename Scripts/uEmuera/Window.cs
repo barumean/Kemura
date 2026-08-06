@@ -32,7 +32,21 @@ namespace uEmuera.Window
 
     public class MainWindow : IDisposable
     {
-        public static string uEmueraVer = "";
+        /// <summary>
+        /// エンジンが自称するEmueraバージョン。"数.数.数.数" 形式でなければならない
+        /// (GameBase.csv の「動作に必要なEmueraのバージョン」が System.Version で
+        ///  比較する)。
+        ///
+        /// 移植時にここが空文字のまま代入されず、new Version("") が例外を投げていた。
+        /// その例外は GAMEBASE.CSV 読み込みの catch に飲まれるため、当該行より後ろの
+        /// コード・バージョン・タイトルが丸ごと失われていた。
+        /// ゲームからは EMUERA_VERSION でも参照されるので、空だと表示も壊れる。
+        ///
+        /// 値は移植元の系統に合わせて 1.824 とする(ソース内の版マーカーが 1.824)。
+        /// ただし画像描画などは未実装のスタブがある。バージョンだけを見て機能の
+        /// 有無を判断するゲームはそこで別途失敗しうる。
+        /// </summary>
+        public static string uEmueraVer = "1.824.0.0";
 
         public MainWindow()
         {}

@@ -106,9 +106,16 @@ namespace MinorShift.Emuera.GameData
 					string[] tokens = st.Substring().Split(',');
 					if (tokens.Length < 2)
 						continue;
+					// 表計算ソフトで書き出したGAMEBASE.CSVは項目名の後ろに空白が
+					// 残ることがある。トリムしないと switch がどれにも一致せず、
+					// 「コード」や「バージョン」が黙って無視される。コードが0の
+					// セーブデータはどのゲームからでも読めてしまうので、
+					// 静かに落ちるのが一番まずい。
+					// (行頭の空白は ReadEnabledLine が既に落としている)
+					string name = tokens[0].Trim();
 					string param = tokens[1].Trim();
 					pos = new ScriptPosition(eReader.Filename, eReader.LineNo);
-					switch (tokens[0])
+					switch (name)
 					{
 						case "コード":
 							if (tryatoi(tokens[1], out ScriptUniqueCode))
@@ -130,33 +137,48 @@ namespace MinorShift.Emuera.GameData
 							tryatoi(tokens[1], out DefaultNoItem);
 							break;
 						case "タイトル":
-							ScriptTitle = tokens[1];
+							ScriptTitle = param;
 							break;
 						case "作者":
-							ScriptAutherName = tokens[1];
+							ScriptAutherName = param;
 							break;
 						case "製作年":
-							ScriptYear = tokens[1];
+							ScriptYear = param;
 							break;
 						case "追加情報":
-							ScriptDetail = tokens[1];
+							ScriptDetail = param;
 							break;
 						case "ウィンドウタイトル":
-							ScriptWindowTitle = tokens[1];
+							ScriptWindowTitle = param;
 							break;
 							
                         case "動作に必要なEmueraのバージョン":
-                            Compatible_EmueraVer = tokens[1];
+                            Compatible_EmueraVer = param;
                             if (!Regex.IsMatch(Compatible_EmueraVer, @"^\d+\.\d+\.\d+\.\d+$"))
                             {
                                 ParserMediator.Warn("バージョン指定を読み取れなかったので処理を省略します", pos, 0);
                                 break;
                             }
-                            Version curerntVersion = new Version(GlobalStatic.MainWindow.InternalEmueraVer);
+                            // エンジン側のバージョン文字列が空・不正だと new Version が
+                            // 例外を投げ、それが下のcatchに飲まれてGAMEBASE.CSVの
+                            // 残り(コード・バージョン・タイトル等)が全て失われていた。
+                            // バージョン判定だけを飛ばして読み込みは続ける。
+                            string engineVer = GlobalStatic.MainWindow?.InternalEmueraVer;
+                            if (!Regex.IsMatch(engineVer ?? "", @"^\d+\.\d+\.\d+\.\d+$"))
+                            {
+                                ParserMediator.Warn("엔진 버전을 알 수 없어 버전 판정을 건너뜁니다", pos, 1);
+                                break;
+                            }
+                            Version curerntVersion = new Version(engineVer);
                             Version targetVersoin = new Version(Compatible_EmueraVer);
                             if (curerntVersion < targetVersoin)
                             {
-                                ParserMediator.Warn("このバリアント動作させるにはVer. " + GlobalStatic.MainWindow.EmueraVerText + "以降のバージョンのEmueraが必要です", pos, 2);
+                                // 元のメッセージは「必要なバージョン」ではなく
+                                // エンジン自身のバージョンを表示していた。
+                                // ユーザーには「今入っているものが必要」と読めてしまう。
+                                ParserMediator.Warn(
+                                    $"이 게임을 실행하려면 Emuera {Compatible_EmueraVer} 이상이 필요합니다"
+                                    + $" (현재 {engineVer})", pos, 2);
                                 return false;
                             }
                             break;

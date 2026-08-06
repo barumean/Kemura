@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using MinorShift.Emuera;
+using MinorShift.Emuera.GameData;
+using MinorShift.Emuera.GameData.Variable;
 
 /// <summary>
 /// 대소문자 파일 해석에 대한 자기 검증.
@@ -54,6 +56,8 @@ internal static class SelfTest
             Build(root);
             PathResolver.ClearCache();
             RunChecks(root);
+            RunGameBaseChecks(root);
+            RunArraySizeChecks();
         }
         catch (Exception e)
         {
@@ -163,6 +167,90 @@ internal static class SelfTest
             $"ClearCache 후 새 파일이 보인다 (기대 4, 실제 {afterAdd.Length})");
         Check(File.Exists(PathResolver.ResolveFile(Path.Combine(erbDir, "ADDED.ERB"))),
             "ClearCache 후 새 파일을 대소문자 무시로 찾는다");
+    }
+
+    // ----------------------------------------------------------------------
+    // GameBase.csv
+    //
+    // era 포맷 문서(eramaker CSV 규격)의 지시어가 실제로 적용되는지 확인한다.
+    // 지시어 이름에 공백이 붙으면 switch 가 어디에도 걸리지 않아 "코드"가
+    // 조용히 0이 되는데, 코드 0인 세이브는 아무 게임에서나 열리므로 가장 위험하다.
+    // ----------------------------------------------------------------------
+    static void RunGameBaseChecks(string root)
+    {
+        var path = Path.Combine(root, "gamebase_test.csv");
+        File.WriteAllText(path, string.Join("\n", new[]
+        {
+            ";주석 줄은 무시된다",
+            "",
+            "コード ,12345",              // 지시어 뒤 공백 — 트림 없이는 무시된다
+            "バージョン,1200",
+            "アイテムなし,1",
+            "最初からいるキャラ,3",
+            "タイトル, 테스트 게임 ",      // 값의 공백은 트림된다
+            "動作に必要なEmueraのバージョン,1.800.0.0",
+            "作者,작성자",                // 위 버전 줄에서 중단되면 이 줄을 잃는다
+        }) + "\n");
+
+        var gb = new GameBase();
+        bool ok = gb.LoadGameBaseCsv(path);
+
+        Check(ok, "GameBase: 요구 버전을 만족하면 로드를 계속한다");
+        Check(gb.ScriptUniqueCode == 12345,
+            $"GameBase: 지시어 뒤 공백이 있어도 「コード」가 적용된다 (실제 {gb.ScriptUniqueCode})");
+        Check(gb.ScriptVersion == 1200,
+            $"GameBase: 「バージョン」 (실제 {gb.ScriptVersion})");
+        Check(gb.DefaultNoItem == 1,
+            $"GameBase: 「アイテムなし」 -> NOITEM 초기값 (실제 {gb.DefaultNoItem})");
+        Check(gb.DefaultCharacter == 3,
+            $"GameBase: 「最初からいるキャラ」 (실제 {gb.DefaultCharacter})");
+        Check(gb.ScriptTitle == "테스트 게임",
+            $"GameBase: 「タイトル」의 앞뒤 공백은 트림된다 (실제 '{gb.ScriptTitle}')");
+        Check(gb.ScriptAutherName == "작성자",
+            $"GameBase: 버전 지정 줄 뒤의 항목도 살아남는다 (실제 '{gb.ScriptAutherName}')");
+
+        // 엔진 버전 문자열이 System.Version 으로 파싱 가능해야 한다.
+        // 비어 있으면 new Version("") 이 예외를 던져 GAMEBASE 파싱이 중단됐다.
+        var engineVer = uEmuera.MainWindow.uEmueraVer;
+        bool verOk = System.Text.RegularExpressions.Regex.IsMatch(
+            engineVer ?? "", @"^\d+\.\d+\.\d+\.\d+$");
+        Check(verOk, $"엔진 버전 문자열이 '수.수.수.수' 형식이다 (실제 '{engineVer}')");
+
+        // 요구 버전이 엔진보다 높으면 거부해야 한다(게이트가 살아 있는지).
+        var path2 = Path.Combine(root, "gamebase_future.csv");
+        File.WriteAllText(path2, "動作に必要なEmueraのバージョン,99.999.9.9\n");
+        var gb2 = new GameBase();
+        Check(!gb2.LoadGameBaseCsv(path2),
+            "GameBase: 엔진보다 높은 버전을 요구하면 거부한다");
+    }
+
+    // ----------------------------------------------------------------------
+    // 배열 상한
+    //
+    // era 포맷 문서에 명시된 상한과 엔진 기본값이 일치해야 한다.
+    // 어긋나면 게임이 FLAG:9999 등에 쓸 때 "배열 범위를 벗어났습니다" 가 된다.
+    // ----------------------------------------------------------------------
+    static void RunArraySizeChecks()
+    {
+        var c = new ConstantData();
+        int Var(VariableCode code)
+            => c.VariableIntArrayLength[(int)(VariableCode.__LOWERCASE__ & code)];
+        int Chara(VariableCode code)
+            => c.CharacterIntArrayLength[(int)(VariableCode.__LOWERCASE__ & code)];
+        int VarStr(VariableCode code)
+            => c.VariableStrArrayLength[(int)(VariableCode.__LOWERCASE__ & code)];
+
+        Check(Var(VariableCode.FLAG) == 10000, $"FLAG 0-9999 (실제 {Var(VariableCode.FLAG)})");
+        Check(Var(VariableCode.TFLAG) == 1000, $"TFLAG 0-999 (실제 {Var(VariableCode.TFLAG)})");
+        Check(Chara(VariableCode.TALENT) == 1000, $"TALENT 0-999 (실제 {Chara(VariableCode.TALENT)})");
+        Check(Chara(VariableCode.CFLAG) == 1000, $"CFLAG 0-999 (실제 {Chara(VariableCode.CFLAG)})");
+        Check(Chara(VariableCode.JUEL) == 200, $"JUEL 0-199 (실제 {Chara(VariableCode.JUEL)})");
+        Check(Chara(VariableCode.ABL) == 100, $"ABL 0-99 (실제 {Chara(VariableCode.ABL)})");
+        Check(Chara(VariableCode.EXP) == 100, $"EXP 0-99 (실제 {Chara(VariableCode.EXP)})");
+        Check(Chara(VariableCode.MARK) == 100, $"MARK 0-99 (실제 {Chara(VariableCode.MARK)})");
+        Check(Chara(VariableCode.RELATION) == 100, $"RELATION 0-99 (실제 {Chara(VariableCode.RELATION)})");
+        Check(VarStr(VariableCode.STR) == 20000, $"STR 0-19999 (실제 {VarStr(VariableCode.STR)})");
+        Check(VarStr(VariableCode.SAVESTR) == 100, $"SAVESTR 0-99 (실제 {VarStr(VariableCode.SAVESTR)})");
     }
 
     static bool Contains(IEnumerable<string> paths, string filename)
