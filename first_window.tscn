@@ -128,7 +128,7 @@ theme_override_font_sizes/font_size = 30
 
 [node name="HintLabel" type="Label" parent="BrowseLayer/Panel/VBox"]
 layout_mode = 2
-text = "폴더를 한 번 눌러 들어갑니다."
+text = "폴더를 한 번 눌러 들어갑니다. 길을 잃으면 [처음으로]."
 autowrap_mode = 3
 theme_override_font_sizes/font_size = 20
 
@@ -137,9 +137,17 @@ layout_mode = 2
 
 [node name="UpDirButton" type="Button" parent="BrowseLayer/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 76)
+custom_minimum_size = Vector2(110, 76)
 theme_override_font_sizes/font_size = 26
 text = "상위"
+
+; 최상위까지 올라가면 원래 위치로 돌아오기 어려웠다. 한 번에 되돌린다.
+[node name="ResetButton" type="Button" parent="BrowseLayer/Panel/VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(130, 76)
+theme_override_font_sizes/font_size = 26
+text = "처음으로"
+tooltip_text = "설정된 게임 폴더로 돌아갑니다"
 
 [node name="PickButton" type="Button" parent="BrowseLayer/Panel/VBox/ButtonRow"]
 layout_mode = 2

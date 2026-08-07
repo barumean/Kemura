@@ -74,7 +74,7 @@ public partial class EmueraContent : Control
         inputEdit = GetNodeOrNull<LineEdit>("Layout/InputBar/LineEdit");
         inputSubmit = GetNodeOrNull<Button>("Layout/InputBar/SubmitButton");
 
-        processLabel = GetNodeOrNull<Label>("ProcessLabel");
+        processLabel = GetNodeOrNull<Label>("Layout/HeaderBar/ProcessLabel");
 
         menuLayer = GetNodeOrNull<Control>("MenuLayer");
         fontLayer = GetNodeOrNull<Control>("FontLayer");
@@ -90,7 +90,7 @@ public partial class EmueraContent : Control
         if (inputSubmit != null)
             inputSubmit.Pressed += SubmitTypedInput;
 
-        Wire("MenuButton", () => SetLayerVisible(menuLayer, true));
+        Wire("Layout/HeaderBar/MenuButton", () => SetLayerVisible(menuLayer, true));
 
         const string menuRoot = "MenuLayer/Center/Panel/VBox";
         Wire(menuRoot + "/RestartButton", OnRestart);
@@ -116,10 +116,17 @@ public partial class EmueraContent : Control
         SetLayerVisible(menuLayer, false);
         SetLayerVisible(fontLayer, false);
 
+        // 입력창은 항상 띄워둔다. 예전에는 엔진이 입력을 기다릴 때만 나타나서
+        // 문구 출력 중에 사라졌다 나타나 화면이 위아래로 흔들렸다.
         if (inputBar != null)
-            inputBar.Visible = false;
+            inputBar.Visible = true;
+        SetNumPadVisible(Settings.ShowNumPad);
+        // 상태 표시는 자리를 항상 차지하고 글자만 비운다(레이아웃 흔들림 방지).
         if (processLabel != null)
-            processLabel.Visible = false;
+        {
+            processLabel.Visible = true;
+            processLabel.Text = "";
+        }
     }
 
     /// <summary>ノードが見つからなくても落ちないように包む。</summary>
@@ -280,8 +287,9 @@ public partial class EmueraContent : Control
     {
         GD.Print("[Kemura] " + msg);
         if (processLabel == null) return;
+        // 라벨은 항상 보이므로 글자만 바꾼다. Visible 을 토글하면 헤더 높이가
+        // 바뀌면서 본문이 위아래로 흔들린다.
         processLabel.Text = msg;
-        processLabel.Visible = true;
         toastFramesLeft = 240;   // 約4秒(60fps基準)
     }
 
@@ -575,11 +583,8 @@ public partial class EmueraContent : Control
         if (toastFramesLeft > 0)
         {
             --toastFramesLeft;
-            if (toastFramesLeft == 0 && processLabel != null)
-            {
-                processLabel.Text = "처리 중...";
-                processLabel.Visible = isInProcess;
-            }
+            if (toastFramesLeft == 0)
+                ApplyProcessIndicator();
         }
     }
 
@@ -587,7 +592,7 @@ public partial class EmueraContent : Control
     {
         if (toastFramesLeft > 0) return;   // 通知表示中は上書きしない
         if (processLabel != null)
-            processLabel.Visible = isInProcess;
+            processLabel.Text = isInProcess ? "처리 중..." : "";
     }
 
     public override void _Draw()
@@ -683,38 +688,47 @@ public partial class EmueraContent : Control
     /// <summary>
     /// 数値/文字列入力待ちのときだけ入力欄を出す。EmueraMain._Processから毎フレーム呼ばれる。
     /// </summary>
+    /// <summary>
+    /// 매 프레임 EmueraMain 이 부른다.
+    ///
+    /// 예전에는 여기서 inputBar.Visible 을 켰다 껐다 했다. 그래서 게임 문구가
+    /// 출력되는 동안 입력창이 사라졌다 나타나며 본문 높이가 계속 바뀌었다.
+    /// 이제 표시 여부는 건드리지 않고, 무엇을 입력해야 하는지만 갱신한다.
+    /// </summary>
     internal void SyncInputBar()
     {
         var console = GlobalStatic.Console;
-        bool want = console != null && console.IsWaitingInputSomething;
-        if (inputBar == null || inputBar.Visible == want)
+        bool waiting = console != null && console.IsWaitingInputSomething;
+        var isInt = waiting
+            && console!.InputType == MinorShift.Emuera.GameProc.InputType.IntValue;
+
+        // 상태가 바뀔 때만 손댄다. 매 프레임 문자열을 대입하면 낭비다.
+        if (waiting == lastWaiting && isInt == lastWaitingInt)
+            return;
+        lastWaiting = waiting;
+        lastWaitingInt = isInt;
+
+        if (inputEdit == null)
             return;
 
-        inputBar.Visible = want;
-        if (want && inputEdit != null)
+        if (waiting)
         {
-            var isInt = console!.InputType == MinorShift.Emuera.GameProc.InputType.IntValue;
-            inputEdit.PlaceholderText = isInt ? "숫자 입력 (탭하면 키보드)" : "문자 입력 (탭하면 키보드)";
+            inputEdit.PlaceholderText = isInt ? "숫자 입력 (탭하면 키보드)"
+                                              : "문자 입력 (탭하면 키보드)";
+            inputEdit.Editable = true;
             inputEdit.Text = "";
-            // GrabFocus() 를 부르지 않는다.
-            // Android 에서 LineEdit 에 포커스가 가면 OS 소프트 키보드가 저절로
-            // 올라와 화면 절반을 가린다. 대부분의 입력은 선택지 탭이나 숫자
-            // 키패드로 끝나므로, 직접 타이핑하려는 사용자가 입력창을 탭했을
-            // 때만 키보드가 뜨게 한다.
         }
-        if (!want)
+        else
         {
-            // 입력이 끝나면 키패드도 접는다
-            SetNumPadVisible(false);
-        }
-        else if (numPad != null && !numPad.Visible
-                 && console!.InputType == MinorShift.Emuera.GameProc.InputType.IntValue)
-        {
-            // 숫자를 요구할 때는 키패드를 바로 띄운다. 게임 특성상 숫자 입력이
-            // 잦아서 매번 [123] 을 누르게 하는 것은 번거롭다.
-            SetNumPadVisible(true);
+            // 입력을 받지 않는 동안에도 자리는 유지하되, 지금 입력받지 않는다는
+            // 사실은 알려준다. 숨기지는 않는다.
+            inputEdit.PlaceholderText = "진행 중...";
+            inputEdit.Editable = false;
         }
     }
+
+    bool lastWaiting;
+    bool lastWaitingInt;
 
     // ------------------------------------------------------------------
     // 숫자 키패드
@@ -740,10 +754,12 @@ public partial class EmueraContent : Control
             () => SetNumPadVisible(numPad == null || !numPad.Visible));
     }
 
+    /// <summary>키패드 표시. 사용자가 직접 접으면 그 선택을 기억한다.</summary>
     void SetNumPadVisible(bool visible)
     {
         if (numPad != null)
             numPad.Visible = visible;
+        Settings.ShowNumPad = visible;
     }
 
     void AppendToInput(string s)

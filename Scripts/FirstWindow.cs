@@ -46,6 +46,7 @@ public partial class FirstWindow : Control
             browseList.ItemSelected += OnBrowseItemSelected;
         WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/UpDirButton", BrowseUp);
         WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/PickButton", BrowsePick);
+        WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/ResetButton", BrowseReset);
         WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/CancelButton", CloseBrowser);
 
         if (startButton != null)
@@ -89,7 +90,12 @@ public partial class FirstWindow : Control
         if (HasStorageAccess())
             return;
         permissionRequested = true;
+        // 런타임 권한 요청(구형 기기용). 최신 기기에서는 물어볼 것이 없다.
         OS.RequestPermissions();
+        // 최신 기기에서 실제로 필요한 것은 '모든 파일 접근' 설정 화면이다.
+        // 다른 앱들이 첫 구동에 권한을 묻는 것처럼 보이는 것이 이 경로다.
+        if (!TryOpenAllFilesAccessScreen())
+            GD.Print("[FirstWindow] 권한 설정 화면을 열지 못했습니다. 안내 문구로 대체합니다.");
 #endif
     }
 
@@ -204,6 +210,7 @@ public partial class FirstWindow : Control
 
         browseEntries.Clear();
         browseList?.Clear();
+        gamesHere = 0;
 
         string[] subs;
         try
@@ -215,6 +222,7 @@ public partial class FirstWindow : Control
             // 권한이 없는 폴더를 탭하면 여기로 온다. 목록만 비우고 알린다.
             browseList?.AddItem($"[읽을 수 없음: {e.GetType().Name}]");
             browseEntries.Add("");
+            UpdateBrowseHint();
             return;
         }
 
@@ -223,9 +231,16 @@ public partial class FirstWindow : Control
         {
             var name = Path.GetFileName(sub);
             if (string.IsNullOrEmpty(name)) continue;
-            // 게임 폴더인지 표시해주면 어디를 골라야 하는지 바로 보인다.
+            // 게임 폴더는 글자와 색을 함께 바꿔 폴더와 확연히 구분한다.
+            // 예전에는 "[게임] 이름" 과 "이름/" 뿐이라 훑을 때 구분이 안 됐다.
             bool isGame = IsValidGameDir(sub);
-            browseList?.AddItem(isGame ? $"[게임] {name}" : $"{name}/");
+            int idx = browseList?.AddItem(isGame ? $"▶ 게임  {name}" : $"[폴더]  {name}") ?? -1;
+            if (isGame && browseList != null && idx >= 0)
+            {
+                browseList.SetItemCustomFgColor(idx, new Color(0.35f, 1.0f, 0.45f));
+                browseList.SetItemTooltip(idx, "이 폴더를 선택하면 바로 실행할 수 있습니다");
+                ++gamesHere;
+            }
             browseEntries.Add(sub);
         }
         if (browseEntries.Count == 0)
@@ -233,6 +248,22 @@ public partial class FirstWindow : Control
             browseList?.AddItem("(하위 폴더가 없습니다)");
             browseEntries.Add("");
         }
+        UpdateBrowseHint();
+    }
+
+    int gamesHere;
+
+    /// <summary>지금 보는 폴더에서 게임을 몇 개 찾았는지 알려준다.</summary>
+    void UpdateBrowseHint()
+    {
+        var hint = GetNodeOrNull<Label>("BrowseLayer/Panel/VBox/HintLabel");
+        if (hint == null) return;
+        hint.Text = gamesHere > 0
+            ? $"▶ 게임 {gamesHere}개를 찾았습니다. 실행할 게임의 상위 폴더를 [이 폴더 선택] 하세요."
+            : "폴더를 한 번 눌러 들어갑니다. 길을 잃으면 [처음으로].";
+        hint.SelfModulate = gamesHere > 0
+            ? new Color(0.35f, 1.0f, 0.45f)
+            : new Color(1, 1, 1);
     }
 
     void OnBrowseItemSelected(long index)
@@ -241,6 +272,27 @@ public partial class FirstWindow : Control
         if (i < 0 || i >= browseEntries.Count) return;
         var target = browseEntries[i];
         if (string.IsNullOrEmpty(target)) return;   // 안내용 행
+        ShowBrowseDir(target);
+    }
+
+    /// <summary>
+    /// 설정된 게임 폴더로 되돌린다.
+    ///
+    /// 최상위("/")까지 올라가면 하위 폴더가 수십 개 나오고 대부분 읽을 수
+    /// 없어서, 원래 보던 위치로 돌아오는 길을 찾기 어려웠다.
+    /// </summary>
+    void BrowseReset()
+    {
+        var target = eraBaseDir;
+        // 설정 경로가 사라졌을 수도 있으니 열 수 있는 상위로 올라가며 찾는다.
+        while (!string.IsNullOrEmpty(target) && !Directory.Exists(target))
+        {
+            var parent = Path.GetDirectoryName(target.TrimEnd('/', '\\'));
+            if (string.IsNullOrEmpty(parent) || parent == target) break;
+            target = parent;
+        }
+        if (string.IsNullOrEmpty(target) || !Directory.Exists(target))
+            target = FallbackBrowseRoot();
         ShowBrowseDir(target);
     }
 
@@ -445,14 +497,84 @@ public partial class FirstWindow : Control
     {
         permissionRequested = true;
 #if GODOT_ANDROID
-        bool requested = OS.RequestPermissions();
-        SetStatus(requested
-            ? "권한을 확인했습니다. 여전히 목록이 비어 있으면 설정 → 앱 → Kemura → 권한 → '모든 파일 접근'을 허용해주세요."
-            : "설정 → 앱 → Kemura → 권한 → '모든 파일 접근'을 허용한 뒤 앱으로 돌아오면 자동으로 다시 검색합니다.");
+        // 먼저 런타임 권한을 요청한다(Android 12 이하에서만 의미가 있다).
+        OS.RequestPermissions();
+
+        // 그다음 '모든 파일 접근' 설정 화면을 직접 연다.
+        if (TryOpenAllFilesAccessScreen())
+        {
+            SetStatus("설정 화면에서 '모든 파일 접근'을 허용한 뒤 앱으로 돌아오면 "
+                    + "자동으로 다시 검색합니다.");
+            return;
+        }
+        SetStatus("설정 → 앱 → Kemura → 권한 → '모든 파일 접근'을 허용한 뒤 앱으로 "
+                + "돌아오면 자동으로 다시 검색합니다.\n"
+                + $"권한을 줄 수 없다면 게임을 {Settings.AppExternalGameRoot} 에 넣으세요.");
 #else
         SetStatus("데스크톱에서는 별도 권한이 필요하지 않습니다.");
 #endif
     }
+
+#if GODOT_ANDROID
+    /// <summary>
+    /// '모든 파일 접근' 설정 화면을 Intent 로 직접 연다.
+    ///
+    /// <para>왜 이렇게 해야 하는가: target SDK 35 에서
+    /// <c>READ_EXTERNAL_STORAGE</c> 는 Android 13+ 부터 시스템이 무시하고,
+    /// <c>MANAGE_EXTERNAL_STORAGE</c> 는 appop 특수 권한이라
+    /// <c>requestPermissions()</c> 로는 다이얼로그가 아예 뜨지 않는다.
+    /// 즉 최신 기기에서는 <c>OS.RequestPermissions()</c> 가 물어볼 것이 없다.
+    /// 다른 앱들이 첫 구동에 권한 화면을 띄우는 것은 이 Intent 를 던지기
+    /// 때문이다.</para>
+    ///
+    /// <para>Godot 에는 Intent API 가 없어 JavaClassWrapper 리플렉션으로
+    /// 만든다. Activity 대신 Application 컨텍스트를 쓰므로
+    /// FLAG_ACTIVITY_NEW_TASK 가 필요하다.</para>
+    ///
+    /// <para><b>미검증</b>: 이 경로는 실기에서 확인하지 못했다. 실패하면
+    /// false 를 돌려주고 호출부가 기존 안내 문구로 넘어간다.</para>
+    /// </summary>
+    bool TryOpenAllFilesAccessScreen()
+    {
+        const int FlagActivityNewTask = 0x10000000;
+        try
+        {
+            if (!Engine.HasSingleton("JavaClassWrapper"))
+                return false;
+            var jcw = Engine.GetSingleton("JavaClassWrapper");
+            if (jcw == null) return false;
+
+            var activityThread = jcw.Call("wrap", "android.app.ActivityThread").AsGodotObject();
+            var app = activityThread?.Call("currentApplication").AsGodotObject();
+            if (app == null) return false;
+
+            var uriClass = jcw.Call("wrap", "android.net.Uri").AsGodotObject();
+            var uri = uriClass?.Call("parse", "package:" + PackageName).AsGodotObject();
+            if (uri == null) return false;
+
+            var intentClass = jcw.Call("wrap", "android.content.Intent").AsGodotObject();
+            var intent = intentClass?.Call(
+                "new",
+                "android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION",
+                uri).AsGodotObject();
+            if (intent == null) return false;
+
+            intent.Call("addFlags", FlagActivityNewTask);
+            app.Call("startActivity", intent);
+            return true;
+        }
+        catch (Exception e)
+        {
+            // 리플렉션 경로는 Godot/Android 버전에 따라 깨질 수 있다.
+            // 실패해도 앱은 계속 동작해야 하므로 삼키고 안내로 넘긴다.
+            GD.PushWarning($"권한 설정 화면을 열 수 없습니다: {e.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>export_presets.cfg 의 package/unique_name 과 같아야 한다.</summary>
+    const string PackageName = "com.kemura.emuera";
+#endif
 
     // ------------------------------------------------------------------
     // ゲーム開始

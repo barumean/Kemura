@@ -17,6 +17,7 @@ internal static class Settings
     static int fontSize = DefaultFontSize;
     static string gameRoot = "";
     static bool forceRunOnParseError;
+    static bool showNumPad = true;
     static bool loaded;
 
     /// <summary>
@@ -35,6 +36,24 @@ internal static class Settings
             Load();
             if (value == forceRunOnParseError) return;
             forceRunOnParseError = value;
+            Save();
+        }
+    }
+
+    /// <summary>
+    /// 숫자 키패드를 띄워둘지. 기본 켬.
+    ///
+    /// 항상 보이게 해달라는 요청이라 기본값을 켬으로 두지만, 세로가 짧은
+    /// 기기에서는 화면을 많이 차지한다. 사용자가 접으면 그 선택을 기억한다.
+    /// </summary>
+    public static bool ShowNumPad
+    {
+        get { Load(); return showNumPad; }
+        set
+        {
+            Load();
+            if (value == showNumPad) return;
+            showNumPad = value;
             Save();
         }
     }
@@ -148,6 +167,7 @@ internal static class Settings
             (int)cfg.GetValue(Sec, "font_size", DefaultFontSize), MinFontSize, MaxFontSize);
         gameRoot = (string)cfg.GetValue(Sec, "game_root", "");
         forceRunOnParseError = (bool)cfg.GetValue(Sec, "force_run_on_parse_error", false);
+        showNumPad = (bool)cfg.GetValue(Sec, "show_num_pad", true);
     }
 
     static void Save()
@@ -156,6 +176,7 @@ internal static class Settings
         cfg.SetValue(Sec, "font_size", fontSize);
         cfg.SetValue(Sec, "game_root", gameRoot);
         cfg.SetValue(Sec, "force_run_on_parse_error", forceRunOnParseError);
+        cfg.SetValue(Sec, "show_num_pad", showNumPad);
         var err = cfg.Save(Path);
         if (err != Error.Ok)
             GD.PushWarning($"설정을 저장할 수 없습니다 ({err})");

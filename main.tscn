@@ -25,6 +25,26 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
 
+; 메뉴 버튼과 상태 표시를 떠 있는 오버레이가 아니라 흐름 안에 둔다.
+; 떠 있으면 본문 첫 줄이 버튼 밑으로 가려지고, 그 정도가 화면비마다 달라진다.
+[node name="HeaderBar" type="HBoxContainer" parent="EmueraContent/Layout"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="ProcessLabel" type="Label" parent="EmueraContent/Layout/HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = ""
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 20
+
+[node name="MenuButton" type="Button" parent="EmueraContent/Layout/HeaderBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(84, 84)
+theme_override_font_sizes/font_size = 40
+text = "≡"
+
 [node name="ScrollContainer" type="ScrollContainer" parent="EmueraContent/Layout"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -70,8 +90,8 @@ text = "확인"
 ; 게임 특성상 숫자 입력이 많다. OS 키보드를 띄우지 않고 바로 누를 수 있는
 ; 숫자 키패드. InputBar 바로 위(Layout 안)에 두어 본문을 밀어낸다.
 [node name="NumPad" type="GridContainer" parent="EmueraContent/Layout"]
-visible = false
 layout_mode = 2
+size_flags_vertical = 0
 columns = 5
 
 [node name="Key1" type="Button" parent="EmueraContent/Layout/NumPad"]
@@ -179,18 +199,6 @@ custom_minimum_size = Vector2(0, 84)
 theme_override_font_sizes/font_size = 24
 text = "닫기"
 
-[node name="MenuButton" type="Button" parent="EmueraContent"]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -92.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 92.0
-grow_horizontal = 0
-text = "≡"
-theme_override_font_sizes/font_size = 40
 
 [node name="MenuLayer" type="Control" parent="EmueraContent"]
 visible = false
@@ -339,16 +347,6 @@ custom_minimum_size = Vector2(340, 76)
 theme_override_font_sizes/font_size = 30
 text = "닫기"
 
-[node name="ProcessLabel" type="Label" parent="EmueraContent"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 178.0
-offset_bottom = 46.0
-text = "처리 중..."
-theme_override_font_sizes/font_size = 18
-mouse_filter = 2
 
 [node name="FirstWindow" parent="." instance=ExtResource("3_first")]
 
