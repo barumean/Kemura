@@ -316,6 +316,92 @@ internal static class SelfTest
         EmMapStore.ClearAll();
         Check(EmMapStore.Exists("k") == 0, "ClearAll: RESETDATA 에서 전부 지워진다");
 
+        // --- DataTable (DT_*) ------------------------------------------------
+        // EM 문서의 DT_SELECT 예제를 그대로 재현한다.
+        EmDataTableStore.ClearAll();
+        Check(EmDataTableStore.Exists("db") == 0, "DT_EXIST: 없는 테이블은 0");
+        Check(EmDataTableStore.Create("db") == 1, "DT_CREATE: 새 테이블은 1");
+        Check(EmDataTableStore.Create("db") == 0, "DT_CREATE: 이미 있으면 0");
+        // id 열은 생성 직후 자동으로 붙는다
+        Check(EmDataTableStore.ColumnLength("db") == 1,
+            $"DT_CREATE: id 열이 자동 추가된다 (실제 {EmDataTableStore.ColumnLength("db")})");
+        Check(EmDataTableStore.ColumnExist("db", "id") != 0, "DT_COLUMN_EXIST: id");
+        Check(EmDataTableStore.ColumnLength("nope") == -1, "DT_COLUMN_LENGTH: 없으면 -1");
+
+        Check(EmDataTableStore.ColumnAdd("db", "name", null, 0, 1) == 1, "DT_COLUMN_ADD: name");
+        Check(EmDataTableStore.ColumnAdd("db", "height", "int16", 0, 1) == 1,
+            "DT_COLUMN_ADD: int16");
+        Check(EmDataTableStore.ColumnAdd("db", "age", "int16", 0, 1) == 1, "DT_COLUMN_ADD: age");
+        Check(EmDataTableStore.ColumnAdd("db", "name", null, 0, 1) == 0,
+            "DT_COLUMN_ADD: 중복이면 0");
+        // 타입 번호 규약: 2 = int16, 5 = string
+        Check(EmDataTableStore.ColumnExist("db", "age") == 2,
+            $"DT_COLUMN_EXIST: int16 은 2 (실제 {EmDataTableStore.ColumnExist("db", "age")})");
+        Check(EmDataTableStore.ColumnExist("db", "name") == 5,
+            $"DT_COLUMN_EXIST: string 은 5 (실제 {EmDataTableStore.ColumnExist("db", "name")})");
+        Check(EmDataTableStore.ColumnExist("db", "none") == 0, "DT_COLUMN_EXIST: 없으면 0");
+        Check(EmDataTableStore.ColumnRemove("db", "id") == 0, "DT_COLUMN_REMOVE: id 는 못 지운다");
+
+        static long AddRow(string n, string v, long age, long h)
+            => EmDataTableStore.RowAdd("db", new List<KeyValuePair<string, string>>
+            {
+                new("name", v), new("age", age.ToString()), new("height", h.ToString()),
+            });
+        long id1 = AddRow("db", "Name1", 11, 132);
+        AddRow("db", "Name2", 21, 164);
+        AddRow("db", "Name3", 18, 159);
+        AddRow("db", "Name4", 33, 180);
+        AddRow("db", "Name5", 18, 172);
+        Check(id1 == 0, $"DT_ROW_ADD: 첫 행의 id 는 0 (실제 {id1})");
+        Check(EmDataTableStore.RowLength("db") == 5,
+            $"DT_ROW_LENGTH: 5 (실제 {EmDataTableStore.RowLength("db")})");
+
+        // 셀 읽기. asId=1 은 id 로, 그 외는 0 기준 순번
+        Check(EmDataTableStore.CellGetStr("db", 0, "name", 1) == "Name1",
+            "DT_CELL_GETS: asId=1 은 id 로 찾는다");
+        Check(EmDataTableStore.CellGetInt("db", 0, "age", 1) == 11, "DT_CELL_GET: 정수 열");
+        Check(EmDataTableStore.CellGetStr("db", 2, "name", 0) == "Name3",
+            "DT_CELL_GETS: asId=0 은 순번으로 찾는다");
+        Check(EmDataTableStore.CellGetInt("db", 99, "age", 1) == 0,
+            "DT_CELL_GET: 실패하면 0");
+        Check(EmDataTableStore.CellGetStr("db", 99, "name", 1) == "",
+            "DT_CELL_GETS: 실패하면 빈 문자열");
+        Check(EmDataTableStore.CellIsNull("db", 0, "none", 1) == -2,
+            "DT_CELL_ISNULL: 열이 없으면 -2");
+        Check(EmDataTableStore.CellSet("db", 0, "none", "x", 1) == -3,
+            "DT_CELL_SET: 열이 없으면 -3");
+        Check(EmDataTableStore.CellSet("db", 0, "age", "12", 1) == 1, "DT_CELL_SET: 1");
+        Check(EmDataTableStore.CellGetInt("db", 0, "age", 1) == 12, "DT_CELL_SET: 값이 바뀐다");
+
+        // DT_SELECT — System.Data.DataTable.Select 문법.
+        // 여기가 통과하면 BCL 위임이 실제로 동작한다는 뜻이다.
+        var sel = EmDataTableStore.Select("db", "age >= 18", "age ASC, height DESC");
+        Check(sel != null && sel.Count == 4,
+            $"DT_SELECT: age>=18 이 4건 (실제 {(sel == null ? "null" : sel.Count.ToString())})");
+        if (sel != null && sel.Count == 4)
+        {
+            // 문서 예제의 기대 순서: Name5(18,172), Name3(18,159), Name2(21), Name4(33)
+            var names = new List<string>();
+            foreach (var id in sel)
+                names.Add(EmDataTableStore.CellGetStr("db", id, "name", 1));
+            var joined = string.Join(",", names);
+            Check(joined == "Name5,Name3,Name2,Name4",
+                $"DT_SELECT: 정렬까지 문서 예제와 일치 (실제 {joined})");
+        }
+        Check(EmDataTableStore.Select("db", "이건 잘못된 식 ((", null) == null,
+            "DT_SELECT: 잘못된 필터식은 null (엔진을 죽이지 않는다)");
+        Check(EmDataTableStore.Select("nope", null, null) == null,
+            "DT_SELECT: 테이블이 없으면 null");
+
+        Check(EmDataTableStore.RowRemove("db", 0) == 1, "DT_ROW_REMOVE: 1");
+        Check(EmDataTableStore.RowLength("db") == 4, "DT_ROW_REMOVE: 개수가 줄어든다");
+        Check(EmDataTableStore.RowRemove("db", 999) == 0, "DT_ROW_REMOVE: 없는 id 는 0");
+        Check(EmDataTableStore.Clear("db") == 1, "DT_CLEAR: 1");
+        Check(EmDataTableStore.RowLength("db") == 0, "DT_CLEAR: 비워진다");
+        Check(EmDataTableStore.Release("db") == 1, "DT_RELEASE: 항상 1");
+        Check(EmDataTableStore.Exists("db") == 0, "DT_RELEASE: 사라진다");
+        EmDataTableStore.ClearAll();
+
         // 명령/표현식 양쪽 등록 확인.
         // FunctionIdentifier 가 methodList 의 항목을 METHOD_Instruction 으로
         // 감싸 명령으로도 등록한다. 등록이 빠지면 「해석할 수 없는 식별자」가 된다.
@@ -327,6 +413,12 @@ internal static class SelfTest
             "MAP_GET", "MAP_HAS", "MAP_SET", "MAP_REMOVE", "MAP_SIZE",
             "EXISTFUNCTION", "HTML_STRINGLEN",
             "CBRT", "LOG", "LOG10", "EXPONENT",
+            "DT_CREATE", "DT_EXIST", "DT_RELEASE", "DT_CLEAR", "DT_NOCASE",
+            "DT_COLUMN_ADD", "DT_COLUMN_EXIST", "DT_COLUMN_REMOVE",
+            "DT_COLUMN_LENGTH", "DT_COLUMN_OPTIONS",
+            "DT_ROW_ADD", "DT_ROW_SET", "DT_ROW_REMOVE", "DT_ROW_LENGTH",
+            "DT_CELL_GET", "DT_CELL_GETS", "DT_CELL_ISNULL", "DT_CELL_SET",
+            "DT_SELECT",
         })
         {
             Check(methods.ContainsKey(name), $"확장 함수 등록: {name}");

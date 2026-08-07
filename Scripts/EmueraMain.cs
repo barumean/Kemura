@@ -246,6 +246,7 @@ public partial class EmueraMain : Node
         PathResolver.ClearCache();
         // EM 확장의 이름 기반 저장소도 게임 사이에 남으면 안 된다
         EmMapStore.ClearAll();
+        EmDataTableStore.ClearAll();
         GC.Collect();
 
         working = false;

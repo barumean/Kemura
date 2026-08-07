@@ -39,6 +39,27 @@ namespace MinorShift.Emuera.GameData.Function
 			list["EXISTFUNCTION"] = new EmExistFunctionMethod();
 			list["HTML_STRINGLEN"] = new EmHtmlStringLenMethod();
 
+			// --- DataTable ----------------------------------------------------
+			list["DT_CREATE"] = new EmDtNameMethod(EmDtNameMethod.Op.Create);
+			list["DT_EXIST"] = new EmDtNameMethod(EmDtNameMethod.Op.Exist);
+			list["DT_RELEASE"] = new EmDtNameMethod(EmDtNameMethod.Op.Release);
+			list["DT_CLEAR"] = new EmDtNameMethod(EmDtNameMethod.Op.Clear);
+			list["DT_ROW_LENGTH"] = new EmDtNameMethod(EmDtNameMethod.Op.RowLength);
+			list["DT_COLUMN_LENGTH"] = new EmDtNameMethod(EmDtNameMethod.Op.ColumnLength);
+			list["DT_NOCASE"] = new EmDtNoCaseMethod();
+			list["DT_COLUMN_ADD"] = new EmDtColumnAddMethod();
+			list["DT_COLUMN_EXIST"] = new EmDtColumnMethod(EmDtColumnMethod.Op.Exist);
+			list["DT_COLUMN_REMOVE"] = new EmDtColumnMethod(EmDtColumnMethod.Op.Remove);
+			list["DT_COLUMN_OPTIONS"] = new EmDtColumnOptionsMethod();
+			list["DT_ROW_ADD"] = new EmDtRowWriteMethod(isAdd: true);
+			list["DT_ROW_SET"] = new EmDtRowWriteMethod(isAdd: false);
+			list["DT_ROW_REMOVE"] = new EmDtRowRemoveMethod();
+			list["DT_CELL_GET"] = new EmDtCellGetMethod();
+			list["DT_CELL_GETS"] = new EmDtCellGetsMethod();
+			list["DT_CELL_ISNULL"] = new EmDtCellGetMethod(isNullCheck: true);
+			list["DT_CELL_SET"] = new EmDtCellSetMethod();
+			list["DT_SELECT"] = new EmDtSelectMethod();
+
 			// --- MATH_EXTENSION ----------------------------------------------
 			list["CBRT"] = new EmMathMethod(EmMathMethod.Kind.Cbrt);
 			list["LOG"] = new EmMathMethod(EmMathMethod.Kind.Log);
@@ -244,6 +265,211 @@ namespace MinorShift.Emuera.GameData.Function
 				// (엔진 내부 폰트 메트릭이 Godot 쪽과 분리돼 있어 근사값이다)
 				return width * Math.Max(1, Config.FontSize / 2);
 			}
+		}
+
+		// =====================================================================
+		// DataTable (DT_*)
+		//
+		// 값 반환형만 여기에 둔다. 출력 배열을 받는 형태
+		// (DT_SELECT 의 output, DT_COLUMN_NAMES 의 outputArray)는 전용
+		// ArgumentBuilder 가 필요해 아직 없다. DT_SELECT 는 문서가 정한
+		// 「output 을 생략하면 RESULT:1 부터 대입」 쪽만 구현했다.
+		// =====================================================================
+
+		/// <summary>인수가 테이블 이름 하나뿐인 DT 함수.</summary>
+		private sealed class EmDtNameMethod : EmIntMethod
+		{
+			internal enum Op { Create, Exist, Release, Clear, RowLength, ColumnLength }
+			readonly Op op;
+			public EmDtNameMethod(Op o) : base(1, 1, typeof(string)) { op = o; }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var n = Str(exm, a, 0);
+				return op switch
+				{
+					Op.Create => EmDataTableStore.Create(n),
+					Op.Exist => EmDataTableStore.Exists(n),
+					Op.Release => EmDataTableStore.Release(n),
+					Op.Clear => EmDataTableStore.Clear(n),
+					Op.RowLength => EmDataTableStore.RowLength(n),
+					Op.ColumnLength => EmDataTableStore.ColumnLength(n),
+					_ => -1,
+				};
+			}
+		}
+
+		private sealed class EmDtNoCaseMethod : EmIntMethod
+		{
+			public EmDtNoCaseMethod() : base(2, 2, typeof(string), typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmDataTableStore.NoCase(Str(exm, a, 0), Int(exm, a, 1, 0));
+		}
+
+		/// <summary>DT_COLUMN_ADD name, column(, type, nullable)</summary>
+		private sealed class EmDtColumnAddMethod : EmIntMethod
+		{
+			// type 은 문자열("int16")도 숫자(2)도 올 수 있어 타입을 고정하지 않는다.
+			public EmDtColumnAddMethod()
+				: base(2, 4, typeof(string), typeof(string), null, typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				string? typeName = null;
+				long typeNo = 0;
+				if (a.Length > 2 && a[2] != null)
+				{
+					if (a[2].GetOperandType() == typeof(string))
+						typeName = a[2].GetStrValue(exm);
+					else
+						typeNo = a[2].GetIntValue(exm);
+				}
+				// nullable 기본값은 「0 이 아니면 허용」이고 미지정도 허용이다.
+				long nullable = Int(exm, a, 3, 1);
+				return EmDataTableStore.ColumnAdd(
+					Str(exm, a, 0), Str(exm, a, 1), typeName, typeNo, nullable);
+			}
+		}
+
+		private sealed class EmDtColumnMethod : EmIntMethod
+		{
+			internal enum Op { Exist, Remove }
+			readonly Op op;
+			public EmDtColumnMethod(Op o) : base(2, 2, typeof(string), typeof(string)) { op = o; }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var n = Str(exm, a, 0);
+				var c = Str(exm, a, 1);
+				return op == Op.Exist
+					? EmDataTableStore.ColumnExist(n, c)
+					: EmDataTableStore.ColumnRemove(n, c);
+			}
+		}
+
+		/// <summary>DT_COLUMN_OPTIONS name, column, option, value(, option, value ...)</summary>
+		private sealed class EmDtColumnOptionsMethod : EmIntMethod
+		{
+			public EmDtColumnOptionsMethod() : base(4, 64, typeof(string), typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var n = Str(exm, a, 0);
+				var c = Str(exm, a, 1);
+				long last = -1;
+				for (int i = 2; i + 1 < a.Length; i += 2)
+					last = EmDataTableStore.ColumnOption(n, c, Str(exm, a, i), AnyToStr(exm, a, i + 1));
+				return last;
+			}
+		}
+
+		/// <summary>
+		/// DT_ROW_ADD name(, column, value) ...
+		/// DT_ROW_SET name, idValue(, column, value) ...
+		/// 형태 b(columnNames/columnValues 배열 + count)는 배열 인수를 받아야 해서
+		/// 아직 지원하지 않는다.
+		/// </summary>
+		private sealed class EmDtRowWriteMethod : EmIntMethod
+		{
+			readonly bool isAdd;
+			public EmDtRowWriteMethod(bool isAdd)
+				: base(isAdd ? 1 : 2, 128, typeof(string)) { this.isAdd = isAdd; }
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				int start = isAdd ? 1 : 2;
+				var pairs = new List<KeyValuePair<string, string>>();
+				for (int i = start; i + 1 < a.Length; i += 2)
+					pairs.Add(new KeyValuePair<string, string>(
+						Str(exm, a, i), AnyToStr(exm, a, i + 1)));
+				return isAdd
+					? EmDataTableStore.RowAdd(name, pairs)
+					: EmDataTableStore.RowSet(name, Int(exm, a, 1, 0), pairs);
+			}
+		}
+
+		private sealed class EmDtRowRemoveMethod : EmIntMethod
+		{
+			public EmDtRowRemoveMethod() : base(2, 2, typeof(string), typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmDataTableStore.RowRemove(Str(exm, a, 0), Int(exm, a, 1, 0));
+		}
+
+		/// <summary>DT_CELL_GET / DT_CELL_ISNULL name, row, column(, asId)</summary>
+		private sealed class EmDtCellGetMethod : EmIntMethod
+		{
+			readonly bool isNullCheck;
+			public EmDtCellGetMethod(bool isNullCheck = false)
+				: base(3, 4, typeof(string), typeof(Int64), typeof(string), typeof(Int64))
+			{
+				this.isNullCheck = isNullCheck;
+			}
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var n = Str(exm, a, 0);
+				long row = Int(exm, a, 1, 0);
+				var col = Str(exm, a, 2);
+				long asId = Int(exm, a, 3, 0);
+				return isNullCheck
+					? EmDataTableStore.CellIsNull(n, row, col, asId)
+					: EmDataTableStore.CellGetInt(n, row, col, asId);
+			}
+		}
+
+		private sealed class EmDtCellGetsMethod : EmStrMethod
+		{
+			public EmDtCellGetsMethod()
+				: base(3, 4, typeof(string), typeof(Int64), typeof(string), typeof(Int64)) { }
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmDataTableStore.CellGetStr(
+					Str(exm, a, 0), Int(exm, a, 1, 0), Str(exm, a, 2), Int(exm, a, 3, 0));
+		}
+
+		/// <summary>DT_CELL_SET name, row, column(, value, asId). value 생략은 null 대입.</summary>
+		private sealed class EmDtCellSetMethod : EmIntMethod
+		{
+			public EmDtCellSetMethod()
+				: base(3, 5, typeof(string), typeof(Int64), typeof(string), null, typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				string? value = a.Length > 3 && a[3] != null ? AnyToStr(exm, a, 3) : null;
+				return EmDataTableStore.CellSet(
+					Str(exm, a, 0), Int(exm, a, 1, 0), Str(exm, a, 2), value, Int(exm, a, 4, 0));
+			}
+		}
+
+		/// <summary>
+		/// DT_SELECT name(, filter, sort).
+		/// 문서의 「output 을 생략하면 RESULT:1 부터 대입」 쪽만 구현했다.
+		/// output 인수를 받는 형태는 전용 ArgumentBuilder 가 필요하다.
+		/// </summary>
+		private sealed class EmDtSelectMethod : EmIntMethod
+		{
+			public EmDtSelectMethod()
+				: base(1, 3, typeof(string), typeof(string), typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var ids = EmDataTableStore.Select(
+					Str(exm, a, 0),
+					a.Length > 1 && a[1] != null ? Str(exm, a, 1) : null,
+					a.Length > 2 && a[2] != null ? Str(exm, a, 2) : null);
+				if (ids == null) return -1;
+
+				// 문서대로 RESULT:1 부터 넣는다. SetResultX 는 0번부터 쓰므로
+				// 선두에 자리표시자를 하나 넣어 한 칸 밀어준다.
+				// RESULT:0 은 이 메서드가 끝난 뒤 METHOD_Instruction 이
+				// 반환값으로 덮어쓰므로 자리표시자 값은 의미가 없다.
+				var buf = new List<long>(ids.Count + 1) { 0 };
+				buf.AddRange(ids);
+				exm.VEvaluator.SetResultX(buf);
+				return ids.Count;
+			}
+		}
+
+		/// <summary>숫자든 문자열이든 문자열로 만든다. DT 는 열 타입에 맞춰 변환한다.</summary>
+		private static string AnyToStr(ExpressionMediator exm, IOperandTerm[] a, int i)
+		{
+			if (i >= a.Length || a[i] == null) return "";
+			return a[i].GetOperandType() == typeof(string)
+				? a[i].GetStrValue(exm) ?? ""
+				: a[i].GetIntValue(exm).ToString();
 		}
 
 		// =====================================================================
