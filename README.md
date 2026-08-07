@@ -50,6 +50,9 @@ uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
   실행됩니다. 다만 해당 행이 실제로 실행되는 기능은 오작동합니다
   (`emuera.config` 의 `解釈不可能な行があっても実行する` 와 같은 설정).
 
+  대응 비용 검토와 계층별 우선순위는 [`docs/EMUERA_EM_GAP.md`](docs/EMUERA_EM_GAP.md)
+  에 정리했습니다. 규격 출처는 <https://gitlab.com/EvilMask/emuera.em.doc> 입니다.
+
 - **`MainWindow.Update()`의 데이터 경합**: 표시 갱신은 메인 스레드에서 돌지만,
   읽는 대상(`EmueraConsole.displayLineList`)은 Emuera 스레드가 갱신합니다.
   uEmuera 원본과 같은 구조로 이식했기 때문에 이 경합이 남아 있습니다.
