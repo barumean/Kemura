@@ -102,11 +102,85 @@ custom_minimum_size = Vector2(0, 72)
 theme_override_font_sizes/font_size = 30
 text = "권한 설정"
 
-[node name="DirDialog" type="FileDialog" parent="."]
-title = "게임 폴더 선택"
-initial_position = 2
-size = Vector2i(700, 1150)
-ok_button_text = "이 폴더 선택"
-file_mode = 2
-access = 2
-show_hidden_files = true
+; Godot 내장 FileDialog 를 쓰지 않는다. 모바일에서 행 높이가 작고
+; 더블탭·필터·파일명 입력란까지 딸려 나와 폴더만 고르는 데 불편하다.
+; 폴더만 보여주고 한 번 탭으로 들어가는 전용 브라우저로 대체한다.
+[node name="BrowseLayer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="BrowseLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="Panel" type="PanelContainer" parent="BrowseLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="BrowseLayer/Panel"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="BrowseLayer/Panel/VBox"]
+layout_mode = 2
+text = "게임 폴더 선택"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="PathLabel" type="Label" parent="BrowseLayer/Panel/VBox"]
+layout_mode = 2
+text = "/"
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+
+[node name="List" type="ItemList" parent="BrowseLayer/Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+theme_override_font_sizes/font_size = 30
+
+[node name="HintLabel" type="Label" parent="BrowseLayer/Panel/VBox"]
+layout_mode = 2
+text = "폴더를 한 번 눌러 들어갑니다."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 20
+
+[node name="ButtonRow" type="HBoxContainer" parent="BrowseLayer/Panel/VBox"]
+layout_mode = 2
+
+[node name="UpDirButton" type="Button" parent="BrowseLayer/Panel/VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 76)
+theme_override_font_sizes/font_size = 26
+text = "상위"
+
+[node name="PickButton" type="Button" parent="BrowseLayer/Panel/VBox/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 76)
+theme_override_font_sizes/font_size = 26
+text = "이 폴더 선택"
+
+[node name="CancelButton" type="Button" parent="BrowseLayer/Panel/VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 76)
+theme_override_font_sizes/font_size = 26
+text = "닫기"

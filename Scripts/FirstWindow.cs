@@ -18,7 +18,14 @@ public partial class FirstWindow : Control
     Button? appDirButton;
     Button? upButton;
     LineEdit? pathEdit;
-    FileDialog? dirDialog;
+    // 자체 폴더 브라우저. Godot 내장 FileDialog 는 쓰지 않는다.
+    Control? browseLayer;
+    ItemList? browseList;
+    Label? browsePathLabel;
+    /// <summary>브라우저가 현재 보고 있는 폴더.</summary>
+    string browseDir = "";
+    /// <summary>목록 각 행에 대응하는 실제 경로.</summary>
+    readonly List<string> browseEntries = new();
 
 
     readonly List<string> gamePaths = new();
@@ -36,7 +43,15 @@ public partial class FirstWindow : Control
         pathEdit = GetNodeOrNull<LineEdit>("VBoxContainer/PathRow/PathEdit");
         browseButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/BrowseButton");
         rescanButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/RescanButton");
-        dirDialog = GetNodeOrNull<FileDialog>("DirDialog");
+        browseLayer = GetNodeOrNull<Control>("BrowseLayer");
+        browseList = GetNodeOrNull<ItemList>("BrowseLayer/Panel/VBox/List");
+        browsePathLabel = GetNodeOrNull<Label>("BrowseLayer/Panel/VBox/PathLabel");
+        // 한 번 탭으로 들어간다. ItemActivated(더블탭)는 모바일에서 어렵다.
+        if (browseList != null)
+            browseList.ItemSelected += OnBrowseItemSelected;
+        WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/UpDirButton", BrowseUp);
+        WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/PickButton", BrowsePick);
+        WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/CancelButton", CloseBrowser);
 
         // Godot의 FileDialog는 모바일에서 조작이 번거롭다.
         // 자주 쓰는 경로는 대화상자를 열지 않고 한 번에 지정한다.
@@ -58,17 +73,43 @@ public partial class FirstWindow : Control
             gameList.ItemActivated += _ => OnStartPressed();
 
         if (browseButton != null)
-            browseButton.Pressed += OpenDirDialog;
+            browseButton.Pressed += OpenBrowser;
         if (rescanButton != null)
             rescanButton.Pressed += OnPathEntered;
         if (pathEdit != null)
             pathEdit.TextSubmitted += _ => OnPathEntered();
-        if (dirDialog != null)
-            dirDialog.DirSelected += OnDirSelected;
+
+        // 첫 구동 시 권한을 먼저 요청한다.
+        // 예전에는 Rescan 이 읽기에 실패한 뒤에야 요청했고, 그 결과 사용자에게는
+        // "게임을 찾을 수 없습니다" 만 보였다. Android 6~10 은 런타임 팝업으로
+        // 바로 받을 수 있으므로 화면을 보여주기 전에 요청하는 편이 낫다.
+        RequestStoragePermissionOnce();
 
         eraBaseDir = Settings.EffectiveGameRoot;
         ApplyFontSize();
         Rescan();
+    }
+
+    /// <summary>
+    /// 저장소 권한을 앱 실행 시 한 번 요청한다.
+    ///
+    /// Android 6~10 은 <c>OS.RequestPermissions()</c> 의 런타임 팝업으로 충분하다.
+    /// Android 11+ 의 MANAGE_EXTERNAL_STORAGE 는 팝업으로 받을 수 없고 설정
+    /// 앱에서 수동 허용해야 하며, Godot 에는 그 설정 화면을 여는 API 가 없다.
+    /// 그래서 팝업을 띄운 뒤에도 읽을 수 없으면 Rescan 이 안내 문구와
+    /// [권한 설정] 버튼을 보여준다.
+    /// </summary>
+    void RequestStoragePermissionOnce()
+    {
+#if GODOT_ANDROID
+        if (permissionRequested)
+            return;
+        // 이미 읽을 수 있으면 팝업으로 사용자를 괴롭히지 않는다.
+        if (HasStorageAccess())
+            return;
+        permissionRequested = true;
+        OS.RequestPermissions();
+#endif
     }
 
     /// <summary>
@@ -80,7 +121,15 @@ public partial class FirstWindow : Control
         if (what == NotificationApplicationResumed || what == NotificationWMWindowFocusIn)
         {
             if (Visible && permissionRequested)
+            {
+                // 사용자가 경로를 직접 지정하지 않았다면 기본 경로를 다시
+                // 계산한다. DefaultGameRoot 는 "읽을 수 있는지"로 경로를
+                // 고르므로, 권한을 받기 전에 계산한 값이 앱 전용 폴더로
+                // 굳어 있을 수 있다.
+                if (string.IsNullOrWhiteSpace(Settings.GameRoot))
+                    eraBaseDir = Settings.EffectiveGameRoot;
                 Rescan();
+            }
         }
     }
 
@@ -107,14 +156,27 @@ public partial class FirstWindow : Control
     // 経路
     // ------------------------------------------------------------------
 
-    void OpenDirDialog()
+    void WireBrowse(string path, Action handler)
     {
-        if (dirDialog == null)
+        var b = GetNodeOrNull<Button>(path);
+        if (b == null)
         {
-            SetStatus("내부 오류: 폴더 선택 대화상자를 찾을 수 없습니다.");
+            GD.PushWarning($"FirstWindow: 버튼을 찾을 수 없습니다 ({path})");
             return;
         }
-        // 現在の経路から開く。存在しない場合は上位に遡って開けるところを探す。
+        b.Pressed += handler;
+    }
+
+    /// <summary>
+    /// 자체 폴더 브라우저를 연다.
+    ///
+    /// Godot 의 FileDialog 는 모바일에서 행이 작고 더블탭이 필요하며
+    /// 파일명 입력란·필터까지 딸려 나온다. 여기서는 폴더만 보여주고
+    /// 한 번 탭으로 들어간다.
+    /// </summary>
+    void OpenBrowser()
+    {
+        // 현재 경로에서 시작한다. 없으면 위로 올라가며 열 수 있는 곳을 찾는다.
         var start = eraBaseDir;
         while (!string.IsNullOrEmpty(start) && !Directory.Exists(start))
         {
@@ -122,19 +184,101 @@ public partial class FirstWindow : Control
             if (string.IsNullOrEmpty(parent) || parent == start) break;
             start = parent;
         }
-#if GODOT_ANDROID
         if (string.IsNullOrEmpty(start) || !Directory.Exists(start))
-            start = "/storage/emulated/0";
-#endif
-        if (Directory.Exists(start))
-            dirDialog.CurrentDir = start;
+            start = FallbackBrowseRoot();
 
-        dirDialog.PopupCentered();
+        SetLayerVisible(browseLayer, true);
+        ShowBrowseDir(start);
     }
 
-    void OnDirSelected(string dir)
+    void CloseBrowser() => SetLayerVisible(browseLayer, false);
+
+    static void SetLayerVisible(Control? layer, bool visible)
     {
-        SetGameRoot(dir);
+        if (layer == null) return;
+        layer.Visible = visible;
+        layer.MouseFilter = visible ? Control.MouseFilterEnum.Stop
+                                    : Control.MouseFilterEnum.Ignore;
+    }
+
+    static string FallbackBrowseRoot()
+    {
+#if GODOT_ANDROID
+        foreach (var c in new[] { "/storage/emulated/0", "/storage", "/" })
+            if (Directory.Exists(c)) return c;
+        return "/";
+#else
+        return Path.GetPathRoot(OS.GetUserDataDir()) ?? "/";
+#endif
+    }
+
+    /// <summary>지정 폴더의 하위 폴더 목록을 보여준다.</summary>
+    void ShowBrowseDir(string dir)
+    {
+        browseDir = Settings.NormalizeDir(dir).TrimEnd('/');
+        if (browseDir.Length == 0) browseDir = "/";
+
+        if (browsePathLabel != null)
+            browsePathLabel.Text = browseDir;
+
+        browseEntries.Clear();
+        browseList?.Clear();
+
+        string[] subs;
+        try
+        {
+            subs = Directory.GetDirectories(browseDir);
+        }
+        catch (Exception e)
+        {
+            // 권한이 없는 폴더를 탭하면 여기로 온다. 목록만 비우고 알린다.
+            browseList?.AddItem($"[읽을 수 없음: {e.GetType().Name}]");
+            browseEntries.Add("");
+            return;
+        }
+
+        Array.Sort(subs, StringComparer.OrdinalIgnoreCase);
+        foreach (var sub in subs)
+        {
+            var name = Path.GetFileName(sub);
+            if (string.IsNullOrEmpty(name)) continue;
+            // 게임 폴더인지 표시해주면 어디를 골라야 하는지 바로 보인다.
+            bool isGame = IsValidGameDir(sub);
+            browseList?.AddItem(isGame ? $"[게임] {name}" : $"{name}/");
+            browseEntries.Add(sub);
+        }
+        if (browseEntries.Count == 0)
+        {
+            browseList?.AddItem("(하위 폴더가 없습니다)");
+            browseEntries.Add("");
+        }
+    }
+
+    void OnBrowseItemSelected(long index)
+    {
+        int i = (int)index;
+        if (i < 0 || i >= browseEntries.Count) return;
+        var target = browseEntries[i];
+        if (string.IsNullOrEmpty(target)) return;   // 안내용 행
+        ShowBrowseDir(target);
+    }
+
+    void BrowseUp()
+    {
+        var parent = Path.GetDirectoryName(browseDir.TrimEnd('/', '\\'));
+        if (string.IsNullOrEmpty(parent) || parent == browseDir)
+        {
+            SetStatus("더 위로 갈 수 없습니다.");
+            return;
+        }
+        ShowBrowseDir(parent);
+    }
+
+    /// <summary>현재 보고 있는 폴더를 게임 루트로 확정한다.</summary>
+    void BrowsePick()
+    {
+        CloseBrowser();
+        SetGameRoot(browseDir);
     }
 
     void OnPathEntered()
@@ -299,9 +443,11 @@ public partial class FirstWindow : Control
 
         // MANAGE_EXTERNAL_STORAGEはランタイムダイアログでは取得できないので、
         // 実際にディレクトリを列挙できるかで確認する
+        // eraBaseDir 에 의존하지 않는다. 이 판정은 eraBaseDir 이 정해지기 전
+        // (_Ready 의 권한 요청 시점)에도 불리므로 고정 경로로 조사한다.
         try
         {
-            if (Directory.Exists(eraBaseDir))
+            if (!string.IsNullOrEmpty(eraBaseDir) && Directory.Exists(eraBaseDir))
             {
                 Directory.GetDirectories(eraBaseDir);
                 return true;
@@ -311,11 +457,9 @@ public partial class FirstWindow : Control
         }
         catch
         {
-            if (!permissionRequested)
-            {
-                permissionRequested = true;
-                OS.RequestPermissions();
-            }
+            // 판정 함수는 부수 효과를 갖지 않는다.
+            // 예전에는 여기서 OS.RequestPermissions() 를 호출해, 실행 시
+            // 명시적으로 요청하는 경로와 겹쳐 팝업이 두 번 떴다.
             return false;
         }
 #else
