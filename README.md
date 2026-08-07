@@ -26,8 +26,29 @@ uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
 | 실기(Android) 게임 로드 | ⚠️ 파일명 대소문자 문제를 수정했으나 **재검증 필요** |
 | 이미지/스프라이트 표시 | ⚠️ 부분 구현 (텍스처 캐시는 동작, 화면 배치는 미구현) |
 | APK 서명 | ⚠️ 릴리스는 keystore 직접 설정 필요 |
+| EmueraEE 확장 명령 | ❌ **미구현** — 이걸 쓰는 게임은 실행되지 않습니다 (아래 참조) |
 
 ### 알려진 제약
+
+- **EmueraEE 확장 명령 미구현.** 이 엔진은 **Emuera 1.824 계열**입니다.
+  EmueraEE(Emuera Extended Edition) 계열이 추가한 명령은 하나도 없습니다.
+  이걸 쓰는 게임은 로딩 중 「해석할 수 없는 행입니다」 로 중단됩니다.
+
+  | 분류 | 명령 |
+  |---|---|
+  | DataTable | `DT_CREATE` `DT_RELEASE` `DT_EXIST` `DT_COLUMN_ADD` `DT_COLUMN_OPTIONS` `DT_ROW_ADD` `DT_ROW_REMOVE` `DT_ROW_LENGTH` `DT_CELL_GET(S)` `DT_CELL_SET` `DT_SELECT` `DT_FROMXML` |
+  | Map | `MAP_CREATE` `MAP_RELEASE` `MAP_EXIST` `MAP_HAS` `MAP_GET` `MAP_SET` `MAP_SIZE` |
+  | XML | `XML_GET` `XML_ADDNODE` `XML_REMOVENODE` |
+  | 사운드 | `PLAYBGM` `STOPBGM` `STOPSOUND` `SETBGMVOLUME` `SETSOUNDVOLUME` |
+  | 리플렉션 | `EXISTVAR` `GETVAR` `GETVARS` `GETMETH` `GETMETHS` `EXISTFUNCTION` |
+  | 기타 | `REGEXPMATCH` `TIMESF` `HTML_STRINGLEN` `GETTEXTBOX` `MOUSEB` |
+
+  `LOADTEXT` 는 있지만 EE 와 인수 타입이 달라
+  `LOADTEXT("dat/schema.xml")` 같은 문자열 경로 호출은 실패합니다.
+
+  **임시 대응**: 우상단 **≡ 메뉴 → [해석 오류 무시]** 를 켜면 강제로
+  실행됩니다. 다만 해당 행이 실제로 실행되는 기능은 오작동합니다
+  (`emuera.config` 의 `解釈不可能な行があっても実行する` 와 같은 설정).
 
 - **`MainWindow.Update()`의 데이터 경합**: 표시 갱신은 메인 스레드에서 돌지만,
   읽는 대상(`EmueraConsole.displayLineList`)은 Emuera 스레드가 갱신합니다.
@@ -507,10 +528,33 @@ manifest 수정 없이도 동작합니다.)
 
 ### 권한 (Android 11+)
 
-`MANAGE_EXTERNAL_STORAGE`는 런타임 팝업으로 받을 수 없습니다.
+`MANAGE_EXTERNAL_STORAGE`는 런타임 팝업으로 받을 수 없고, Godot 에는 해당
+설정 화면을 직접 여는 API 가 없습니다. 그래서 두 가지 방법이 있습니다.
+
+**방법 A — 모든 파일 접근 허용**
+
 앱의 **[권한 설정]** 버튼을 누른 뒤,
 **설정 → 앱 → Kemura → 권한 → 모든 파일 접근**을 허용하세요.
 앱으로 돌아오면 자동으로 다시 검색합니다.
+
+**방법 B — 권한 없이 (앱 전용 폴더)**
+
+```
+/storage/emulated/0/Android/data/com.kemura.emuera/files/emuera/
+```
+
+앱 전용 외부 경로라 **어떤 Android 버전에서도 권한이 필요 없습니다.**
+PC 에 USB 로 연결(MTP)해서 이 경로에 게임 폴더를 넣고,
+첫 화면의 **[앱 전용 폴더]** 버튼을 누르세요.
+
+> Android 11+ 에서는 기기 내 파일 관리자로 `Android/data/` 안에 들어가는 것이
+> 제한됩니다. PC 에서 USB 로 넣는 편이 확실합니다.
+
+### 경로 지정이 번거로울 때
+
+Godot 의 파일 대화상자는 모바일에서 조작이 불편합니다. 첫 화면의
+**[내장 저장소] / [앱 전용 폴더] / [상위]** 버튼으로 대화상자를 열지 않고
+바로 이동할 수 있고, 경로를 직접 입력한 뒤 Enter 를 눌러도 됩니다.
 
 ---
 
