@@ -44,37 +44,6 @@ custom_minimum_size = Vector2(0, 64)
 theme_override_font_sizes/font_size = 26
 text = "찾아보기"
 
-[node name="RescanButton" type="Button" parent="VBoxContainer/PathRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
-theme_override_font_sizes/font_size = 26
-text = "새로고침"
-
-[node name="QuickRow" type="HBoxContainer" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="SharedButton" type="Button" parent="VBoxContainer/QuickRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 60)
-theme_override_font_sizes/font_size = 24
-text = "내장 저장소"
-tooltip_text = "/storage/emulated/0/emuera"
-
-[node name="AppDirButton" type="Button" parent="VBoxContainer/QuickRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 60)
-theme_override_font_sizes/font_size = 24
-text = "앱 전용 폴더"
-tooltip_text = "권한 없이 읽을 수 있는 경로"
-
-[node name="UpButton" type="Button" parent="VBoxContainer/QuickRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(90, 60)
-theme_override_font_sizes/font_size = 24
-text = "상위"
-
 [node name="StatusLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "스캔 중..."

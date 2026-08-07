@@ -103,6 +103,7 @@ public partial class EmueraContent : Control
         Wire(menuRoot + "/QuitAppButton", OnQuitApp);
         Wire(menuRoot + "/CloseButton", () => SetLayerVisible(menuLayer, false));
         Wire(fontRoot + "/FontCloseButton", () => SetLayerVisible(fontLayer, false));
+        WireNumPad();
 
         if (fontSmaller != null)
             fontSmaller.Pressed += () => NudgeFontSize(-2);
@@ -693,10 +694,74 @@ public partial class EmueraContent : Control
         if (want && inputEdit != null)
         {
             var isInt = console!.InputType == MinorShift.Emuera.GameProc.InputType.IntValue;
-            inputEdit.PlaceholderText = isInt ? "숫자 입력" : "문자 입력";
+            inputEdit.PlaceholderText = isInt ? "숫자 입력 (탭하면 키보드)" : "문자 입력 (탭하면 키보드)";
             inputEdit.Text = "";
-            inputEdit.GrabFocus();
+            // GrabFocus() 를 부르지 않는다.
+            // Android 에서 LineEdit 에 포커스가 가면 OS 소프트 키보드가 저절로
+            // 올라와 화면 절반을 가린다. 대부분의 입력은 선택지 탭이나 숫자
+            // 키패드로 끝나므로, 직접 타이핑하려는 사용자가 입력창을 탭했을
+            // 때만 키보드가 뜨게 한다.
         }
+        if (!want)
+        {
+            // 입력이 끝나면 키패드도 접는다
+            SetNumPadVisible(false);
+        }
+        else if (numPad != null && !numPad.Visible
+                 && console!.InputType == MinorShift.Emuera.GameProc.InputType.IntValue)
+        {
+            // 숫자를 요구할 때는 키패드를 바로 띄운다. 게임 특성상 숫자 입력이
+            // 잦아서 매번 [123] 을 누르게 하는 것은 번거롭다.
+            SetNumPadVisible(true);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // 숫자 키패드
+    // ------------------------------------------------------------------
+
+    Control? numPad;
+
+    void WireNumPad()
+    {
+        numPad = GetNodeOrNull<Control>("Layout/NumPad");
+        const string root = "Layout/NumPad/";
+        for (int i = 0; i <= 9; i++)
+        {
+            int digit = i;   // 클로저가 루프 변수를 잡지 않도록 복사
+            Wire($"{root}Key{digit}", () => AppendToInput(digit.ToString()));
+        }
+        Wire(root + "KeyMinus", () => AppendToInput("-"));
+        Wire(root + "KeyBack", BackspaceInput);
+        Wire(root + "KeyClear", () => { if (inputEdit != null) inputEdit.Text = ""; });
+        Wire(root + "KeyEnter", SubmitTypedInput);
+        Wire(root + "KeyHide", () => SetNumPadVisible(false));
+        Wire("Layout/InputBar/PadButton",
+            () => SetNumPadVisible(numPad == null || !numPad.Visible));
+    }
+
+    void SetNumPadVisible(bool visible)
+    {
+        if (numPad != null)
+            numPad.Visible = visible;
+    }
+
+    void AppendToInput(string s)
+    {
+        if (inputEdit == null) return;
+        // '-' 는 맨 앞에서만 의미가 있다(음수).
+        if (s == "-" && inputEdit.Text.Length > 0) return;
+        inputEdit.Text += s;
+        inputEdit.CaretColumn = inputEdit.Text.Length;
+    }
+
+    void BackspaceInput()
+    {
+        if (inputEdit == null) return;
+        var t = inputEdit.Text;
+        if (t.Length == 0) return;
+        inputEdit.Text = t.Substring(0, t.Length - 1);
+        inputEdit.CaretColumn = inputEdit.Text.Length;
     }
 
     void SubmitTypedInput()

@@ -13,10 +13,6 @@ public partial class FirstWindow : Control
     Button? startButton;
     Button? permButton;
     Button? browseButton;
-    Button? rescanButton;
-    Button? sharedButton;
-    Button? appDirButton;
-    Button? upButton;
     LineEdit? pathEdit;
     // 자체 폴더 브라우저. Godot 내장 FileDialog 는 쓰지 않는다.
     Control? browseLayer;
@@ -42,7 +38,6 @@ public partial class FirstWindow : Control
 
         pathEdit = GetNodeOrNull<LineEdit>("VBoxContainer/PathRow/PathEdit");
         browseButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/BrowseButton");
-        rescanButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/RescanButton");
         browseLayer = GetNodeOrNull<Control>("BrowseLayer");
         browseList = GetNodeOrNull<ItemList>("BrowseLayer/Panel/VBox/List");
         browsePathLabel = GetNodeOrNull<Label>("BrowseLayer/Panel/VBox/PathLabel");
@@ -53,18 +48,6 @@ public partial class FirstWindow : Control
         WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/PickButton", BrowsePick);
         WireBrowse("BrowseLayer/Panel/VBox/ButtonRow/CancelButton", CloseBrowser);
 
-        // Godot의 FileDialog는 모바일에서 조작이 번거롭다.
-        // 자주 쓰는 경로는 대화상자를 열지 않고 한 번에 지정한다.
-        sharedButton = GetNodeOrNull<Button>("VBoxContainer/QuickRow/SharedButton");
-        appDirButton = GetNodeOrNull<Button>("VBoxContainer/QuickRow/AppDirButton");
-        upButton = GetNodeOrNull<Button>("VBoxContainer/QuickRow/UpButton");
-        if (sharedButton != null)
-            sharedButton.Pressed += () => SetGameRoot("/storage/emulated/0/emuera");
-        if (appDirButton != null)
-            appDirButton.Pressed += () => SetGameRoot(Settings.AppExternalGameRoot);
-        if (upButton != null)
-            upButton.Pressed += GoUp;
-
         if (startButton != null)
             startButton.Pressed += OnStartPressed;
         if (permButton != null)
@@ -74,8 +57,6 @@ public partial class FirstWindow : Control
 
         if (browseButton != null)
             browseButton.Pressed += OpenBrowser;
-        if (rescanButton != null)
-            rescanButton.Pressed += OnPathEntered;
         if (pathEdit != null)
             pathEdit.TextSubmitted += _ => OnPathEntered();
 
@@ -284,22 +265,6 @@ public partial class FirstWindow : Control
     void OnPathEntered()
     {
         SetGameRoot(pathEdit?.Text ?? "");
-    }
-
-    /// <summary>
-    /// 한 단계 위로. 게임 폴더를 직접 지정해버린 경우 되돌아오기 쉽게 한다.
-    /// (대화상자를 다시 열지 않아도 되게 하는 것이 목적)
-    /// </summary>
-    void GoUp()
-    {
-        var cur = eraBaseDir.TrimEnd('/', '\\');
-        var parent = Path.GetDirectoryName(cur);
-        if (string.IsNullOrEmpty(parent) || parent == cur)
-        {
-            SetStatus("더 위로 갈 수 없습니다.");
-            return;
-        }
-        SetGameRoot(parent);
     }
 
     void SetGameRoot(string dir)
