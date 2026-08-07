@@ -26,7 +26,7 @@ uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
 | 실기(Android) 게임 로드 | ⚠️ 파일명 대소문자 문제를 수정했으나 **재검증 필요** |
 | 이미지/스프라이트 표시 | ⚠️ 부분 구현 (텍스처 캐시는 동작, 화면 배치는 미구현) |
 | APK 서명 | ⚠️ 릴리스는 keystore 직접 설정 필요 |
-| EmueraEE 확장 명령 | ⚠️ **부분 구현** (53종). 남은 것은 아래 참조 |
+| EmueraEE 확장 명령 | ⚠️ **부분 구현** (54종). 남은 것은 아래 참조 |
 
 ### 알려진 제약
 
@@ -34,7 +34,7 @@ uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
   EmueraEE(EM+EE) 확장을 필요한 만큼 얹고 있습니다.
   규격 출처: <https://gitlab.com/EvilMask/emuera.em.doc>
 
-  **구현됨 (53종)**
+  **구현됨 (54종)**
 
   | 분류 | 명령 |
   |---|---|
@@ -42,7 +42,7 @@ uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
   | DataTable (19) | `DT_CREATE` `DT_EXIST` `DT_RELEASE` `DT_CLEAR` `DT_NOCASE` `DT_COLUMN_ADD/EXIST/REMOVE/LENGTH/OPTIONS` `DT_ROW_ADD/SET/REMOVE/LENGTH` `DT_CELL_GET/GETS/ISNULL/SET` `DT_SELECT` |
   | XML (13) | `XML_DOCUMENT` `XML_EXIST` `XML_RELEASE` `XML_TOSTR` `XML_GET(_BYNAME)` `XML_SET(_BYNAME)` `XML_ADDNODE(_BYNAME)` `XML_REMOVENODE` `XML_ADDATTRIBUTE` `XML_REMOVEATTRIBUTE` |
   | 사운드 (7) | `PLAYBGM` `PLAYSOUND` `STOPBGM` `STOPSOUND` `SETBGMVOLUME` `SETSOUNDVOLUME` `EXISTSOUND` |
-  | 기타 (5) | `EXISTFUNCTION` `HTML_STRINGLEN` `CBRT` `LOG` `LOG10` `EXPONENT` |
+  | 기타 (6) | `EXISTFUNCTION` `HTML_STRINGLEN` `CBRT` `LOG` `LOG10` `EXPONENT` |
 
   `DT_*` 는 `System.Data.DataTable`, `XML_*` 는 `System.Xml` + XPath 위임입니다.
   EM 문서가 그렇게 규정하므로 필터식·정렬식·XPath 문법이 BCL 에서 따라옵니다.
@@ -58,6 +58,7 @@ uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
   | `GETTEXTBOX` `MOUSEB` `INPUTMOUSEKEY` `TOOLTIP_*` | UI 작업 필요 |
   | `GCREATE`/`GDRAW*`/`SPRITE*` | **이미지 출력이 스텁**입니다. 그래픽 파이프라인이 먼저 |
   | `DT_TOXML/FROMXML` `MAP_TOXML/FROMXML` `XML_REPLACE` | 세이브 직렬화 규약 포함 |
+  | `MAP_GETKEYS` | 내부 구현은 있으나 **함수로 등록되지 않았습니다**. 키 목록을 배열로 내보내야 하므로 출력 인수 문제와 같습니다 |
   | `TIMESF` | EM 문서 279개 목록에 없습니다. 다른 계열일 가능성 |
 
   `LOADTEXT` 는 있지만 EM 과 인수 타입이 달라
