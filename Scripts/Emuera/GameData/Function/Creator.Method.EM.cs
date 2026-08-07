@@ -75,6 +75,15 @@ namespace MinorShift.Emuera.GameData.Function
 			list["XML_ADDATTRIBUTE"] = new EmXmlAttributeMethod(add: true);
 			list["XML_REMOVEATTRIBUTE"] = new EmXmlAttributeMethod(add: false);
 
+			// --- 오디오 --------------------------------------------------------
+			list["PLAYBGM"] = new EmAudioMethod(EmAudioMethod.Op.PlayBgm);
+			list["PLAYSOUND"] = new EmAudioMethod(EmAudioMethod.Op.PlaySound);
+			list["STOPBGM"] = new EmAudioMethod(EmAudioMethod.Op.StopBgm);
+			list["STOPSOUND"] = new EmAudioMethod(EmAudioMethod.Op.StopSound);
+			list["SETBGMVOLUME"] = new EmAudioMethod(EmAudioMethod.Op.SetBgmVolume);
+			list["SETSOUNDVOLUME"] = new EmAudioMethod(EmAudioMethod.Op.SetSoundVolume);
+			list["EXISTSOUND"] = new EmAudioMethod(EmAudioMethod.Op.ExistSound);
+
 			// --- MATH_EXTENSION ----------------------------------------------
 			list["CBRT"] = new EmMathMethod(EmMathMethod.Kind.Cbrt);
 			list["LOG"] = new EmMathMethod(EmMathMethod.Kind.Log);
@@ -614,6 +623,55 @@ namespace MinorShift.Emuera.GameData.Function
 					? EmXmlStore.AddAttribute(name, xpath, attr, AnyToStr(exm, a, 3), Int(exm, a, 4, 0))
 					: EmXmlStore.RemoveAttribute(name, xpath, attr, Int(exm, a, 3, 0));
 			}
+		}
+
+		// =====================================================================
+		// 오디오
+		//
+		// 실제 재생은 EmAudio 가 Godot 메인 스레드에서 한다. era 명령은 엔진
+		// 스레드에서 실행되므로 여기서는 요청만 큐에 넣는다.
+		// =====================================================================
+
+		private sealed class EmAudioMethod : EmIntMethod
+		{
+			internal enum Op
+			{
+				PlayBgm, PlaySound, StopBgm, StopSound,
+				SetBgmVolume, SetSoundVolume, ExistSound,
+			}
+			readonly Op op;
+
+			public EmAudioMethod(Op o) : base(MinOf(o), MaxOf(o), TypeOf(o)) { op = o; }
+
+			static int MinOf(Op o) => o switch
+			{
+				Op.StopBgm or Op.StopSound => 0,
+				_ => 1,
+			};
+			static int MaxOf(Op o) => o switch
+			{
+				Op.StopBgm or Op.StopSound => 0,
+				_ => 1,
+			};
+			static Type? TypeOf(Op o) => o switch
+			{
+				Op.SetBgmVolume or Op.SetSoundVolume => typeof(Int64),
+				Op.StopBgm or Op.StopSound => null,
+				_ => typeof(string),
+			};
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> op switch
+				{
+					Op.PlayBgm => EmAudio.PlayBgm(Str(exm, a, 0)),
+					Op.PlaySound => EmAudio.PlaySound(Str(exm, a, 0)),
+					Op.StopBgm => EmAudio.StopBgm(),
+					Op.StopSound => EmAudio.StopSound(),
+					Op.SetBgmVolume => EmAudio.SetBgmVolume(Int(exm, a, 0, 100)),
+					Op.SetSoundVolume => EmAudio.SetSoundVolume(Int(exm, a, 0, 100)),
+					Op.ExistSound => EmAudio.ExistSound(Str(exm, a, 0)),
+					_ => 0,
+				};
 		}
 
 		// =====================================================================

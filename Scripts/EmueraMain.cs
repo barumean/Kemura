@@ -51,6 +51,10 @@ public partial class EmueraMain : Node
 
         GenericUtils.SetContent(content);
 
+        // 오디오 플레이어를 붙일 부모. Godot 노드는 메인 스레드에서만
+        // 만들 수 있으므로 여기서 한 번 등록하고, 이후 요청은 큐를 지난다.
+        EmAudio.Attach(this);
+
         // 起動直後はゲーム選択画面のみを見せる
         content?.Hide();
         firstWindow?.Show();
@@ -225,6 +229,8 @@ public partial class EmueraMain : Node
         // Godotノードを触るのでメインスレッドであるここから毎フレーム呼ぶ。
         GlobalStatic.MainWindow?.Update();
         content?.SyncInputBar();
+        // 엔진 스레드가 넣은 오디오 요청을 메인 스레드에서 처리한다
+        EmAudio.Pump();
     }
 
     void DoClear()
@@ -248,6 +254,7 @@ public partial class EmueraMain : Node
         EmMapStore.ClearAll();
         EmDataTableStore.ClearAll();
         EmXmlStore.ClearAll();
+        EmAudio.StopAll();
         GC.Collect();
 
         working = false;

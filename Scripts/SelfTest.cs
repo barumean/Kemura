@@ -482,6 +482,8 @@ internal static class SelfTest
             "XML_GET", "XML_GET_BYNAME", "XML_SET", "XML_SET_BYNAME",
             "XML_ADDNODE", "XML_ADDNODE_BYNAME", "XML_REMOVENODE",
             "XML_ADDATTRIBUTE", "XML_REMOVEATTRIBUTE",
+            "PLAYBGM", "PLAYSOUND", "STOPBGM", "STOPSOUND",
+            "SETBGMVOLUME", "SETSOUNDVOLUME", "EXISTSOUND",
         })
         {
             Check(methods.ContainsKey(name), $"확장 함수 등록: {name}");
