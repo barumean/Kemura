@@ -96,6 +96,9 @@ public partial class EmueraContent : Control
         Wire(menuRoot + "/RestartButton", OnRestart);
         Wire(menuRoot + "/SaveLogButton", OnSaveLog);
         Wire(menuRoot + "/FontButton", OnOpenFontSettings);
+        forceRunButton = GetNodeOrNull<Button>(menuRoot + "/ForceRunButton");
+        Wire(menuRoot + "/ForceRunButton", OnToggleForceRun);
+        UpdateForceRunLabel();
         Wire(menuRoot + "/QuitToListButton", OnQuitToList);
         Wire(menuRoot + "/QuitAppButton", OnQuitApp);
         Wire(menuRoot + "/CloseButton", () => SetLayerVisible(menuLayer, false));
@@ -139,6 +142,33 @@ public partial class EmueraContent : Control
     // ------------------------------------------------------------------
     // メニュー
     // ------------------------------------------------------------------
+
+    Button? forceRunButton;
+
+    /// <summary>
+    /// 「解釈不可能な行があっても実行する」 토글.
+    ///
+    /// EmueraEE 확장 명령(DT_*, MAP_*, XML_*, PLAYBGM 등)을 쓰는 게임은
+    /// 이 엔진이 해당 행을 해석하지 못해 시작조차 못 한다. 이걸 켜면 일단
+    /// 실행되지만 그 행이 실행되는 지점에서는 오작동한다. 다음 실행부터
+    /// 적용되므로 [다시 시작] 을 안내한다.
+    /// </summary>
+    void OnToggleForceRun()
+    {
+        Settings.ForceRunOnParseError = !Settings.ForceRunOnParseError;
+        UpdateForceRunLabel();
+        ShowToast(Settings.ForceRunOnParseError
+            ? "해석 오류를 무시합니다. [다시 시작] 후 적용됩니다."
+            : "해석 오류 시 중단합니다. [다시 시작] 후 적용됩니다.");
+    }
+
+    void UpdateForceRunLabel()
+    {
+        if (forceRunButton != null)
+            forceRunButton.Text = Settings.ForceRunOnParseError
+                ? "해석 오류 무시: 켬"
+                : "해석 오류 무시: 끔";
+    }
 
     void OnRestart()
     {

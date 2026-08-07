@@ -92,6 +92,11 @@ public partial class EmueraMain : Node
         // 이전 게임의 대소문자 캐시가 남아 있으면 안 된다
         PathResolver.ClearCache();
 
+        // 켜져 있을 때만 덮어쓴다. 항상 대입하면 게임의 emuera.config 가
+        // 이미 YES 로 지정한 경우를 우리가 NO 로 되돌려버린다.
+        ConfigData.ForceCompatiErrorLine =
+            Settings.ForceRunOnParseError ? true : (bool?)null;
+
         var problem = DescribeGameFolderProblem(full);
         if (problem != null)
         {
@@ -140,29 +145,55 @@ public partial class EmueraMain : Node
                 return "ERB 폴더를 찾을 수 없습니다. 게임 폴더 안에 ERB 폴더가 그대로 들어 있어야 합니다 "
                      + $"(선택한 폴더: {gameDir})";
 
-            bool hasErb = false;
-            foreach (var f in System.IO.Directory.EnumerateFiles(erbDir))
+            // ERB 파일이 하위 폴더에만 있는 게임이 흔하다.
+            // (예: ERB/COMMON.ERB 없이 ERB/BODY_INFO/*.ERB 만 있는 구성)
+            // 예전에는 최상위만 훑어서 그런 게임의 시작을 막아버렸다.
+            // AllDirectories 로 훑고, 못 읽으면 그 사실을 구분해 알린다.
+            var erbs = PathResolver.GetFiles(erbDir, "*.ERB",
+                System.IO.SearchOption.AllDirectories);
+            if (erbs.Length == 0)
             {
-                if (f.EndsWith(".ERB", StringComparison.OrdinalIgnoreCase))
+                // 권한이 없으면 Directory.Exists 는 true 여도 열거 결과가
+                // 0건이 되는 경우가 있다(예외를 던지지 않음). 실제로 읽을 수
+                // 있는지 따로 확인해서 원인을 구분한다.
+                bool readable;
+                try
                 {
-                    hasErb = true;
-                    break;
+                    System.IO.Directory.GetFileSystemEntries(erbDir);
+                    readable = true;
                 }
+                catch { readable = false; }
+
+                if (!readable)
+                    return PermissionMessage(erbDir);
+
+                return $"ERB 폴더 안에 .ERB 파일이 없습니다: {erbDir}\n"
+                     + "게임 압축을 풀 때 폴더 구조가 유지됐는지 확인해주세요.";
             }
-            if (!hasErb)
-                return $"ERB 폴더에 .ERB 파일이 없습니다: {erbDir}";
 
             return null;
         }
         catch (UnauthorizedAccessException)
         {
-            return "게임 폴더를 읽을 권한이 없습니다. 설정 → 앱 → Kemura → 권한에서 "
-                 + "'모든 파일 접근'을 허용해주세요.";
+            return PermissionMessage(gameDir);
         }
         catch (Exception e)
         {
             return $"게임 폴더를 확인할 수 없습니다: {e.GetType().Name}: {e.Message}";
         }
+    }
+
+    static string PermissionMessage(string path)
+    {
+#if GODOT_ANDROID
+        return $"'{path}' 를 읽을 권한이 없습니다.\n"
+             + "설정 → 앱 → Kemura → 권한 → '모든 파일 접근'을 허용한 뒤 "
+             + "앱으로 돌아오면 자동으로 다시 검색합니다.\n"
+             + $"권한을 줄 수 없다면 게임을 {Settings.AppExternalGameRoot} 에 넣으면 "
+             + "권한 없이 읽을 수 있습니다.";
+#else
+        return $"'{path}' 를 읽을 권한이 없습니다.";
+#endif
     }
 
     public void Clear() => pendingClear = true;

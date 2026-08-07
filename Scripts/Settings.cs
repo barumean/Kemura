@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 
 /// <summary>
@@ -16,7 +16,28 @@ internal static class Settings
 
     static int fontSize = DefaultFontSize;
     static string gameRoot = "";
+    static bool forceRunOnParseError;
     static bool loaded;
+
+    /// <summary>
+    /// 해석할 수 없는 ERB 행이 있어도 게임을 강제로 실행한다.
+    /// (emuera.config 의 「解釈不可能な行があっても実行する」 에 대응)
+    ///
+    /// EmueraEE 확장 명령(DT_*, MAP_*, XML_*, PLAYBGM 등)을 쓰는 게임은
+    /// 이 엔진에서 해당 행을 해석하지 못해 시작 자체가 막힌다. 이 옵션을 켜면
+    /// 일단 실행되지만, 그 행이 실제로 실행되는 지점에서는 오작동한다.
+    /// </summary>
+    public static bool ForceRunOnParseError
+    {
+        get { Load(); return forceRunOnParseError; }
+        set
+        {
+            Load();
+            if (value == forceRunOnParseError) return;
+            forceRunOnParseError = value;
+            Save();
+        }
+    }
 
     /// <summary>콘솔 텍스트 표시 크기(px).</summary>
     public static int FontSize
@@ -46,13 +67,32 @@ internal static class Settings
         }
     }
 
+    /// <summary>
+    /// 앱 전용 외부 저장소. Android 에서 <b>아무 권한 없이</b> 읽고 쓸 수 있는
+    /// 유일한 외부 경로다(getExternalFilesDir 과 같은 위치).
+    ///
+    /// Android 11+ 의 MANAGE_EXTERNAL_STORAGE 는 런타임 팝업으로 받을 수 없고
+    /// 설정 앱에서 수동 허용해야 한다. 그걸 원하지 않거나 기기 정책상 막혀
+    /// 있는 경우의 탈출구로 쓴다. PC 에서 USB(MTP)로 이 경로에 게임을 넣으면
+    /// 권한 없이 바로 동작한다.
+    /// </summary>
+    public static string AppExternalGameRoot =>
+        "/storage/emulated/0/Android/data/com.kemura.emuera/files/emuera/";
+
     /// <summary>설정이 비어 있을 때 사용할 플랫폼별 기본 경로.</summary>
     public static string DefaultGameRoot
     {
         get
         {
 #if GODOT_ANDROID
-            return "/storage/emulated/0/emuera/";
+            // 권한이 있으면 눈에 잘 보이는 곳을 우선한다.
+            const string shared = "/storage/emulated/0/emuera/";
+            if (CanList(shared))
+                return shared;
+            // 권한이 없어도 읽히는 앱 전용 경로에 게임이 있으면 그쪽을 쓴다.
+            if (CanList(AppExternalGameRoot))
+                return AppExternalGameRoot;
+            return shared;
 #else
             var beside = OS.GetExecutablePath().GetBaseDir().PathJoin("emuera") + "/";
             if (System.IO.Directory.Exists(beside))
@@ -71,6 +111,20 @@ internal static class Settings
             if (string.IsNullOrWhiteSpace(r))
                 r = DefaultGameRoot;
             return NormalizeDir(r);
+        }
+    }
+
+    /// <summary>실제로 목록을 읽을 수 있는지. 권한이 없으면 false.</summary>
+    static bool CanList(string dir)
+    {
+        try
+        {
+            return System.IO.Directory.Exists(dir)
+                && System.IO.Directory.GetFileSystemEntries(dir) != null;
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -93,6 +147,7 @@ internal static class Settings
         fontSize = Mathf.Clamp(
             (int)cfg.GetValue(Sec, "font_size", DefaultFontSize), MinFontSize, MaxFontSize);
         gameRoot = (string)cfg.GetValue(Sec, "game_root", "");
+        forceRunOnParseError = (bool)cfg.GetValue(Sec, "force_run_on_parse_error", false);
     }
 
     static void Save()
@@ -100,6 +155,7 @@ internal static class Settings
         var cfg = new ConfigFile();
         cfg.SetValue(Sec, "font_size", fontSize);
         cfg.SetValue(Sec, "game_root", gameRoot);
+        cfg.SetValue(Sec, "force_run_on_parse_error", forceRunOnParseError);
         var err = cfg.Save(Path);
         if (err != Error.Ok)
             GD.PushWarning($"설정을 저장할 수 없습니다 ({err})");

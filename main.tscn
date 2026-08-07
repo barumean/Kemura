@@ -121,6 +121,13 @@ custom_minimum_size = Vector2(340, 76)
 theme_override_font_sizes/font_size = 30
 text = "글자 크기 설정"
 
+[node name="ForceRunButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(340, 76)
+theme_override_font_sizes/font_size = 26
+text = "해석 오류 무시: 끔"
+tooltip_text = "해석할 수 없는 ERB 행이 있어도 강제 실행합니다. 해당 기능은 오작동합니다."
+
 [node name="QuitToListButton" type="Button" parent="EmueraContent/MenuLayer/Center/Panel/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(340, 76)

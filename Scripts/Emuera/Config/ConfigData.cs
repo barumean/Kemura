@@ -434,7 +434,13 @@ static ConfigData() { }
 			loadConfig(defaultConfigPath, false);
 			loadConfig(configPath, false);
 			loadConfig(fixedConfigPath, true);
-			
+
+			// アプリのUIから設定を上書きする口。
+			// emuera.config はゲームフォルダ側にあり、Androidでは書き込み権限が
+			// 無いことも多い。設定キー名も日本語なので、端末から直接編集させるのは
+			// 現実的でない。UIのトグルをここで反映する。
+			ApplyAppOverrides();
+
 			Config.SetConfig(this);
 			bool needSave = false;
 			// 파일명이 Emuera.config 처럼 다른 대소문자일 수 있다. 그대로 두면
@@ -449,6 +455,18 @@ static ConfigData() { }
 			if (needSave)
 				SaveConfig();
             return true;
+		}
+
+		/// <summary>
+		/// アプリ側の設定でエンジン設定を上書きする。
+		/// nullなら上書きしない(=emuera.configの値をそのまま使う)。
+		/// </summary>
+		internal static bool? ForceCompatiErrorLine;
+
+		private void ApplyAppOverrides()
+		{
+			if (ForceCompatiErrorLine.HasValue)
+				GetItem(ConfigCode.CompatiErrorLine).SetValue(ForceCompatiErrorLine.Value);
 		}
 
 		private bool loadConfig(string confPath, bool fix)

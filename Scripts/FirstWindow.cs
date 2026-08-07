@@ -14,6 +14,9 @@ public partial class FirstWindow : Control
     Button? permButton;
     Button? browseButton;
     Button? rescanButton;
+    Button? sharedButton;
+    Button? appDirButton;
+    Button? upButton;
     LineEdit? pathEdit;
     FileDialog? dirDialog;
 
@@ -34,6 +37,18 @@ public partial class FirstWindow : Control
         browseButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/BrowseButton");
         rescanButton = GetNodeOrNull<Button>("VBoxContainer/PathRow/RescanButton");
         dirDialog = GetNodeOrNull<FileDialog>("DirDialog");
+
+        // Godot의 FileDialog는 모바일에서 조작이 번거롭다.
+        // 자주 쓰는 경로는 대화상자를 열지 않고 한 번에 지정한다.
+        sharedButton = GetNodeOrNull<Button>("VBoxContainer/QuickRow/SharedButton");
+        appDirButton = GetNodeOrNull<Button>("VBoxContainer/QuickRow/AppDirButton");
+        upButton = GetNodeOrNull<Button>("VBoxContainer/QuickRow/UpButton");
+        if (sharedButton != null)
+            sharedButton.Pressed += () => SetGameRoot("/storage/emulated/0/emuera");
+        if (appDirButton != null)
+            appDirButton.Pressed += () => SetGameRoot(Settings.AppExternalGameRoot);
+        if (upButton != null)
+            upButton.Pressed += GoUp;
 
         if (startButton != null)
             startButton.Pressed += OnStartPressed;
@@ -127,6 +142,22 @@ public partial class FirstWindow : Control
         SetGameRoot(pathEdit?.Text ?? "");
     }
 
+    /// <summary>
+    /// 한 단계 위로. 게임 폴더를 직접 지정해버린 경우 되돌아오기 쉽게 한다.
+    /// (대화상자를 다시 열지 않아도 되게 하는 것이 목적)
+    /// </summary>
+    void GoUp()
+    {
+        var cur = eraBaseDir.TrimEnd('/', '\\');
+        var parent = Path.GetDirectoryName(cur);
+        if (string.IsNullOrEmpty(parent) || parent == cur)
+        {
+            SetStatus("더 위로 갈 수 없습니다.");
+            return;
+        }
+        SetGameRoot(parent);
+    }
+
     void SetGameRoot(string dir)
     {
         var norm = Settings.NormalizeDir(dir);
@@ -140,8 +171,18 @@ public partial class FirstWindow : Control
         }
         if (!Directory.Exists(norm))
         {
-            SetStatus($"폴더가 없습니다: {norm}");
-            return;
+            // 앱 전용 폴더처럼 아직 없는 경로를 빠른 버튼으로 고를 수 있으므로
+            // 만들어본다. 권한이 없어 못 만들면 그 사실을 그대로 알린다.
+            try
+            {
+                Directory.CreateDirectory(norm);
+                SetStatus($"폴더를 만들었습니다: {norm}");
+            }
+            catch (Exception e)
+            {
+                SetStatus($"폴더가 없고 만들 수도 없습니다: {norm}\n{e.Message}");
+                return;
+            }
         }
         Settings.GameRoot = norm;
         eraBaseDir = norm;

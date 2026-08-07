@@ -151,8 +151,13 @@ namespace MinorShift.Emuera.GameProc
 			}
 			if ((!noError) && (!Config.CompatiErrorLine))
 			{
-				console.PrintSystemLine("ERB 코드에 해석할 수 없는 행이 있어 Emuera를 종료합니다");
-				console.PrintSystemLine("※ 호환성 옵션 「" + Config.GetConfigName(ConfigCode.CompatiErrorLine) + "」로 강제 실행할 수 있습니다");
+				console.PrintSystemLine("ERB 코드에 해석할 수 없는 행이 있어 실행을 중단했습니다");
+				// 원래 메시지는 emuera.config 의 일본어 키 이름만 알려줬다.
+				// Android에서는 그 파일을 편집할 수 없는 경우가 많으므로
+				// 앱 안에서 켤 수 있는 경로를 안내한다.
+				console.PrintSystemLine("※ 우상단 ≡ 메뉴 → [해석 오류 무시] 를 켜면 강제로 실행할 수 있습니다");
+				console.PrintSystemLine("　 (그 행이 실행되는 기능은 오작동합니다)");
+				console.PrintSystemLine("※ emuera.config 의 「" + Config.GetConfigName(ConfigCode.CompatiErrorLine) + "」 와 같은 설정입니다");
 				console.PrintSystemLine("emuera.log에 로그를 출력합니다");
 				console.OutputLog(Program.ExeDir + "emuera.log");
 				console.noOutputLog = true;
