@@ -1269,6 +1269,7 @@ namespace MinorShift.Emuera.GameData.Variable
 			// 자동으로 삭제된다.
 			EmMapStore.ClearAll();
 			EmDataTableStore.ClearAll();
+			EmXmlStore.ClearAll();
 		}
 
 		public void ResetGlobalData()

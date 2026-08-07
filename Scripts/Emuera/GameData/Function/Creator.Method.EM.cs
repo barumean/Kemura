@@ -60,6 +60,21 @@ namespace MinorShift.Emuera.GameData.Function
 			list["DT_CELL_SET"] = new EmDtCellSetMethod();
 			list["DT_SELECT"] = new EmDtSelectMethod();
 
+			// --- XML ----------------------------------------------------------
+			list["XML_DOCUMENT"] = new EmXmlDocumentMethod();
+			list["XML_EXIST"] = new EmXmlNameMethod(EmXmlNameMethod.Op.Exist);
+			list["XML_RELEASE"] = new EmXmlNameMethod(EmXmlNameMethod.Op.Release);
+			list["XML_TOSTR"] = new EmXmlToStrMethod();
+			list["XML_GET"] = new EmXmlGetMethod(byName: false);
+			list["XML_GET_BYNAME"] = new EmXmlGetMethod(byName: true);
+			list["XML_SET"] = new EmXmlSetMethod();
+			list["XML_SET_BYNAME"] = new EmXmlSetMethod();
+			list["XML_ADDNODE"] = new EmXmlAddNodeMethod();
+			list["XML_ADDNODE_BYNAME"] = new EmXmlAddNodeMethod();
+			list["XML_REMOVENODE"] = new EmXmlRemoveNodeMethod();
+			list["XML_ADDATTRIBUTE"] = new EmXmlAttributeMethod(add: true);
+			list["XML_REMOVEATTRIBUTE"] = new EmXmlAttributeMethod(add: false);
+
 			// --- MATH_EXTENSION ----------------------------------------------
 			list["CBRT"] = new EmMathMethod(EmMathMethod.Kind.Cbrt);
 			list["LOG"] = new EmMathMethod(EmMathMethod.Kind.Log);
@@ -470,6 +485,135 @@ namespace MinorShift.Emuera.GameData.Function
 			return a[i].GetOperandType() == typeof(string)
 				? a[i].GetStrValue(exm) ?? ""
 				: a[i].GetIntValue(exm).ToString();
+		}
+
+		// =====================================================================
+		// XML (XML_*)
+		//
+		// 출력 배열 인수를 받는 형태(형태 2·4)는 전용 ArgumentBuilder 가
+		// 필요해 아직 없다. 문서의 형태 1·3 (doOutput 이 0 이 아니면 RESULTS 에
+		// 대입) 쪽을 구현했다.
+		// =====================================================================
+
+		/// <summary>XML_DOCUMENT xmlId, xmlContent</summary>
+		private sealed class EmXmlDocumentMethod : EmIntMethod
+		{
+			// xmlId 는 정수도 허용된다(TOSTR 되어 키가 된다).
+			public EmXmlDocumentMethod() : base(2, 2, null, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmXmlStore.Create(AnyToStr(exm, a, 0), Str(exm, a, 1));
+		}
+
+		private sealed class EmXmlNameMethod : EmIntMethod
+		{
+			internal enum Op { Exist, Release }
+			readonly Op op;
+			public EmXmlNameMethod(Op o) : base(1, 1, (Type?)null) { op = o; }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var n = AnyToStr(exm, a, 0);
+				return op == Op.Exist ? EmXmlStore.Exists(n) : EmXmlStore.Release(n);
+			}
+		}
+
+		private sealed class EmXmlToStrMethod : EmStrMethod
+		{
+			public EmXmlToStrMethod() : base(1, 1, (Type?)null) { }
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmXmlStore.ToStr(AnyToStr(exm, a, 0));
+		}
+
+		/// <summary>
+		/// XML_GET xml, xpath(, doOutput, outputType)
+		/// XML_GET_BYNAME xmlName, xpath(, doOutput, outputType)
+		///
+		/// XML_GET 은 첫 인수가 문자열이면 그 내용을 직접 파싱하고,
+		/// 정수면 TOSTR 해서 보관된 문서의 키로 쓴다(EM 규격).
+		/// XML_GET_BYNAME 은 항상 보관된 문서의 키다.
+		/// </summary>
+		private sealed class EmXmlGetMethod : EmIntMethod
+		{
+			readonly bool byName;
+			public EmXmlGetMethod(bool byName)
+				: base(2, 4, null, typeof(string), typeof(Int64), typeof(Int64))
+			{
+				this.byName = byName;
+			}
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var xpath = Str(exm, a, 1);
+				long doOutput = Int(exm, a, 2, 0);
+				long outputType = Int(exm, a, 3, 0);
+
+				List<string>? hits;
+				if (!byName && a[0].GetOperandType() == typeof(string))
+					hits = EmXmlStore.GetFromContent(Str(exm, a, 0), xpath, outputType);
+				else
+					hits = EmXmlStore.Get(AnyToStr(exm, a, 0), xpath, outputType);
+
+				if (hits == null) return -1;
+				if (doOutput != 0)
+				{
+					// RESULTS 배열에 순서대로 넣는다. 배열 크기를 넘기지 않는다.
+					var arr = exm.VEvaluator.RESULTS_ARRAY;
+					int n = Math.Min(hits.Count, arr.Length);
+					for (int i = 0; i < n; i++) arr[i] = hits[i];
+				}
+				return hits.Count;
+			}
+		}
+
+		/// <summary>XML_SET(_BYNAME) xmlName, xpath, value(, doSetAll, outputType)</summary>
+		private sealed class EmXmlSetMethod : EmIntMethod
+		{
+			public EmXmlSetMethod()
+				: base(3, 5, null, typeof(string), null, typeof(Int64), typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmXmlStore.Set(AnyToStr(exm, a, 0), Str(exm, a, 1), AnyToStr(exm, a, 2),
+					Int(exm, a, 3, 0), Int(exm, a, 4, 0));
+		}
+
+		/// <summary>XML_ADDNODE(_BYNAME) xmlName, xpath, nodeXml(, methodType, doSetAll)</summary>
+		private sealed class EmXmlAddNodeMethod : EmIntMethod
+		{
+			public EmXmlAddNodeMethod()
+				: base(3, 5, null, typeof(string), typeof(string), typeof(Int64), typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmXmlStore.AddNode(AnyToStr(exm, a, 0), Str(exm, a, 1), Str(exm, a, 2),
+					Int(exm, a, 3, 0), Int(exm, a, 4, 0));
+		}
+
+		/// <summary>XML_REMOVENODE xmlName, xpath(, doSetAll)</summary>
+		private sealed class EmXmlRemoveNodeMethod : EmIntMethod
+		{
+			public EmXmlRemoveNodeMethod()
+				: base(2, 3, null, typeof(string), typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmXmlStore.RemoveNode(AnyToStr(exm, a, 0), Str(exm, a, 1), Int(exm, a, 2, 0));
+		}
+
+		/// <summary>
+		/// XML_ADDATTRIBUTE xmlName, xpath, name, value(, doSetAll)
+		/// XML_REMOVEATTRIBUTE xmlName, xpath, name(, doSetAll)
+		/// </summary>
+		private sealed class EmXmlAttributeMethod : EmIntMethod
+		{
+			readonly bool add;
+			public EmXmlAttributeMethod(bool add)
+				: base(3, 5, null, typeof(string), typeof(string), null, typeof(Int64))
+			{
+				this.add = add;
+			}
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = AnyToStr(exm, a, 0);
+				var xpath = Str(exm, a, 1);
+				var attr = Str(exm, a, 2);
+				return add
+					? EmXmlStore.AddAttribute(name, xpath, attr, AnyToStr(exm, a, 3), Int(exm, a, 4, 0))
+					: EmXmlStore.RemoveAttribute(name, xpath, attr, Int(exm, a, 3, 0));
+			}
 		}
 
 		// =====================================================================

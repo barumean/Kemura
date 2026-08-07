@@ -402,6 +402,65 @@ internal static class SelfTest
         Check(EmDataTableStore.Exists("db") == 0, "DT_RELEASE: 사라진다");
         EmDataTableStore.ClearAll();
 
+        // --- XML (XML_*) -----------------------------------------------------
+        EmXmlStore.ClearAll();
+        const string xml = "<root><item id=\"1\"><n>alpha</n></item>"
+                         + "<item id=\"2\"><n>beta</n></item></root>";
+        Check(EmXmlStore.Exists("x") == 0, "XML_EXIST: 없으면 0");
+        Check(EmXmlStore.Create("x", xml) == 1, "XML_DOCUMENT: 1");
+        Check(EmXmlStore.Create("x", xml) == 0, "XML_DOCUMENT: 이미 있으면 0");
+        Check(EmXmlStore.Exists("x") == 1, "XML_EXIST: 있으면 1");
+        Check(EmXmlStore.Create("bad", "<unclosed>") == 0,
+            "XML_DOCUMENT: 파싱 실패는 0 (예외를 던지지 않는다)");
+
+        // outputType: 1=InnerText, 3=OuterXml, 4=Name
+        var t1 = EmXmlStore.Get("x", "/root/item/n", 1);
+        Check(t1 != null && t1.Count == 2 && t1[0] == "alpha" && t1[1] == "beta",
+            $"XML_GET: InnerText 2건 (실제 {(t1 == null ? "null" : string.Join(",", t1))})");
+        var t4 = EmXmlStore.Get("x", "/root/item", 4);
+        Check(t4 != null && t4.Count == 2 && t4[0] == "item", "XML_GET: outputType 4 = Name");
+        // 속성값은 Value 로 읽힌다(outputType 미지정)
+        var attr = EmXmlStore.Get("x", "/root/item/@id", 0);
+        Check(attr != null && attr.Count == 2 && attr[0] == "1",
+            $"XML_GET: 속성은 Value (실제 {(attr == null ? "null" : string.Join(",", attr))})");
+        Check(EmXmlStore.Get("nope", "/root", 1) == null, "XML_GET: 문서가 없으면 null");
+        Check(EmXmlStore.Get("x", "///[[bad", 1) == null,
+            "XML_GET: 잘못된 XPath 는 null (엔진을 죽이지 않는다)");
+        var noHit = EmXmlStore.Get("x", "/root/nothing", 1);
+        Check(noHit != null && noHit.Count == 0, "XML_GET: 안 맞으면 0건");
+
+        // 저장하지 않은 XML 문자열에서 바로 읽기 (XML_GET 형태 1)
+        var direct = EmXmlStore.GetFromContent(xml, "/root/item/n", 1);
+        Check(direct != null && direct.Count == 2,
+            "XML_GET: 문자열 인수면 그 내용을 직접 파싱한다");
+
+        // 편집
+        Check(EmXmlStore.Set("x", "/root/item/n", "gamma", 1, 1) == 2,
+            "XML_SET: doSetAll=1 이면 전부");
+        var afterSet = EmXmlStore.Get("x", "/root/item/n", 1);
+        Check(afterSet != null && afterSet[0] == "gamma", "XML_SET: 값이 바뀐다");
+        Check(EmXmlStore.Set("nope", "/root", "v", 1, 1) == -1, "XML_SET: 문서가 없으면 -1");
+
+        Check(EmXmlStore.AddNode("x", "/root", "<extra/>", 0, 0) == 1, "XML_ADDNODE: 1건");
+        Check(EmXmlStore.Get("x", "/root/extra", 4)?.Count == 1, "XML_ADDNODE: 실제로 붙는다");
+        Check(EmXmlStore.AddAttribute("x", "/root/extra", "k", "v", 1) == 1,
+            "XML_ADDATTRIBUTE: 1건");
+        Check(EmXmlStore.Get("x", "/root/extra/@k", 0)?[0] == "v",
+            "XML_ADDATTRIBUTE: 값이 들어간다");
+        Check(EmXmlStore.RemoveAttribute("x", "/root/extra", "k", 1) == 1,
+            "XML_REMOVEATTRIBUTE: 1건");
+        Check(EmXmlStore.Get("x", "/root/extra/@k", 0)?.Count == 0,
+            "XML_REMOVEATTRIBUTE: 사라진다");
+        Check(EmXmlStore.RemoveNode("x", "/root/item", 1) == 2,
+            "XML_REMOVENODE: doSetAll=1 이면 전부");
+        Check(EmXmlStore.Get("x", "/root/item", 4)?.Count == 0, "XML_REMOVENODE: 사라진다");
+
+        Check(EmXmlStore.ToStr("x").Contains("extra"), "XML_TOSTR: 문서 전체를 돌려준다");
+        Check(EmXmlStore.ToStr("nope") == "", "XML_TOSTR: 없으면 빈 문자열");
+        Check(EmXmlStore.Release("x") == 1, "XML_RELEASE: 항상 1");
+        Check(EmXmlStore.Exists("x") == 0, "XML_RELEASE: 사라진다");
+        EmXmlStore.ClearAll();
+
         // 명령/표현식 양쪽 등록 확인.
         // FunctionIdentifier 가 methodList 의 항목을 METHOD_Instruction 으로
         // 감싸 명령으로도 등록한다. 등록이 빠지면 「해석할 수 없는 식별자」가 된다.
@@ -419,6 +478,10 @@ internal static class SelfTest
             "DT_ROW_ADD", "DT_ROW_SET", "DT_ROW_REMOVE", "DT_ROW_LENGTH",
             "DT_CELL_GET", "DT_CELL_GETS", "DT_CELL_ISNULL", "DT_CELL_SET",
             "DT_SELECT",
+            "XML_DOCUMENT", "XML_EXIST", "XML_RELEASE", "XML_TOSTR",
+            "XML_GET", "XML_GET_BYNAME", "XML_SET", "XML_SET_BYNAME",
+            "XML_ADDNODE", "XML_ADDNODE_BYNAME", "XML_REMOVENODE",
+            "XML_ADDATTRIBUTE", "XML_REMOVEATTRIBUTE",
         })
         {
             Check(methods.ContainsKey(name), $"확장 함수 등록: {name}");
