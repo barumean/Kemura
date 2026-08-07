@@ -244,6 +244,8 @@ public partial class EmueraMain : Node
         SpriteManager.ForceClear();
         // 다른 게임으로 바꿀 때 이전 게임 폴더의 목록을 계속 보지 않도록 비운다
         PathResolver.ClearCache();
+        // EM 확장의 이름 기반 저장소도 게임 사이에 남으면 안 된다
+        EmMapStore.ClearAll();
         GC.Collect();
 
         working = false;

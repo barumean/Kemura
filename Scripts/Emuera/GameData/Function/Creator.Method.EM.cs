@@ -1,0 +1,285 @@
+using System;
+using System.Collections.Generic;
+using MinorShift.Emuera.GameData.Expression;
+
+namespace MinorShift.Emuera.GameData.Function
+{
+	/// <summary>
+	/// Emuera EM+EE 확장의 표현식 함수.
+	/// 규격: https://gitlab.com/EvilMask/emuera.em.doc
+	///
+	/// EM 은 대부분의 확장을 「명령과 표현식 함수 양쪽 지원」으로 규정한다.
+	/// 여기에 등록하면 <b>양쪽이 동시에</b> 생긴다. FunctionIdentifier 의 정적
+	/// 초기화 마지막(391~398행)에서 methodList 의 모든 항목을
+	/// METHOD_Instruction 으로 감싸 명령으로도 등록하고, 그 명령은 반환값을
+	/// RESULT / RESULTS 에 넣는다. 즉 별도의 명령 클래스가 필요 없다.
+	///
+	/// 반대로 <b>출력 인수(ref)를 받는 형태는 이 경로로 만들 수 없다.</b>
+	/// (REGEXPMATCH 의 groupCount/matches, DT_SELECT 의 output,
+	///  XML_GET 의 outputArray 등) 그것들은 전용 ArgumentBuilder 를 가진
+	/// AbstractInstruction 이 필요하므로 아직 구현하지 않았다.
+	/// </summary>
+	internal static partial class FunctionMethodCreator
+	{
+		/// <summary>Creator.cs 의 정적 초기화 마지막에서 호출된다.</summary>
+		private static void AddEmMethods(Dictionary<string, FunctionMethod> list)
+		{
+			// --- MAP ---------------------------------------------------------
+			list["MAP_CREATE"] = new EmMapCreateMethod();
+			list["MAP_EXIST"] = new EmMapExistMethod();
+			list["MAP_RELEASE"] = new EmMapReleaseMethod();
+			list["MAP_CLEAR"] = new EmMapClearMethod();
+			list["MAP_GET"] = new EmMapGetMethod();
+			list["MAP_HAS"] = new EmMapHasMethod();
+			list["MAP_SET"] = new EmMapSetMethod();
+			list["MAP_REMOVE"] = new EmMapRemoveMethod();
+			list["MAP_SIZE"] = new EmMapSizeMethod();
+
+			// --- 기타 ---------------------------------------------------------
+			list["EXISTFUNCTION"] = new EmExistFunctionMethod();
+			list["HTML_STRINGLEN"] = new EmHtmlStringLenMethod();
+
+			// --- MATH_EXTENSION ----------------------------------------------
+			list["CBRT"] = new EmMathMethod(EmMathMethod.Kind.Cbrt);
+			list["LOG"] = new EmMathMethod(EmMathMethod.Kind.Log);
+			list["LOG10"] = new EmMathMethod(EmMathMethod.Kind.Log10);
+			list["EXPONENT"] = new EmMathMethod(EmMathMethod.Kind.Exponent);
+		}
+
+		// =====================================================================
+		// 인수 검사를 재사용하기 위한 공통 기반
+		// =====================================================================
+
+		/// <summary>
+		/// 문자열 인수 n개(선택 인수 포함)를 받는 함수의 공통 검사.
+		/// 엔진의 기본 CheckArgumentType 은 개수가 정확히 맞아야 하므로
+		/// 선택 인수가 있는 EM 함수에는 쓸 수 없다.
+		/// </summary>
+		private abstract class EmMethodBase : FunctionMethod
+		{
+			protected int MinArgs;
+			protected int MaxArgs;
+			/// <summary>각 자리의 요구 타입. null 이면 아무 타입이나 허용.</summary>
+			protected Type?[]? ArgTypes;
+
+			public override string CheckArgumentType(string name, IOperandTerm[] arguments)
+			{
+				if (arguments.Length < MinArgs)
+					return $"{name} 함수는 인수가 최소 {MinArgs}개 필요합니다";
+				if (arguments.Length > MaxArgs)
+					return $"{name} 함수의 인수가 너무 많습니다";
+				for (int i = 0; i < arguments.Length; i++)
+				{
+					if (arguments[i] == null)
+					{
+						// 선택 인수 자리는 생략(null)을 허용한다
+						if (i < MinArgs)
+							return $"{name} 함수의 {i + 1}번째 인수는 생략할 수 없습니다";
+						continue;
+					}
+					var want = ArgTypes != null && i < ArgTypes.Length ? ArgTypes[i] : null;
+					if (want != null && arguments[i].GetOperandType() != want)
+						return want == typeof(string)
+							? $"{name} 함수의 {i + 1}번째 인수가 문자열이 아닙니다"
+							: $"{name} 함수의 {i + 1}번째 인수가 숫자가 아닙니다";
+				}
+				return null;
+			}
+
+			protected static string Str(ExpressionMediator exm, IOperandTerm[] a, int i)
+				=> i < a.Length && a[i] != null ? a[i].GetStrValue(exm) ?? "" : "";
+
+			protected static long Int(ExpressionMediator exm, IOperandTerm[] a, int i, long def)
+				=> i < a.Length && a[i] != null ? a[i].GetIntValue(exm) : def;
+		}
+
+		/// <summary>문자열 인수를 받고 정수를 돌려주는 EM 함수.</summary>
+		private abstract class EmIntMethod : EmMethodBase
+		{
+			protected EmIntMethod(int min, int max, params Type?[] types)
+			{
+				ReturnType = typeof(Int64);
+				// 상태를 참조하므로 상수 접기(Restructure)를 허용하지 않는다.
+				CanRestructure = false;
+				MinArgs = min;
+				MaxArgs = max;
+				ArgTypes = types;
+			}
+		}
+
+		/// <summary>문자열 인수를 받고 문자열을 돌려주는 EM 함수.</summary>
+		private abstract class EmStrMethod : EmMethodBase
+		{
+			protected EmStrMethod(int min, int max, params Type?[] types)
+			{
+				ReturnType = typeof(string);
+				CanRestructure = false;
+				MinArgs = min;
+				MaxArgs = max;
+				ArgTypes = types;
+			}
+		}
+
+		// =====================================================================
+		// MAP
+		// =====================================================================
+
+		private sealed class EmMapCreateMethod : EmIntMethod
+		{
+			public EmMapCreateMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Create(Str(exm, a, 0));
+		}
+
+		private sealed class EmMapExistMethod : EmIntMethod
+		{
+			public EmMapExistMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Exists(Str(exm, a, 0));
+		}
+
+		private sealed class EmMapReleaseMethod : EmIntMethod
+		{
+			public EmMapReleaseMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Release(Str(exm, a, 0));
+		}
+
+		private sealed class EmMapClearMethod : EmIntMethod
+		{
+			public EmMapClearMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Clear(Str(exm, a, 0));
+		}
+
+		private sealed class EmMapGetMethod : EmStrMethod
+		{
+			public EmMapGetMethod() : base(2, 2, typeof(string), typeof(string)) { }
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Get(Str(exm, a, 0), Str(exm, a, 1));
+		}
+
+		private sealed class EmMapHasMethod : EmIntMethod
+		{
+			public EmMapHasMethod() : base(2, 2, typeof(string), typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Has(Str(exm, a, 0), Str(exm, a, 1));
+		}
+
+		private sealed class EmMapSetMethod : EmIntMethod
+		{
+			// 값은 문자열/숫자 어느 쪽이든 받아 문자열로 저장한다.
+			public EmMapSetMethod() : base(3, 3, typeof(string), typeof(string), null) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				string value = a[2].GetOperandType() == typeof(string)
+					? a[2].GetStrValue(exm) ?? ""
+					: a[2].GetIntValue(exm).ToString();
+				return EmMapStore.Set(Str(exm, a, 0), Str(exm, a, 1), value);
+			}
+		}
+
+		private sealed class EmMapRemoveMethod : EmIntMethod
+		{
+			public EmMapRemoveMethod() : base(2, 2, typeof(string), typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Remove(Str(exm, a, 0), Str(exm, a, 1));
+		}
+
+		private sealed class EmMapSizeMethod : EmIntMethod
+		{
+			public EmMapSizeMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.Size(Str(exm, a, 0));
+		}
+
+		// =====================================================================
+		// EXISTFUNCTION
+		// =====================================================================
+
+		private sealed class EmExistFunctionMethod : EmIntMethod
+		{
+			public EmExistFunctionMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				if (string.IsNullOrEmpty(name)) return 0;
+				var labelDic = GlobalStatic.Process?.LabelDictionary;
+				if (labelDic == null) return 0;
+				// 일반 함수와 이벤트 함수를 모두 본다.
+				// 이벤트 함수(@EVENTCOM 등)는 같은 이름이 여러 개일 수 있어
+				// 별도 조회 경로를 쓴다.
+				if (labelDic.GetNonEventLabel(name) != null)
+					return 1;
+				var ev = labelDic.GetEventLabels(name);
+				if (ev != null)
+				{
+					foreach (var list in ev)
+						if (list != null && list.Count > 0)
+							return 1;
+				}
+				return 0;
+			}
+		}
+
+		// =====================================================================
+		// HTML_STRINGLEN
+		// =====================================================================
+
+		private sealed class EmHtmlStringLenMethod : EmIntMethod
+		{
+			// HTML_STRINGLEN html(, returnPixel)
+			public EmHtmlStringLenMethod() : base(1, 2, typeof(string), typeof(Int64)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var html = Str(exm, a, 0);
+				bool pixel = Int(exm, a, 1, 0) != 0;
+				// 태그를 걷어낸 순수 텍스트의 길이를 센다.
+				var plain = GameView.HtmlManager.Html2PlainText(html) ?? "";
+				// 전각을 2로 세는 것이 Emuera 의 표시폭 규약이다.
+				int width = uEmuera.Utils.GetByteCount(plain);
+				if (!pixel)
+					return width;
+				// 픽셀 요청 시엔 표시 폭 × 반각 1글자 폭으로 환산한다.
+				// (엔진 내부 폰트 메트릭이 Godot 쪽과 분리돼 있어 근사값이다)
+				return width * Math.Max(1, Config.FontSize / 2);
+			}
+		}
+
+		// =====================================================================
+		// MATH_EXTENSION
+		// =====================================================================
+
+		private sealed class EmMathMethod : EmIntMethod
+		{
+			internal enum Kind { Cbrt, Log, Log10, Exponent }
+			readonly Kind kind;
+
+			public EmMathMethod(Kind k) : base(1, 1, typeof(Int64))
+			{
+				kind = k;
+				// 인수가 상수면 접어도 안전하다(상태를 참조하지 않음).
+				CanRestructure = true;
+			}
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				long v = a[0].GetIntValue(exm);
+				double d = kind switch
+				{
+					Kind.Cbrt => Math.Cbrt(v),
+					Kind.Log => v <= 0 ? 0 : Math.Log(v),
+					Kind.Log10 => v <= 0 ? 0 : Math.Log10(v),
+					Kind.Exponent => Math.Exp(v),
+					_ => 0,
+				};
+				if (double.IsNaN(d) || double.IsInfinity(d))
+					return 0;
+				// EM 의 반환형이 int 이므로 잘라낸다.
+				if (d >= long.MaxValue) return long.MaxValue;
+				if (d <= long.MinValue) return long.MinValue;
+				return (long)d;
+			}
+		}
+	}
+}

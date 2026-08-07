@@ -211,6 +211,9 @@ namespace MinorShift.Emuera.GameData.Function
             };
 
 
+            // Emuera EM+EE 확장 함수 등록 (Creator.Method.EM.cs)
+            AddEmMethods(methodList);
+
             //1823 自分の関数名を知っていた方が何かと便利なので覚えさせることにした
             foreach (var pair in methodList)
 				pair.Value.SetMethodName(pair.Key);

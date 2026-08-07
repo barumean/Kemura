@@ -1265,6 +1265,9 @@ namespace MinorShift.Emuera.GameData.Variable
 			foreach (CharacterData chara in varData.CharacterList)
 				chara.Dispose();
 			varData.CharacterList.Clear();
+			// EM 규격: MAP / XML / DataTable 은 RESETDATA 와 타이틀 복귀에서
+			// 자동으로 삭제된다.
+			EmMapStore.ClearAll();
 		}
 
 		public void ResetGlobalData()

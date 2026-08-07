@@ -58,6 +58,7 @@ internal static class SelfTest
             RunChecks(root);
             RunGameBaseChecks(root);
             RunArraySizeChecks();
+            RunEmExtensionChecks();
         }
         catch (Exception e)
         {
@@ -251,6 +252,85 @@ internal static class SelfTest
         Check(Chara(VariableCode.RELATION) == 100, $"RELATION 0-99 (실제 {Chara(VariableCode.RELATION)})");
         Check(VarStr(VariableCode.STR) == 20000, $"STR 0-19999 (실제 {VarStr(VariableCode.STR)})");
         Check(VarStr(VariableCode.SAVESTR) == 100, $"SAVESTR 0-99 (실제 {VarStr(VariableCode.SAVESTR)})");
+    }
+
+    // ----------------------------------------------------------------------
+    // Emuera EM+EE 확장
+    //
+    // 규격: https://gitlab.com/EvilMask/emuera.em.doc
+    // 반환값 규약이 문서에 명시돼 있어(맵 없으면 -1, MAP_GET 은 빈 문자열 등)
+    // 그대로 검증한다. 여기가 틀리면 게임 쪽 분기가 조용히 어긋난다.
+    // ----------------------------------------------------------------------
+    static void RunEmExtensionChecks()
+    {
+        EmMapStore.ClearAll();
+
+        // 생성 / 존재 / 중복
+        Check(EmMapStore.Exists("m") == 0, "MAP_EXIST: 없는 맵은 0");
+        Check(EmMapStore.Create("m") == 1, "MAP_CREATE: 새 맵은 1");
+        Check(EmMapStore.Create("m") == 0, "MAP_CREATE: 이미 있으면 0");
+        Check(EmMapStore.Exists("m") == 1, "MAP_EXIST: 있으면 1");
+
+        // 맵이 없을 때의 반환값 (-1 규약)
+        Check(EmMapStore.Size("nope") == -1, "MAP_SIZE: 맵이 없으면 -1");
+        Check(EmMapStore.Has("nope", "k") == -1, "MAP_HAS: 맵이 없으면 -1");
+        Check(EmMapStore.Set("nope", "k", "v") == -1, "MAP_SET: 맵이 없으면 -1");
+        Check(EmMapStore.Remove("nope", "k") == -1, "MAP_REMOVE: 맵이 없으면 -1");
+        Check(EmMapStore.Clear("nope") == -1, "MAP_CLEAR: 맵이 없으면 -1");
+        Check(EmMapStore.Get("nope", "k") == "",
+            "MAP_GET: 맵이 없으면 빈 문자열(예외를 던지지 않는다)");
+
+        // 정상 동작
+        Check(EmMapStore.Size("m") == 0, "MAP_SIZE: 빈 맵은 0");
+        Check(EmMapStore.Set("m", "Id", "user") == 1, "MAP_SET: 추가하면 1");
+        Check(EmMapStore.Set("m", "Pw", "1234") == 1, "MAP_SET: 두 번째 추가");
+        Check(EmMapStore.Size("m") == 2, $"MAP_SIZE: 2 (실제 {EmMapStore.Size("m")})");
+        Check(EmMapStore.Get("m", "Id") == "user", "MAP_GET: 값을 읽는다");
+        Check(EmMapStore.Has("m", "Id") == 1, "MAP_HAS: 있으면 1");
+        Check(EmMapStore.Has("m", "None") == 0, "MAP_HAS: 없는 키는 0");
+        Check(EmMapStore.Get("m", "None") == "", "MAP_GET: 없는 키는 빈 문자열");
+
+        // 덮어쓰기도 1
+        Check(EmMapStore.Set("m", "Id", "other") == 1, "MAP_SET: 덮어써도 1");
+        Check(EmMapStore.Get("m", "Id") == "other", "MAP_SET: 값이 바뀐다");
+        Check(EmMapStore.Size("m") == 2, "MAP_SET: 덮어쓰기는 개수를 늘리지 않는다");
+
+        // 키는 대소문자를 구분한다
+        Check(EmMapStore.Has("m", "id") == 0, "MAP: 키는 대소문자를 구분한다");
+
+        // 삭제 / 비우기 / 해제
+        Check(EmMapStore.Remove("m", "Pw") == 1, "MAP_REMOVE: 1");
+        Check(EmMapStore.Size("m") == 1, "MAP_REMOVE: 개수가 줄어든다");
+        Check(EmMapStore.Clear("m") == 1, "MAP_CLEAR: 1");
+        Check(EmMapStore.Size("m") == 0, "MAP_CLEAR: 비워진다");
+        Check(EmMapStore.Release("m") == 1, "MAP_RELEASE: 항상 1");
+        Check(EmMapStore.Exists("m") == 0, "MAP_RELEASE: 사라진다");
+
+        // 키 목록
+        EmMapStore.Create("k");
+        EmMapStore.Set("k", "a", "1");
+        EmMapStore.Set("k", "b", "2");
+        var keys = EmMapStore.Keys("k");
+        Check(keys != null && keys.Count == 2, "MAP_GETKEYS: 키 2개");
+        Check(EmMapStore.Keys("nope") == null, "MAP_GETKEYS: 맵이 없으면 null");
+        EmMapStore.ClearAll();
+        Check(EmMapStore.Exists("k") == 0, "ClearAll: RESETDATA 에서 전부 지워진다");
+
+        // 명령/표현식 양쪽 등록 확인.
+        // FunctionIdentifier 가 methodList 의 항목을 METHOD_Instruction 으로
+        // 감싸 명령으로도 등록한다. 등록이 빠지면 「해석할 수 없는 식별자」가 된다.
+        var methods = MinorShift.Emuera.GameData.Function
+            .FunctionMethodCreator.GetMethodList();
+        foreach (var name in new[]
+        {
+            "MAP_CREATE", "MAP_EXIST", "MAP_RELEASE", "MAP_CLEAR",
+            "MAP_GET", "MAP_HAS", "MAP_SET", "MAP_REMOVE", "MAP_SIZE",
+            "EXISTFUNCTION", "HTML_STRINGLEN",
+            "CBRT", "LOG", "LOG10", "EXPONENT",
+        })
+        {
+            Check(methods.ContainsKey(name), $"확장 함수 등록: {name}");
+        }
     }
 
     static bool Contains(IEnumerable<string> paths, string filename)
