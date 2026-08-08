@@ -59,6 +59,9 @@ internal static class SelfTest
             RunGameBaseChecks(root);
             RunArraySizeChecks();
             RunEmExtensionChecks();
+            // ERB 를 실제로 실행해 언어 의미를 검증한다.
+            // 엔진 전체를 구동하므로 다른 검사 뒤에 둔다.
+            failures += SelfTestErb.Run((ok, what) => Check(ok, what));
         }
         catch (Exception e)
         {

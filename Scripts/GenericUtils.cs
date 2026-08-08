@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,8 +38,20 @@ public static class GenericUtils
     internal static void ShowFatal(string message)
         => _content?.ShowFatal(message);
 
+    /// <summary>
+    /// 자기 검증에서 ERB 실행 결과를 가로채기 위한 훅.
+    ///
+    /// 화면(EmueraContent) 없이 엔진을 돌려 출력을 검증하려면 어딘가에서
+    /// 받아야 한다. null 이면 아무 비용도 없다.
+    /// </summary>
+    internal static List<string>? TextCapture;
+
     internal static void AddText(ConsoleDisplayLine line, bool old)
-        => _content?.AddLine(line, old);
+    {
+        if (TextCapture != null && line != null)
+            TextCapture.Add(line.ToString() ?? "");
+        _content?.AddLine(line, old);
+    }
 
     public static void ClearText()
         => _content?.Clear();
