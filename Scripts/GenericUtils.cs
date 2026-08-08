@@ -48,8 +48,12 @@ public static class GenericUtils
 
     internal static void AddText(ConsoleDisplayLine line, bool old)
     {
-        if (TextCapture != null && line != null)
-            TextCapture.Add(line.ToString() ?? "");
+        // null 을 앞에서 한 번에 걸러낸다. 중간에 null 검사를 두면 컴파일러가
+        // 이후의 line 을 maybe-null 로 보고 CS8604 를 낸다.
+        // (EmueraContent.AddLine 도 null 이면 바로 돌아가므로 동작은 같다)
+        if (line == null)
+            return;
+        TextCapture?.Add(line.ToString() ?? "");
         _content?.AddLine(line, old);
     }
 
