@@ -55,7 +55,7 @@ EM 은 자체 의미를 **.NET BCL 타입으로 직접 규정**합니다. net9.0
 |---|---|
 | `MAP_CREATE` `MAP_EXIST` `MAP_RELEASE` `MAP_CLEAR` | 반환값 규약까지 문서에 명시 |
 | `MAP_GET` `MAP_HAS` `MAP_SET` `MAP_REMOVE` `MAP_SIZE` | 맵 없으면 `-1`, `GET` 은 빈 문자열 |
-| `MAP_GETKEYS` `MAP_TOXML` `MAP_FROMXML` | |
+| `MAP_GETKEYS` `MAP_TOXML` `MAP_FROMXML` | `MAP_GETKEYS` 는 **아직 함수로 등록되지 않았습니다.** `EmMapStore.Keys()` 는 있지만, 이 명령은 키 목록을 배열 변수에 써넣는 형태라 `ref` 출력 인수 경로(3계층)가 필요합니다. 인수 형태를 추측해 등록하면 실제 EmueraEM 과 다르게 동작하는 함수가 생기므로, 규격을 확인할 때까지 등록하지 않습니다 |
 | `REGEXPMATCH` | |
 | `EXISTFUNCTION` | `LabelDictionary` 조회 |
 | `HTML_STRINGLEN` | `HTML_PRINT` 은 이미 구현되어 있음 |

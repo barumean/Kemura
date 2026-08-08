@@ -63,15 +63,16 @@ internal static class SelfTest
             // ERB 를 실제로 실행해 언어 의미를 검증한다.
             // 엔진 전체를 구동하므로 다른 검사 뒤에 둔다.
             //
-            // 이 하네스는 아직 안정화 중이라 실패를 전체 종료 코드에 반영하지
-            // 않는다. 결과는 [ErbTest] 로 남겨 CI 로그에서 볼 수 있고,
-            // 안정화되면 failures 에 합산한다. 검증되지 않은 하네스가
-            // main 을 막는 것은 이득보다 손해가 크다.
+            // 한동안은 하네스 자체를 신뢰할 수 없어 실패를 종료 코드에 반영하지
+            // 않았다(실제로 하네스 쪽 계수 버그로 엔진이 정상인데 FAIL 이 나온
+            // 적이 있다). 15건 전부 통과하는 것을 CI 에서 확인했으므로 이제
+            // 합산한다. 여기서 막지 않으면 언어 의미가 깨지는 회귀를 놓친다.
             int erbFailed = SelfTestErb.Run((ok, what) =>
                 GD.Print($"[ErbTest] {(ok ? "PASS" : "FAIL")}  {what}"));
             GD.Print(erbFailed == 0
                 ? "[ErbTest] ALL PASS"
-                : $"[ErbTest] {erbFailed} FAILED (아직 종료 코드에 반영하지 않음)");
+                : $"[ErbTest] {erbFailed} FAILED");
+            failures += erbFailed;
         }
         catch (Exception e)
         {
