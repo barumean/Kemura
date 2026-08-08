@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 
 /// <summary>
-/// ゲーム選択画面。main.tscnの Main/FirstWindow に付く。
+/// 게임 선택 화면. main.tscn 의 Main/FirstWindow 에 붙는다.
 /// </summary>
 public partial class FirstWindow : Control
 {
@@ -67,6 +67,13 @@ public partial class FirstWindow : Control
         // 바로 받을 수 있으므로 화면을 보여주기 전에 요청하는 편이 낫다.
         RequestStoragePermissionOnce();
 
+        // 제목에 버전을 박아둔다. 버그 보고에 "어느 버전인지"가 빠지면
+        // 재현할 수 없다. 값은 project.godot 이 원본이다.
+        var title = GetNodeOrNull<Label>("VBoxContainer/TitleLabel");
+        if (title != null)
+            title.Text = $"KEMURA  v{AppInfo.Version}";
+        GD.Print($"[FirstWindow] {AppInfo.NameWithVersion} ({AppInfo.PackageName})");
+
         eraBaseDir = Settings.EffectiveGameRoot;
         ApplyFontSize();
         Rescan();
@@ -100,8 +107,8 @@ public partial class FirstWindow : Control
     }
 
     /// <summary>
-    /// 設定画面から戻ってきたときに再スキャンする。
-    /// 以前は権限付与後に再スキャンする経路がなく、アプリ再起動が必要だった。
+    /// 설정 화면에서 돌아왔을 때 다시 스캔한다.
+    /// 예전에는 권한을 준 뒤 재스캔할 경로가 없어 앱을 재시작해야 했다.
     /// </summary>
     public override void _Notification(int what)
     {
@@ -572,8 +579,8 @@ public partial class FirstWindow : Control
         }
     }
 
-    /// <summary>export_presets.cfg 의 package/unique_name 과 같아야 한다.</summary>
-    const string PackageName = "com.kemura.emuera";
+    /// <summary>패키지명은 Settings 에 한 곳만 둔다.</summary>
+    static string PackageName => Settings.PackageName;
 #endif
 
     // ------------------------------------------------------------------

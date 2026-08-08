@@ -1,13 +1,13 @@
 <Project Sdk="Godot.NET.Sdk/4.7.0">
   <PropertyGroup>
     <!--
-      Godot 4.7 の .NET エディションは net9.0 を前提にビルド・エクスポートする。
-      エディタが期待するTFMと一致させること。
+      Godot 4.7 의 .NET 에디션은 net9.0 을 전제로 빌드/내보내기한다.
+      에디터가 기대하는 TFM 과 일치시켜야 한다.
 
-      以前ここには「GodotSharpが lib/net8.0 しか提供しないので net8.0」と
-      書いてあったが、これは誤り。net9.0 のプロジェクトは net8.0 の
-      ライブラリをそのまま参照できるので、lib/net8.0 の存在は
-      プロジェクト側のTFMを net8.0 に縛る理由にならない。
+      예전에 여기에는 "GodotSharp 가 lib/net8.0 만 제공하므로 net8.0" 이라고
+      적혀 있었지만 이는 틀렸다. net9.0 프로젝트는 net8.0 라이브러리를 그대로
+      참조할 수 있으므로, lib/net8.0 의 존재는 프로젝트 쪽 TFM 을 net8.0 으로
+      묶을 근거가 되지 않는다.
     -->
     <TargetFramework>net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
@@ -31,10 +31,10 @@
   </PropertyGroup>
 
   <!--
-    SQLiteの依存は削除した。
-    Microsoft.Data.Sqlite / SQLitePCLRaw を参照していたが、リポジトリ全体で
-    SQLiteを使うコードは1行も無く、参照していた addons/sqlite/... というパスも
-    存在しなかった。APKを無駄に太らせ、16KB整列されていないネイティブ.soを
-    持ち込むリスクだけがあった。
+    SQLite 의존은 삭제했다.
+    Microsoft.Data.Sqlite / SQLitePCLRaw 를 참조하고 있었지만, 저장소 전체에
+    SQLite 를 쓰는 코드는 한 줄도 없었고 참조하던 addons/sqlite/... 경로도
+    존재하지 않았다. APK 만 불필요하게 키우고, 16KB 정렬되지 않은 네이티브
+    .so 를 끌어들이는 위험만 있었다.
   -->
 </Project>

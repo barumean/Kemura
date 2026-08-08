@@ -11,8 +11,10 @@ config_version=5
 [application]
 
 config/name="Kemura"
-config/description="Emuera era-script game emulator for Android"
-config/version="0.3.0"
+config/description="Emuera(era) 스크립트 게임을 안드로이드에서 실행하는 에뮬레이터"
+; 배포 버전. 이 값이 원본이고, export_presets.cfg 의 version/name 은
+; 여기에 맞춘다(CI 가 검사한다). 규칙은 docs/RELEASE.md.
+config/version="0.9.0"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"

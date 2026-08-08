@@ -4,6 +4,15 @@
 
 uEmuera(Unity 포트)를 Godot 4.7 + .NET 9로 이식한 프로젝트입니다.
 
+| | |
+|---|---|
+| 버전 | **0.9.0** (versionCode 900) |
+| 패키지명 | `com.kemura.emuera` |
+| 최소 / 대상 SDK | Android 7.0 (24) / Android 15 (35) |
+| ABI | arm64-v8a |
+
+버전을 올리는 방법과 `1.0.0` 이 아닌 이유는 [docs/RELEASE.md](docs/RELEASE.md).
+
 ---
 
 ## 현재 상태

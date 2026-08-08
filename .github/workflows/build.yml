@@ -8,6 +8,54 @@ on:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # 버전 문자열 일치 검사.
+  #
+  # 버전은 project.godot 이 원본이고, export_presets.cfg 의 version/name 은
+  # Godot 내보내기 설정이 별도 파일이라 어쩔 수 없이 중복된다. 한쪽만 올리면
+  # 화면에 표시되는 버전과 스토어 버전이 어긋나고, versionCode 를 안 올리면
+  # 업로드 자체가 거부된다. 규칙은 docs/RELEASE.md.
+  # ---------------------------------------------------------------------------
+  version-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version consistency
+        run: |
+          set -euo pipefail
+          pv=$(sed -n 's/^config\/version="\(.*\)"$/\1/p' project.godot)
+          en=$(sed -n 's/^version\/name="\(.*\)"$/\1/p' export_presets.cfg)
+          ec=$(sed -n 's/^version\/code=\([0-9]*\)$/\1/p' export_presets.cfg)
+
+          for v in "$pv" "$en" "$ec"; do
+            if [ -z "$v" ]; then
+              echo "::error::버전 필드를 읽지 못했습니다 (project=$pv name=$en code=$ec)"
+              exit 1
+            fi
+          done
+
+          if [ "$pv" != "$en" ]; then
+            echo "::error::버전이 어긋납니다: project.godot=$pv, export_presets.cfg=$en"
+            exit 1
+          fi
+
+          if ! echo "$pv" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::버전 형식은 MAJOR.MINOR.PATCH 입니다: $pv"
+            exit 1
+          fi
+
+          # versionCode = MAJOR*10000 + MINOR*100 + PATCH
+          IFS=. read -r ma mi pa <<< "$pv"
+          want=$(( ma * 10000 + mi * 100 + pa ))
+          if [ "$ec" != "$want" ]; then
+            echo "::error::version/code 가 규칙과 다릅니다: $ec (기대값 $want, docs/RELEASE.md)"
+            exit 1
+          fi
+
+          echo "버전 $pv / versionCode $ec — 일치"
+          echo "### 버전 \`$pv\` (versionCode \`$ec\`)" >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
   # C# 컴파일. Godot.NET.Sdk 와 GodotSharp 는 NuGet에서 받으므로
   # Godot 본체 없이 빌드할 수 있다.
   #

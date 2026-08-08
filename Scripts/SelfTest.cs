@@ -59,6 +59,7 @@ internal static class SelfTest
             RunGameBaseChecks(root);
             RunArraySizeChecks();
             RunEmExtensionChecks();
+            RunAppInfoChecks();
             // ERB 를 실제로 실행해 언어 의미를 검증한다.
             // 엔진 전체를 구동하므로 다른 검사 뒤에 둔다.
             //
@@ -87,6 +88,29 @@ internal static class SelfTest
             ? "[SelfTest] ALL PASS"
             : $"[SelfTest] {failures} FAILED");
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// 앱 이름·버전이 런타임에 실제로 읽히는지 확인한다.
+    ///
+    /// 버전은 project.godot 이 원본이고 화면·로그 표기는 AppInfo 가 거기서
+    /// 읽는다. 설정 키 이름을 틀리면 조용히 fallback("0.0.0")이 표시되므로,
+    /// 값이 비어 있지 않은지가 아니라 fallback 이 아닌지를 본다.
+    /// export_presets.cfg 와의 일치는 CI 의 version-consistency 잡이 본다.
+    /// </summary>
+    static void RunAppInfoChecks()
+    {
+        Check(AppInfo.Name == "Kemura", $"AppInfo.Name (실제 '{AppInfo.Name}')");
+        Check(AppInfo.Version != "0.0.0",
+            $"AppInfo.Version 이 project.godot 에서 읽힌다 (실제 '{AppInfo.Version}')");
+        Check(System.Text.RegularExpressions.Regex.IsMatch(AppInfo.Version, @"^\d+\.\d+\.\d+$"),
+            $"AppInfo.Version 이 MAJOR.MINOR.PATCH 형식이다 (실제 '{AppInfo.Version}')");
+        Check(AppInfo.PackageName == "com.kemura.emuera",
+            $"AppInfo.PackageName (실제 '{AppInfo.PackageName}')");
+        Check(Settings.AppExternalGameRoot.Contains(Settings.PackageName),
+            "앱 전용 폴더 경로가 PackageName 을 쓴다");
+        Check(AppInfo.NameWithVersion == $"Kemura v{AppInfo.Version}",
+            $"AppInfo.NameWithVersion (실제 '{AppInfo.NameWithVersion}')");
     }
 
     /// <summary>

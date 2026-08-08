@@ -338,7 +338,7 @@ text = "A+"
 [node name="Sample" type="Label" parent="EmueraContent/FontLayer/Center/Panel/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(320, 0)
-text = "미리보기 テキスト 0123"
+text = "미리보기 가나다 ABC 0123"
 autowrap_mode = 3
 
 [node name="FontCloseButton" type="Button" parent="EmueraContent/FontLayer/Center/Panel/VBox"]

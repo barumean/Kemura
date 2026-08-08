@@ -96,7 +96,20 @@ internal static class Settings
     /// 권한 없이 바로 동작한다.
     /// </summary>
     public static string AppExternalGameRoot =>
-        "/storage/emulated/0/Android/data/com.kemura.emuera/files/emuera/";
+        $"/storage/emulated/0/Android/data/{PackageName}/files/emuera/";
+
+    /// <summary>
+    /// 앱 패키지명(applicationId).
+    /// <c>export_presets.cfg</c> 의 <c>package/unique_name</c> 과 반드시 같아야 한다.
+    ///
+    /// 예전에는 이 문자열이 Settings 와 FirstWindow 두 곳에 각각 하드코딩돼
+    /// 있었다. 한쪽만 고치면 앱 전용 폴더 경로와 권한 설정 Intent 가 서로
+    /// 다른 패키지를 가리켜 조용히 어긋난다.
+    ///
+    /// 바꾸면 기존 설치본의 앱 전용 폴더(게임 데이터)에 접근할 수 없게 되므로
+    /// 출시 후에는 바꾸지 않는다.
+    /// </summary>
+    public const string PackageName = "com.kemura.emuera";
 
     /// <summary>설정이 비어 있을 때 사용할 플랫폼별 기본 경로.</summary>
     public static string DefaultGameRoot
