@@ -188,7 +188,7 @@ internal static class SelfTestErb
 	SIF ARG >= 10
 		RETURN
 	CALL T_ARG_RECURSE, ARG + 1
-	PRINTFORM ARGREC{ARG},
+	PRINTFORML ARGREC{ARG}
 
 ; --- TIMES: 소수 곱셈 ---
 @T_TIMES
@@ -294,13 +294,18 @@ internal static class SelfTestErb
         Expect("LOCALSCOPE", "123");      // 함수마다 별개
         Expect("TIMES", "1500");
 
-        // ARG 비초기화: ARGREC 이 10만 10번 나와야 한다
+        // ARG 비초기화: ARGREC 이 10만 10번 나와야 한다.
+        //
+        // 처음에는 PRINTFORM 으로 한 줄에 몰아넣고 ',' 로 쪼개 셌는데,
+        // 표시 행에는 폭 제한이 있어 10번째 항목이 "ARG" 로 잘렸다.
+        // 그래서 엔진이 9번만 재귀한 것처럼 보였다(엔진은 정상이었다).
+        // 이제 PRINTFORML 로 한 항목당 한 줄씩 찍고 줄 단위로 센다.
         int tens = 0, others = 0;
-        foreach (var part in all.Split(','))
+        foreach (var line in output)
         {
-            var t = part.Trim();
-            if (!t.Contains("ARGREC")) continue;
-            var v = t.Substring(t.IndexOf("ARGREC", StringComparison.Ordinal) + 6);
+            int i = line.IndexOf("ARGREC", StringComparison.Ordinal);
+            if (i < 0) continue;
+            var v = line.Substring(i + 6).Trim();
             if (v == "10") ++tens; else ++others;
         }
         bool argOk = tens == 10 && others == 0;
