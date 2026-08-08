@@ -307,6 +307,16 @@ internal static class SelfTestErb
         if (!argOk) ++failed;
         check(argOk,
             $"ERB ARG 는 호출 시 초기화되지 않는다: 기대 '10'x10, 실제 10이 {tens}회 / 그 외 {others}회");
+        if (!argOk)
+        {
+            // 하네스의 계수 문제인지 엔진의 재귀 깊이 문제인지 가르려면
+            // 실제로 찍힌 원문이 필요하다. 캡처된 줄을 그대로 남긴다.
+            foreach (var line in output)
+            {
+                if (line.Contains("ARGREC"))
+                    GD.Print("[ErbTest] ARGREC 원문: " + line);
+            }
+        }
 
         return failed;
     }
