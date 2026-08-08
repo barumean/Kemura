@@ -221,9 +221,28 @@ internal static class SelfTestErb
         GenericUtils.TextCapture = captured;
         try
         {
-            // Program.Main 은 win.Init() 을 부르고 바로 돌아온다(블록하지 않는다).
-            // @SYSTEM_TITLE 이 QUIT 로 끝나므로 그 안에서 전부 실행된다.
+            // Program.Main -> win.Init() -> EmueraConsole.Initialize() 가
+            // CSV/ERB 로드와 @SYSTEM_TITLE 실행까지 동기로 끝낸다.
             Program.Main(Array.Empty<string>());
+
+            // 하지만 화면으로 나가는 출력은 MainWindow.Update() 안에서만
+            // GenericUtils.AddText 로 흘러나온다(Window.cs). 평소에는 Godot
+            // 메인 루프가 매 프레임 부르지만, 여기서는 루프가 없으므로 직접
+            // 펌프해야 한다. 이걸 안 해서 첫 시도의 출력이 완전히 비었다.
+            var win = GlobalStatic.MainWindow;
+            if (win == null)
+            {
+                uEmuera.Logger.Warn("SelfTestErb: MainWindow 가 만들어지지 않았습니다");
+                return captured;
+            }
+            // 더 나올 것이 없을 때까지 돌린다. 무한루프를 막기 위해 상한을 둔다.
+            int idle = 0;
+            for (int i = 0; i < 2000 && idle < 20; i++)
+            {
+                int before = captured.Count;
+                win.Update();
+                idle = captured.Count == before ? idle + 1 : 0;
+            }
         }
         finally
         {
