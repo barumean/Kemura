@@ -115,7 +115,9 @@ jobs:
         run: |
           set -o pipefail
           godot --headless -- --kemura-selftest 2>&1 | tee selftest.log || true
-          grep '\[SelfTest\]' selftest.log || true
+          # ErbTest 줄도 보여준다. 예전에는 SelfTest 만 걸러서 ERB 실행
+          # 테스트 결과가 잡 로그에 전혀 나타나지 않았다.
+          grep -E '\[SelfTest\]|\[ErbTest\]' selftest.log || true
           if ! grep -q '\[SelfTest\] ALL PASS' selftest.log; then
             echo "::error::대소문자 경로 해석 자기 검증 실패"
             exit 1
