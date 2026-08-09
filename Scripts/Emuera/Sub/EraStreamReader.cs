@@ -43,7 +43,10 @@ namespace MinorShift.Emuera.Sub
 			try
 			{
 				stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-				reader = new StreamReader(stream, Config.Encode);
+				// era 게임의 ERB/CSV 는 대부분 SHIFT-JIS 다. Config.Encode 는
+				// UTF-8 로 하드코딩돼 있어서 그대로 쓰면 일본어 식별자가 전부
+				// U+FFFD 로 깨진다. 파일마다 판정한다(Scripts/EraEncoding.cs).
+				reader = new StreamReader(stream, EraEncoding.Detect(stream));
 			}
 			catch
 			{

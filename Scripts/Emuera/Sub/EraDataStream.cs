@@ -38,7 +38,10 @@ namespace MinorShift.Emuera.Sub
 		{
 			this.file = file;
 			file.Seek(0, SeekOrigin.Begin);
-			reader = new StreamReader(file, Config.Encode);
+			// PC판 Emuera 가 만든 세이브는 SHIFT-JIS 다. 쓰기는 Config.SaveEncode
+			// (UTF-8)를 그대로 두므로, 이 앱이 만든 세이브와 PC판 세이브를 모두
+			// 읽을 수 있어야 한다. 그래서 읽기만 판정한다.
+			reader = new StreamReader(file, EraEncoding.Detect(file));
 		}
 		FileStream file;
 		StreamReader reader;

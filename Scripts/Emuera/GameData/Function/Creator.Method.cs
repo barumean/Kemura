@@ -4210,9 +4210,11 @@ namespace MinorShift.Emuera.GameData.Function
 				string filepath = forceSavdir ?
 					GetSaveDataPathText(fileIndex, Config.ForceSavDir) :
 					GetSaveDataPathText(fileIndex, Config.SavDir);
+				// forceUTF8 인수가 없으면 파일을 보고 판정한다. PC판이 만든
+				// SHIFT-JIS 텍스트도 읽어야 하기 때문이다.
 				Encoding encoding = forceUTF8 ?
 					Encoding.GetEncoding("UTF-8") :
-					Config.SaveEncode;
+					EraEncoding.Detect(filepath);
 				if (!System.IO.File.Exists(filepath))
 					return "";
                 string ret;

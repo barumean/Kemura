@@ -17,8 +17,19 @@ namespace MinorShift.Emuera
 
         #region config
 
-        //public static Encoding Encode = Encoding.GetEncoding(932);      //"SHIFT-JIS"
-        //public static Encoding SaveEncode = Encoding.GetEncoding(932);  //"SHIFT-JIS"
+        // 원본 Emuera 는 이 둘이 SHIFT-JIS(932) 였다. uEmuera 가 UTF-8 로
+        // 하드코딩했고, 그 결과 SHIFT-JIS 로 작성된 게임의 ERB/CSV 를 UTF-8 로
+        // 디코드해 모든 일본어 식별자가 U+FFFD 로 깨졌다.
+        //
+        // 지금은 읽기가 이 값을 쓰지 않는다. EraEncoding 이 파일마다
+        // 판정한다(Scripts/EraEncoding.cs). 아래 두 값은 쓰기 전용으로
+        // 남아 있다.
+        //
+        // 쓰기를 932 로 되돌리지 말 것:
+        //  - 기존에 이 앱이 UTF-8 로 만든 세이브를 읽을 수 없게 된다
+        //    (읽기는 판정하므로 실제로는 둘 다 읽히지만, 되돌릴 이유가 없다)
+        //  - 932 는 한글을 표현할 수 없다. 사용자가 입력한 이름 등이 '?' 로
+        //    소실된다.
         public static Encoding Encode = Encoding.UTF8;
         public static Encoding SaveEncode = Encoding.UTF8;
 

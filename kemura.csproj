@@ -30,6 +30,21 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!--
+      SHIFT-JIS(코드페이지 932) 를 쓰기 위해 필요하다.
+      .NET Core 계열에는 코드페이지 인코딩이 기본 포함되지 않아서, 이 참조와
+      Encoding.RegisterProvider(CodePagesEncodingProvider.Instance) 없이
+      Encoding.GetEncoding(932) 을 부르면 예외가 난다(Scripts/EraEncoding.cs).
+
+      era 게임의 ERB/CSV 는 대부분 SHIFT-JIS 다. 이게 없으면 일본어 식별자가
+      전부 U+FFFD 로 깨져 "해석할 수 없는 식별자입니다" 가 수천 건 쏟아진다.
+    -->
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.0" />
+    <!-- Android 내보내기의 트리밍이 코드페이지 테이블을 지우지 않게 한다. -->
+    <TrimmerRootAssembly Include="System.Text.Encoding.CodePages" />
+  </ItemGroup>
+
   <!--
     SQLite 의존은 삭제했다.
     Microsoft.Data.Sqlite / SQLitePCLRaw 를 참조하고 있었지만, 저장소 전체에

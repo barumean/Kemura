@@ -99,7 +99,7 @@ namespace MinorShift.Emuera.Content
 					string directory = Path.GetDirectoryName(filepath) + "/";
 					string filename = Path.GetFileName(filepath);
                     //string[] lines = File.ReadAllLines(filepath, Config.Encode);
-                    string[] lines = uEmuera.Utils.GetResourceCSVLines(filepath, Config.Encode);
+                    string[] lines = uEmuera.Utils.GetResourceCSVLines(filepath, EraEncoding.Detect(filepath));
 					int lineNo = 0;
                     var linecount = lines.Length;
                     for (var l=0; l<linecount; ++l)

@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using MinorShift.Emuera;
 using MinorShift.Emuera.GameData;
 using MinorShift.Emuera.GameData.Variable;
@@ -59,6 +60,7 @@ internal static class SelfTest
             RunGameBaseChecks(root);
             RunArraySizeChecks();
             RunEmExtensionChecks();
+            RunEncodingChecks(root);
             RunAppInfoChecks();
             // ERB 를 실제로 실행해 언어 의미를 검증한다.
             // 엔진 전체를 구동하므로 다른 검사 뒤에 둔다.
@@ -89,6 +91,102 @@ internal static class SelfTest
             ? "[SelfTest] ALL PASS"
             : $"[SelfTest] {failures} FAILED");
         return failures == 0 ? 0 : 1;
+    }
+
+    // ----------------------------------------------------------------------
+    // 문자 인코딩
+    //
+    // era 게임의 ERB/CSV 는 대부분 SHIFT-JIS 다. uEmuera 가 Config.Encode 를
+    // UTF-8 로 하드코딩해서, SHIFT-JIS 게임의 일본어 식별자가 전부 U+FFFD 로
+    // 깨졌다("해석할 수 없는 식별자입니다" 수천 건).
+    //
+    // 이 검사가 없어서 놓쳤다. 기존 검사는 전부 파일을 UTF-8 로 쓰고 UTF-8 로
+    // 읽었으니 통과할 수밖에 없었다. 실제 SHIFT-JIS 바이트를 파일로 써서
+    // 엔진 경로로 읽어야 한다.
+    // ----------------------------------------------------------------------
+    static void RunEncodingChecks(string root)
+    {
+        Check(EraEncoding.ShiftJisAvailable,
+            "SHIFT-JIS(932) 를 사용할 수 있다 (CodePages 공급자 등록)");
+
+        var sjis = EraEncoding.ShiftJis;
+        Check(sjis.CodePage == 932,
+            $"EraEncoding.ShiftJis 가 932 다 (실제 {sjis.CodePage})");
+
+        // --- 판정 단위 검사 --------------------------------------------------
+        // "東方" 를 각 인코딩으로 바이트화해 판정이 맞는지 본다.
+        const string jp = "東方紅魔郷";
+        var sjisBytes = sjis.GetBytes(jp);
+        var utf8Bytes = Encoding.UTF8.GetBytes(jp);
+
+        Check(EraEncoding.Detect(sjisBytes, sjisBytes.Length, true).CodePage == 932,
+            "Detect: SHIFT-JIS 바이트를 932 로 판정한다");
+        Check(EraEncoding.Detect(utf8Bytes, utf8Bytes.Length, true).CodePage == 65001,
+            "Detect: UTF-8 바이트를 UTF-8 로 판정한다");
+
+        var bom = new byte[] { 0xEF, 0xBB, 0xBF };
+        var withBom = new byte[bom.Length + utf8Bytes.Length];
+        Buffer.BlockCopy(bom, 0, withBom, 0, bom.Length);
+        Buffer.BlockCopy(utf8Bytes, 0, withBom, bom.Length, utf8Bytes.Length);
+        Check(EraEncoding.Detect(withBom, withBom.Length, true).CodePage == 65001,
+            "Detect: UTF-8 BOM");
+
+        var ascii = Encoding.ASCII.GetBytes("@SYSTEM_TITLE\n");
+        Check(EraEncoding.Detect(ascii, ascii.Length, true).CodePage == 65001,
+            "Detect: 순수 ASCII 는 UTF-8 (두 인코딩이 같으므로 무해)");
+
+        Check(EraEncoding.Detect(Array.Empty<byte>(), 0, true).CodePage == 65001,
+            "Detect: 빈 파일은 UTF-8");
+
+        // 앞부분만 읽었을 때 UTF-8 시퀀스가 잘려도 SHIFT-JIS 로 오판하지 않는다.
+        // 이 처리를 빼면 큰 UTF-8 파일이 잘린 위치에 따라 깨진다.
+        Check(EraEncoding.Detect(utf8Bytes, utf8Bytes.Length - 1, complete: false)
+                .CodePage == 65001,
+            "Detect: 끝이 잘린 UTF-8 을 SHIFT-JIS 로 오판하지 않는다");
+
+        // --- 엔진 경로 통과 검사 (GAMEBASE.CSV) -----------------------------
+        // GameBase.LoadGameBaseCsv 는 EraStreamReader 를 쓴다. 즉 실제 게임이
+        // 로드되는 것과 같은 경로다.
+        var sjisCsv = Path.Combine(root, "gamebase_sjis.csv");
+        File.WriteAllBytes(sjisCsv, sjis.GetBytes(
+            "コード,777\nタイトル,東方紅魔郷\n作者,ZUN\n"));
+
+        var gbS = new GameBase();
+        bool okS = gbS.LoadGameBaseCsv(sjisCsv);
+        Check(okS, "SHIFT-JIS GAMEBASE.CSV 를 로드한다");
+        Check(gbS.ScriptUniqueCode == 777,
+            $"SHIFT-JIS: 「コード」 지시어를 인식한다 (실제 {gbS.ScriptUniqueCode})");
+        Check(gbS.ScriptTitle == "東方紅魔郷",
+            $"SHIFT-JIS: 일본어 값이 깨지지 않는다 (실제 '{gbS.ScriptTitle}')");
+        Check(gbS.ScriptTitle != null && !gbS.ScriptTitle.Contains('�'),
+            "SHIFT-JIS: 제목에 U+FFFD 가 없다");
+
+        // 같은 내용을 UTF-8 로 써도 통과해야 한다(둘 다 지원한다는 확인).
+        var utf8Csv = Path.Combine(root, "gamebase_utf8.csv");
+        File.WriteAllText(utf8Csv, "コード,778\nタイトル,東方紅魔郷\n",
+            new UTF8Encoding(false));
+        var gbU = new GameBase();
+        Check(gbU.LoadGameBaseCsv(utf8Csv) && gbU.ScriptTitle == "東方紅魔郷",
+            $"UTF-8 GAMEBASE.CSV 도 그대로 동작한다 (실제 '{gbU.ScriptTitle}')");
+
+        // --- 엔진 경로 통과 검사 (ERB) --------------------------------------
+        // 로그에 나온 증상은 ERB 안의 식별자가 깨지는 것이었다.
+        var sjisErb = Path.Combine(root, "sjis_test.erb");
+        const string erbLine = "\tABL:調教技術 = 5";
+        File.WriteAllBytes(sjisErb, sjis.GetBytes("@陥落状態\n" + erbLine + "\n"));
+
+        using (var er = new MinorShift.Emuera.Sub.EraStreamReader(false))
+        {
+            Check(er.Open(sjisErb), "SHIFT-JIS ERB 를 EraStreamReader 로 연다");
+            var l1 = er.ReadLine();
+            var l2 = er.ReadLine();
+            Check(l1 == "@陥落状態",
+                $"SHIFT-JIS ERB: 함수명이 깨지지 않는다 (실제 '{l1}')");
+            Check(l2 == erbLine,
+                $"SHIFT-JIS ERB: 변수명이 깨지지 않는다 (실제 '{l2}')");
+            Check(l1 != null && !l1.Contains('�'),
+                "SHIFT-JIS ERB: U+FFFD 가 없다");
+        }
     }
 
     /// <summary>

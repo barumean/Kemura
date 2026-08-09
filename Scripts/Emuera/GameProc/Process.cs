@@ -528,13 +528,13 @@ namespace MinorShift.Emuera.GameProc
 			if (extents == ".erb")
 			{
 				return File.Exists(Program.ErbDir + position.Filename)
-					? position.LineNo > 0 ? File.ReadLines(Program.ErbDir + position.Filename, Config.Encode).Skip(position.LineNo - 1).First() : ""
+					? position.LineNo > 0 ? File.ReadLines(Program.ErbDir + position.Filename, EraEncoding.Detect(Program.ErbDir + position.Filename)).Skip(position.LineNo - 1).First() : ""
 					: "";
 			}
 			else if (extents == ".csv")
 			{
 				return File.Exists(Program.CsvDir + position.Filename)
-					? position.LineNo > 0 ? File.ReadLines(Program.CsvDir + position.Filename, Config.Encode).Skip(position.LineNo - 1).First() : ""
+					? position.LineNo > 0 ? File.ReadLines(Program.CsvDir + position.Filename, EraEncoding.Detect(Program.CsvDir + position.Filename)).Skip(position.LineNo - 1).First() : ""
 					: "";
 			}
 			else

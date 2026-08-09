@@ -260,7 +260,6 @@ namespace uEmuera
                 contentdir, "*.csv", SearchOption.TopDirectoryOnly));
             resource_csv_lines_ = new Dictionary<string, string[]>();
 
-            var encoder = MinorShift.Emuera.Config.Encode;
             var filecount = csvFiles.Count;
             for(int index=0; index < filecount; ++index)
             {
@@ -274,7 +273,8 @@ namespace uEmuera
                 }
 
                 List<string> newlines = new List<string>();
-                lines = File.ReadAllLines(filename, encoder);
+                // 리소스 CSV 도 SHIFT-JIS 인 경우가 있다. 파일마다 판정한다.
+                lines = File.ReadAllLines(filename, EraEncoding.Detect(filename));
                 int fixcount = 0;
                 for(int i = 0; i < lines.Length; ++i)
                 {
@@ -341,7 +341,6 @@ namespace uEmuera
                 contentdir, "*.csv", SearchOption.TopDirectoryOnly));
             resource_csv_lines_ = new Dictionary<string, string[]>();
 
-            var encoder = MinorShift.Emuera.Config.Encode;
             var filecount = csvFiles.Count;
             for(int index = 0; index < filecount; ++index)
             {
