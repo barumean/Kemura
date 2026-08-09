@@ -256,7 +256,9 @@ internal static class SelfTestErb
 	; 이름에 인덱스가 붙은 요소 참조. 게임이 실제로 이 형태를 쓴다.
 	; 인덱스는 리터럴일 수도 있고 변수 이름일 수도 있다.
 	L_ARR:2 = 77
-	L_SARR:2 = ""hit""
+	; 문자열 변수에 '=' 를 쓰면 줄 나머지를 그대로 대입한다. 따옴표까지
+	; 값에 들어가므로 식 대입("'=")을 써야 한다. 한 번 이걸로 틀렸다.
+	L_SARR:2 '= ""hit""
 	PRINTFORML GVIX={GETVAR(""L_ARR:2"")}:{GETVAR(""L_ARR:L_IDX"")}:%GETVARS(""L_SARR:2"")%
 	SETVAR ""L_ARR:3"", 88
 	PRINTFORML SVIX={L_ARR:3}
