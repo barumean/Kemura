@@ -43,6 +43,13 @@ namespace MinorShift.Emuera.GameData.Function
 			// --- 기타 ---------------------------------------------------------
 			list["EXISTFUNCTION"] = new EmExistFunctionMethod();
 			list["REGEXPMATCH"] = new EmRegexpMatchMethod();
+
+			// --- 이름으로 변수 다루기 (리플렉션) ---------------------------------
+			list["EXISTVAR"] = new EmExistVarMethod();
+			list["GETVAR"] = new EmGetVarMethod(wantStr: false);
+			list["GETVARS"] = new EmGetVarMethod(wantStr: true);
+			list["SETVAR"] = new EmSetVarMethod();
+			list["EXISTMETH"] = new EmExistMethMethod();
 			list["HTML_STRINGLEN"] = new EmHtmlStringLenMethod();
 
 			// --- DataTable ----------------------------------------------------
@@ -838,6 +845,155 @@ namespace MinorShift.Emuera.GameData.Function
 					Op.ExistSound => EmAudio.ExistSound(Str(exm, a, 0)),
 					_ => 0,
 				};
+		}
+
+		// =====================================================================
+		// 이름으로 변수·표현식 함수 다루기
+		//
+		//   int    EXISTVAR  varName
+		//   int    GETVAR    varName
+		//   string GETVARS   varName
+		//   1      SETVAR    varName, value
+		//   int    EXISTMETH functionName
+		//
+		// 엔진의 이름 조회는 IdentifierDictionary.GetVariableToken 이 이미
+		// 다 해준다. 프라이빗 변수(함수 안의 #DIM)는 현재 실행 중인 함수
+		// 범위에서만 보이고, 그 판단도 그 함수가 한다. 규격 문서의 예제도
+		// 다른 함수의 #DIMS 는 보이지 않는다고 명시한다.
+		// =====================================================================
+
+		/// <summary>이름으로 변수 토큰을 찾는다. 없으면 null. 예외를 밖으로 내지 않는다.</summary>
+		private static VariableToken? FindVar(string name)
+		{
+			if (string.IsNullOrEmpty(name))
+				return null;
+			var dic = GlobalStatic.IdentifierDictionary;
+			if (dic == null)
+				return null;
+			try
+			{
+				// subKey=null, allowPrivate=true 로 현재 함수의 프라이빗 변수까지 본다.
+				return dic.GetVariableToken(name, null, true);
+			}
+			catch (CodeEE)
+			{
+				// 설정으로 사용이 금지된 변수, 실행 중인 함수가 없어 LOCAL 을
+				// 해석할 수 없는 경우 등. "없다"로 취급한다. 여기서 예외를
+				// 올리면 EXISTVAR 로 존재를 확인하는 코드가 오히려 멈춘다.
+				return null;
+			}
+		}
+
+		/// <summary>인덱스가 필요한 변수도 0번 요소를 본다.</summary>
+		static readonly Int64[] ZeroIndex = new Int64[] { 0, 0, 0 };
+
+		/// <summary>
+		/// EXISTVAR: 정의돼 있으면 종류에 따른 비트를 세운 양수, 없으면 0.
+		///
+		/// 문서의 "비트 N" 은 값 2^(N-1) 이다(문서 예제의 BIT 상수 배열로 확인).
+		///   정수형 → 1, 문자열형 → 2, 상수 → 4, 2차원 배열 → 8, 3차원 배열 → 16
+		/// 게임 쪽에서는 GETBIT(EXISTVAR(X), 0) 으로 "정수형인가"를 본다.
+		/// </summary>
+		private sealed class EmExistVarMethod : EmIntMethod
+		{
+			public EmExistVarMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var v = FindVar(Str(exm, a, 0));
+				if (v == null) return 0;
+				long bits = v.IsInteger ? 1 : 2;
+				if (v.IsConst) bits |= 4;
+				if (v.IsArray2D) bits |= 8;
+				if (v.IsArray3D) bits |= 16;
+				return bits;
+			}
+		}
+
+		/// <summary>GETVAR / GETVARS: 이름으로 값을 읽는다.</summary>
+		private sealed class EmGetVarMethod : EmMethodBase
+		{
+			readonly bool wantStr;
+			public EmGetVarMethod(bool wantStr)
+			{
+				this.wantStr = wantStr;
+				ReturnType = wantStr ? typeof(string) : typeof(Int64);
+				CanRestructure = false;
+				MinArgs = 1;
+				MaxArgs = 1;
+				ArgTypes = new Type?[] { typeof(string) };
+			}
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				var v = FindVar(name);
+				if (v == null)
+					throw new CodeEE($"GETVAR: \"{name}\"은(는) 해석할 수 없는 식별자입니다");
+				if (!v.IsInteger)
+					throw new CodeEE($"GETVAR: \"{name}\"은(는) 정수형이 아닙니다");
+				return v.GetIntValue(exm, ZeroIndex);
+			}
+
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				var v = FindVar(name);
+				if (v == null)
+					throw new CodeEE($"GETVARS: \"{name}\"은(는) 해석할 수 없는 식별자입니다");
+				if (v.IsInteger)
+					throw new CodeEE($"GETVARS: \"{name}\"은(는) 문자열형이 아닙니다");
+				return v.GetStrValue(exm, ZeroIndex) ?? "";
+			}
+		}
+
+		/// <summary>SETVAR varName, value — 항상 1을 돌려준다. 상수에는 쓸 수 없다.</summary>
+		private sealed class EmSetVarMethod : EmIntMethod
+		{
+			// 두 번째 인수는 대상 변수의 타입에 맞춰야 하므로 여기서는 고정하지 않는다.
+			public EmSetVarMethod() : base(2, 2, typeof(string), null) { }
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				var v = FindVar(name);
+				if (v == null)
+					throw new CodeEE($"SETVAR: \"{name}\"은(는) 해석할 수 없는 식별자입니다");
+				if (v.IsConst)
+					throw new CodeEE($"SETVAR: \"{name}\"은(는) 상수이므로 대입할 수 없습니다");
+
+				bool valueIsStr = a[1] != null && a[1].GetOperandType() == typeof(string);
+				if (v.IsInteger)
+				{
+					if (valueIsStr)
+						throw new CodeEE($"SETVAR: \"{name}\"은(는) 정수형인데 문자열을 대입하려 했습니다");
+					v.SetValue(a[1].GetIntValue(exm), ZeroIndex);
+				}
+				else
+				{
+					if (!valueIsStr)
+						throw new CodeEE($"SETVAR: \"{name}\"은(는) 문자열형인데 숫자를 대입하려 했습니다");
+					v.SetValue(a[1].GetStrValue(exm) ?? "", ZeroIndex);
+				}
+				return 1;
+			}
+		}
+
+		/// <summary>
+		/// EXISTMETH: #FUNCTION 이면 1, #FUNCTIONS 이면 2, 없으면 0.
+		/// </summary>
+		private sealed class EmExistMethMethod : EmIntMethod
+		{
+			public EmExistMethMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				if (string.IsNullOrEmpty(name)) return 0;
+				var labelDic = GlobalStatic.LabelDictionary;
+				if (labelDic == null) return 0;
+				var label = labelDic.GetNonEventLabel(name);
+				if (label == null || !label.IsMethod) return 0;
+				return label.MethodType == typeof(string) ? 2 : 1;
+			}
 		}
 
 		// =====================================================================

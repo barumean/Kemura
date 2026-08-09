@@ -88,6 +88,8 @@ internal static class SelfTestErb
 	CALL T_DT_SELECT
 	CALL T_XML_GET
 	CALL T_REGEXP
+	CALL T_GETVAR
+	CALL T_METH
 	PRINTL DONE
 	QUIT
 
@@ -233,6 +235,29 @@ internal static class SelfTestErb
 	#DIM L_C
 	L_C = REGEXPMATCH(""Apple Banana Car"", "".(.{2})\\b"", L_GC, L_M)
 	PRINTFORML REGEXP={L_C}:{L_GC}:%L_M:0%:%L_M:1%
+
+; --- 이름으로 변수 다루기 ---
+; EXISTVAR 의 비트: 정수 1, 문자열 2, 상수 4, 2차원 8, 3차원 16.
+; 없는 이름은 0 이어야 한다(게임이 존재 확인에 쓴다).
+@T_GETVAR
+	#DIM L_N = 10
+	#DIMS L_S = ""local""
+	PRINTFORML GV={GETVAR(""L_N"")}:%GETVARS(""L_S"")%:{EXISTVAR(""L_N"")}:{EXISTVAR(""L_S"")}:{EXISTVAR(""NOPE_XYZ"")}
+	SETVAR ""L_N"", 42
+	SETVAR ""L_S"", ""set""
+	PRINTFORML SV={L_N}:%L_S%
+
+; --- EXISTMETH: #FUNCTION 은 1, #FUNCTIONS 는 2, 없으면 0 ---
+@T_METH
+	PRINTFORML EM={EXISTMETH(""T_M_INT"")}:{EXISTMETH(""T_M_STR"")}:{EXISTMETH(""NOPE_XYZ"")}
+
+@T_M_INT
+#FUNCTION
+	RETURNF 1
+
+@T_M_STR
+#FUNCTIONS
+	RETURNF ""x""
 ");
         File.WriteAllText(Path.Combine(erb, "TEST.ERB"),
             sb.ToString().Replace("\r\n", "\n"));
@@ -334,6 +359,10 @@ internal static class SelfTestErb
         Expect("DTSEL", "2:2:1");             // age ASC 이므로 18(id2), 21(id1)
         Expect("XMLARR", "2:hello:world");    // outputType 1 = InnerText
         Expect("REGEXP", "3:2:ple:le");
+        // 이름으로 변수 다루기
+        Expect("GV", "10:local:1:2:0");
+        Expect("SV", "42:set");
+        Expect("EM", "1:2:0");
 
         // ARG 비초기화: ARGREC 이 10만 10번 나와야 한다.
         //
