@@ -241,8 +241,13 @@ internal static class SelfTestErb
 ; EXISTVAR 의 비트: 정수 1, 문자열 2, 상수 4, 2차원 8, 3차원 16.
 ; 없는 이름은 0 이어야 한다(게임이 존재 확인에 쓴다).
 @T_GETVAR
+	; #DIM 은 함수 본문 맨 위에만 올 수 있다. 실행문 사이에 두면 그 파일
+	; 전체가 해석 실패하고 아무 출력도 나오지 않는다(내가 한 번 그랬다).
 	#DIM L_N = 10
 	#DIMS L_S = ""local""
+	#DIM L_ARR, 5
+	#DIMS L_SARR, 5
+	#DIM L_IDX = 2
 	PRINTFORML GV={GETVAR(""L_N"")}:%GETVARS(""L_S"")%:{EXISTVAR(""L_N"")}:{EXISTVAR(""L_S"")}:{EXISTVAR(""NOPE_XYZ"")}
 	SETVAR ""L_N"", 42
 	SETVAR ""L_S"", ""set""
@@ -250,9 +255,6 @@ internal static class SelfTestErb
 
 	; 이름에 인덱스가 붙은 요소 참조. 게임이 실제로 이 형태를 쓴다.
 	; 인덱스는 리터럴일 수도 있고 변수 이름일 수도 있다.
-	#DIM L_ARR, 5
-	#DIMS L_SARR, 5
-	#DIM L_IDX = 2
 	L_ARR:2 = 77
 	L_SARR:2 = ""hit""
 	PRINTFORML GVIX={GETVAR(""L_ARR:2"")}:{GETVAR(""L_ARR:L_IDX"")}:%GETVARS(""L_SARR:2"")%
@@ -378,7 +380,13 @@ internal static class SelfTestErb
         if (!done)
         {
             // 진단을 위해 실제로 무엇이 나왔는지 남긴다.
-            GD.Print("[SelfTest] ERB 출력 덤프:\n" + all);
+            if (output.Count == 0)
+                GD.Print("[SelfTest] ERB 출력이 하나도 없습니다. "
+                    + "게임이 실행되기 전(ERB 로드/해석) 단계에서 실패했다는 뜻입니다. "
+                    + "테스트 ERB 자체의 문법 오류일 가능성이 큽니다 "
+                    + "(예: #DIM 을 실행문 사이에 두면 파일 전체가 해석 실패한다).");
+            else
+                GD.Print("[SelfTest] ERB 출력 덤프:\n" + all);
             return failed;
         }
 
