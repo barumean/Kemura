@@ -3,8 +3,16 @@
 출처: <https://gitlab.com/EvilMask/emuera.em.doc> (EvilMask 판 Emuera = **EM+EE**)
 문서 사이트: <https://evilmask.gitlab.io/emuera.em.doc/en/>
 
-이 문서는 **무엇을 얼마나 들여 구현할 수 있는지** 판단하기 위한 검토 결과입니다.
-구현 계획이 아니고, 아직 아무것도 구현하지 않았습니다.
+이 문서는 처음에 **무엇을 얼마나 들여 구현할 수 있는지** 판단하기 위한 검토
+결과로 썼습니다. 이후 실제로 구현이 진행됐으므로, 아래의 "계층" 구분은 당시의
+비용 추정으로 읽어주세요. 현재 구현 상태는 [README](../README.md) 의 표가
+기준입니다.
+
+> **당시 판단이 틀린 부분이 하나 있습니다.** 출력 인수(`ref`)를 받는 형태에
+> "전용 `ArgumentBuilder` 를 가진 `AbstractInstruction` 이 필요하다"고 적었는데,
+> 필요하지 않았습니다. 표현식 인수로 넘어온 변수는 이미 `VariableTerm` 이고
+> `SetValue` 가 있습니다. 이 잘못된 전제 때문에 `DT_SELECT` 의 4번째 인수와
+> `XML_GET` 의 출력 배열 형태를 한동안 빼먹었습니다.
 
 ## 현재 위치
 
@@ -55,12 +63,12 @@ EM 은 자체 의미를 **.NET BCL 타입으로 직접 규정**합니다. net9.0
 |---|---|
 | `MAP_CREATE` `MAP_EXIST` `MAP_RELEASE` `MAP_CLEAR` | 반환값 규약까지 문서에 명시 |
 | `MAP_GET` `MAP_HAS` `MAP_SET` `MAP_REMOVE` `MAP_SIZE` | 맵 없으면 `-1`, `GET` 은 빈 문자열 |
-| `MAP_GETKEYS` `MAP_TOXML` `MAP_FROMXML` | `MAP_GETKEYS` 는 **아직 함수로 등록되지 않았습니다.** `EmMapStore.Keys()` 는 있지만, 이 명령은 키 목록을 배열 변수에 써넣는 형태라 `ref` 출력 인수 경로(3계층)가 필요합니다. 인수 형태를 추측해 등록하면 실제 EmueraEM 과 다르게 동작하는 함수가 생기므로, 규격을 확인할 때까지 등록하지 않습니다 |
+| `MAP_GETKEYS` `MAP_TOXML` `MAP_FROMXML` | **구현 완료.** `MAP_GETKEYS` 는 규격의 세 형태를 모두 지원합니다(문자열 반환 / `RESULTS` / 출력 배열). 예전에 "`ref` 출력 인수 경로가 필요해서 등록하지 않았다"고 적어둔 것은 판단이 틀렸습니다 — 출력 인수는 전용 `ArgumentBuilder` 없이 `VariableTerm.SetValue` 로 됩니다 |
 | `REGEXPMATCH` | |
 | `EXISTFUNCTION` | `LabelDictionary` 조회 |
 | `HTML_STRINGLEN` | `HTML_PRINT` 은 이미 구현되어 있음 |
 | `CBRT` `LOG` `LOG10` `EXPONENT` | `MATH_EXTENSION` |
-| `LOADTEXT` 문자열 경로 오버로드 | 현재는 `int` 만. 확장자 허용 목록 config 항목도 함께 필요 |
+| `LOADTEXT` 문자열 경로 오버로드 | **구현 완료.** `SAVETEXT` 도 함께(경로는 두 번째 인수). config 항목 「LOADTEXTとSAVETEXTで使える拡張子」 추가, `..`·절대 경로 거부 |
 
 ### 2계층 — 보통
 
@@ -69,7 +77,18 @@ EM 은 자체 의미를 **.NET BCL 타입으로 직접 규정**합니다. net9.0
   `XML_ADDATTRIBUTE` `XML_REMOVEATTRIBUTE`
 - 오디오: `PLAYBGM` `PLAYSOUND` `STOPBGM` `STOPSOUND` `SETBGMVOLUME` `SETSOUNDVOLUME` `EXISTSOUND`
 - 리플렉션: `GETVAR` `GETVARS` `SETVAR` `GETMETH` `GETMETHS` `EXISTVAR` `EXISTMETH`
-  — 엔진의 `varTokenDic` / `LabelDictionary` 를 이름으로 훑어야 하므로 신중해야 합니다
+  — **부분 구현.** `EXISTVAR` `GETVAR` `GETVARS` `SETVAR` `EXISTMETH` 는
+  `IdentifierDictionary.GetVariableToken` 으로 동작합니다(프라이빗 변수 범위까지
+  엔진이 처리).
+
+  다만 **이름을 사전에서 그대로 찾기만 합니다.** 실제 게임은 인덱스가 붙은
+  요소 참조를 넘깁니다 — `GETVARS(@"TALENT_%...%:INDEX")` → `"TALENT_미모:INDEX"`.
+  이걸 지원하려면 이름 문자열을 식으로 파싱해야 합니다
+  (`LexicalAnalyzer` → `ExpressionParser.ReduceExpressionTerm`).
+  `VARSETEX` 도 같은 문제이므로 함께 고쳐야 합니다.
+
+  `GETMETH` / `GETMETHS` 는 이름으로 표현식 함수를 **동적 호출**하는 것이라
+  별개 작업입니다.
 
 ### 3계층 — 큼
 
