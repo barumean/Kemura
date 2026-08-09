@@ -72,6 +72,11 @@ internal static class SelfTestErb
         File.WriteAllText(Path.Combine(csv, "GAMEBASE.CSV"),
             "コード,777\nタイトル,ErbSelfTest\n");
 
+        // 상수는 ERH 에 선언한다(규격 문서 예제와 같은 구성).
+        // EXISTVAR 은 상수에 비트 3 을 세워야 하므로 상수 경로를 반드시 봐야 한다.
+        File.WriteAllText(Path.Combine(erb, "DEFINE.ERH"),
+            "#DIM CONST TBIT = 0, 1, 2, 4, 8, 16\n");
+
         var sb = new System.Text.StringBuilder();
         sb.Append(@"
 @SYSTEM_TITLE
@@ -93,6 +98,7 @@ internal static class SelfTestErb
 	CALL T_SERIAL
 	CALL T_TRYCALL
 	CALL T_EMEE_COMMENT
+	CALL T_EXISTVAR_KINDS
 	PRINTL DONE
 	QUIT
 
@@ -318,6 +324,20 @@ internal static class SelfTestErb
 ;	L_V = 3
 	PRINTFORML EMEEC={L_V}
 
+; --- EXISTVAR 의 종류별 비트 (규격 문서 예제와 같은 구성) ---
+; 비트 N = 값 2^(N-1). 정수 1, 문자열 2, 상수 4, 2차원 8, 3차원 16.
+; 상수와 2차원 배열은 지금까지 검사한 적이 없다.
+@T_EXISTVAR_KINDS
+	#DIM L_2D, 2, 2
+	#DIMS L_S2
+	; 2차원 정수 배열 → 1|8 = 9
+	; 정수 상수 배열   → 1|4 = 5
+	; 문자열          → 2
+	; 없는 이름       → 0
+	PRINTFORML EV={EXISTVAR(""L_2D"")}:{EXISTVAR(""TBIT"")}:{EXISTVAR(""L_S2"")}:{EXISTVAR(""NOPE_QQQ"")}
+	; 상수도 값을 읽을 수 있어야 한다
+	PRINTFORML EVC={GETVAR(""TBIT:3"")}
+
 ; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
 @T_SERIAL
 	#DIMS L_KEYS, 5
@@ -467,6 +487,9 @@ internal static class SelfTestErb
         Expect("TRYC", "ok");
         // ;^; 는 실행되고( L_V=2 ), 평범한 ';' 주석은 무시된다( 3 이 아니다 )
         Expect("EMEEC", "2");
+        // 규격 문서 예제의 기댓값. 상수(5)와 2차원(9)은 처음 검사한다.
+        Expect("EV", "9:5:2:0");
+        Expect("EVC", "4");           // TBIT:3 == 4
         Expect("EM", "1:2:0");
         // GETMETH / GETMETHS. 없으면 기본값, 종류가 달라도 기본값.
         Expect("GM", "1:9");
