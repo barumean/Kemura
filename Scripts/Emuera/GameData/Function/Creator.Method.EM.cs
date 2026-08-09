@@ -54,6 +54,8 @@ namespace MinorShift.Emuera.GameData.Function
 			list["GETVARS"] = new EmGetVarMethod(wantStr: true);
 			list["SETVAR"] = new EmSetVarMethod();
 			list["EXISTMETH"] = new EmExistMethMethod();
+			list["GETMETH"] = new EmGetMethMethod(wantStr: false);
+			list["GETMETHS"] = new EmGetMethMethod(wantStr: true);
 			list["VARSETEX"] = new EmVarSetExMethod();
 
 			// --- 입력창 / 마우스 -------------------------------------------------
@@ -1308,13 +1310,104 @@ namespace MinorShift.Emuera.GameData.Function
 			public EmExistMethMethod() : base(1, 1, typeof(string)) { }
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
 			{
-				var name = Str(exm, a, 0);
-				if (string.IsNullOrEmpty(name)) return 0;
-				var labelDic = GlobalStatic.LabelDictionary;
-				if (labelDic == null) return 0;
-				var label = labelDic.GetNonEventLabel(name);
-				if (label == null || !label.IsMethod) return 0;
+				var label = FindMethodLabel(Str(exm, a, 0));
+				if (label == null) return 0;
 				return label.MethodType == typeof(string) ? 2 : 1;
+			}
+		}
+
+		/// <summary>
+		/// 이름으로 식중 함수(#FUNCTION / #FUNCTIONS) 라벨을 찾는다.
+		/// 식중 함수가 아니면 null.
+		///
+		/// 대소문자는 엔진 설정을 따른다. GetFunctionMethod 는 내부에서
+		/// 대문자로 바꾸지만 GetNonEventLabel 은 그러지 않으므로, 여기서
+		/// 맞춰주지 않으면 소문자로 적은 이름이 설정에 따라 안 찾힌다.
+		/// </summary>
+		private static MinorShift.Emuera.GameProc.FunctionLabelLine? FindMethodLabel(string name)
+		{
+			if (string.IsNullOrEmpty(name))
+				return null;
+			var labelDic = GlobalStatic.LabelDictionary;
+			if (labelDic == null)
+				return null;
+			if (Config.ICFunction)
+				name = name.ToUpper();
+			var label = labelDic.GetNonEventLabel(name);
+			if (label == null || !label.IsMethod)
+				return null;
+			return label;
+		}
+
+		/// <summary>
+		/// GETMETH functionName(, defaultValue, argument...)
+		/// GETMETHS functionName(, defaultValue, argument...)
+		///
+		/// 이름으로 식중 함수를 부른다. GETMETH 는 #FUNCTION,
+		/// GETMETHS 는 #FUNCTIONS 에 대응한다. 두 번째 인수는 함수가 없을 때의
+		/// 반환값이고, 세 번째 이후가 대상 함수의 인수가 된다.
+		///
+		/// "없을 때"만 기본값으로 돌려준다. 인수 개수나 타입이 맞지 않는 것은
+		/// 게임 쪽 오류이므로 조용히 기본값으로 감추지 않고 그대로 올린다.
+		/// 감추면 왜 값이 이상한지 찾을 수 없게 된다.
+		/// </summary>
+		private sealed class EmGetMethMethod : EmMethodBase
+		{
+			readonly bool wantStr;
+
+			public EmGetMethMethod(bool wantStr)
+			{
+				this.wantStr = wantStr;
+				ReturnType = wantStr ? typeof(string) : typeof(Int64);
+				CanRestructure = false;
+				MinArgs = 1;
+				MaxArgs = int.MaxValue;   // 대상 함수의 인수 개수는 정해져 있지 않다
+				// 첫 인수만 문자열로 고정. 두 번째(기본값)와 그 뒤는 자유.
+				ArgTypes = new Type?[] { typeof(string) };
+			}
+
+			/// <summary>대상 함수에 넘길 인수(3번째부터).</summary>
+			static IOperandTerm[] TargetArgs(IOperandTerm[] a)
+			{
+				if (a.Length <= 2)
+					return Array.Empty<IOperandTerm>();
+				var args = new IOperandTerm[a.Length - 2];
+				Array.Copy(a, 2, args, 0, args.Length);
+				return args;
+			}
+
+			/// <summary>찾아서 만든 항. 없으면 null.</summary>
+			IOperandTerm? Resolve(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				var label = FindMethodLabel(name);
+				if (label == null)
+					return null;
+				// #FUNCTION 과 #FUNCTIONS 를 서로 부르면 안 된다.
+				bool labelIsStr = label.MethodType == typeof(string);
+				if (labelIsStr != wantStr)
+					return null;
+				var dic = GlobalStatic.IdentifierDictionary;
+				if (dic == null)
+					return null;
+				return dic.GetFunctionMethod(
+					GlobalStatic.LabelDictionary, name, TargetArgs(a), true);
+			}
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var term = Resolve(exm, a);
+				if (term == null)
+					return Int(exm, a, 1, 0);
+				return term.GetIntValue(exm);
+			}
+
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var term = Resolve(exm, a);
+				if (term == null)
+					return Str(exm, a, 1);
+				return term.GetStrValue(exm) ?? "";
 			}
 		}
 

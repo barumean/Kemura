@@ -275,6 +275,14 @@ internal static class SelfTestErb
 ; --- EXISTMETH: #FUNCTION 은 1, #FUNCTIONS 는 2, 없으면 0 ---
 @T_METH
 	PRINTFORML EM={EXISTMETH(""T_M_INT"")}:{EXISTMETH(""T_M_STR"")}:{EXISTMETH(""NOPE_XYZ"")}
+	; GETMETH / GETMETHS: 이름으로 식중 함수를 부른다.
+	; 없으면 두 번째 인수(기본값)를 돌려준다.
+	PRINTFORML GM={GETMETH(""T_M_INT"", 9)}:{GETMETH(""NOPE_XYZ"", 9)}
+	PRINTFORML GMS=%GETMETHS(""T_M_STR"", ""def"")%:%GETMETHS(""NOPE_XYZ"", ""def"")%
+	; 종류가 다르면(#FUNCTION 을 GETMETHS 로) 기본값이어야 한다
+	PRINTFORML GMX=%GETMETHS(""T_M_INT"", ""def"")%
+	; 인수를 넘겨 부른다
+	PRINTFORML GMA={GETMETH(""T_M_ADD"", 0, 3, 4)}
 
 @T_M_INT
 #FUNCTION
@@ -283,6 +291,13 @@ internal static class SelfTestErb
 @T_M_STR
 #FUNCTIONS
 	RETURNF ""x""
+
+; 인수를 받는 식중 함수. 규격 문서 예제와 같은 괄호 형태를 쓴다.
+@T_M_ADD(ARG_A, ARG_B)
+#FUNCTION
+	#DIM ARG_A
+	#DIM ARG_B
+	RETURNF ARG_A + ARG_B
 
 ; --- TRYCALLF / TRYCALLFORMF: 없는 함수를 불러도 오류가 나지 않는다 ---
 ; 오류가 나면 여기서 실행이 끊겨 DONE 이 나오지 않는다.
@@ -453,6 +468,11 @@ internal static class SelfTestErb
         // ;^; 는 실행되고( L_V=2 ), 평범한 ';' 주석은 무시된다( 3 이 아니다 )
         Expect("EMEEC", "2");
         Expect("EM", "1:2:0");
+        // GETMETH / GETMETHS. 없으면 기본값, 종류가 달라도 기본값.
+        Expect("GM", "1:9");
+        Expect("GMS", "x:def");
+        Expect("GMX", "def");
+        Expect("GMA", "7");
         // MAP / DataTable 의 키 목록과 직렬화
         Expect("MKEYS", "a,b");
         Expect("MKEYSA", "1:a:b");        // 배열 형태는 빈 문자열을 돌려준다
