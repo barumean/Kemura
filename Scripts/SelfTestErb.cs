@@ -92,6 +92,7 @@ internal static class SelfTestErb
 	CALL T_METH
 	CALL T_SERIAL
 	CALL T_TRYCALL
+	CALL T_EMEE_COMMENT
 	PRINTL DONE
 	QUIT
 
@@ -293,6 +294,15 @@ internal static class SelfTestErb
 	TRYCALLFORMF T_M_INT
 	PRINTFORML TRYC=ok
 
+; --- EMEE 전용 주석 ;^; : 다른 Emuera 판은 주석, EMEE 는 실행 ---
+; 지원하지 않으면 오류 없이 조용히 건너뛰므로 값으로 확인해야 한다.
+@T_EMEE_COMMENT
+	#DIM L_V = 1
+;^;	L_V = 2
+	; 평범한 주석은 그대로 무시돼야 한다
+;	L_V = 3
+	PRINTFORML EMEEC={L_V}
+
 ; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
 @T_SERIAL
 	#DIMS L_KEYS, 5
@@ -440,6 +450,8 @@ internal static class SelfTestErb
         Expect("VSEXS", "z:z");
         // 없는 함수를 TRY 로 불러도 실행이 끊기지 않는다
         Expect("TRYC", "ok");
+        // ;^; 는 실행되고( L_V=2 ), 평범한 ';' 주석은 무시된다( 3 이 아니다 )
+        Expect("EMEEC", "2");
         Expect("EM", "1:2:0");
         // MAP / DataTable 의 키 목록과 직렬화
         Expect("MKEYS", "a,b");

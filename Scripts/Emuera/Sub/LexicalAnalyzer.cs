@@ -801,6 +801,16 @@ namespace MinorShift.Emuera.Sub
 							st.Jump(3);
 							continue;
 						}
+						// EMEE 전용 주석 기호. eramaker 와 다른 Emuera 판에서는
+						// 평범한 주석이지만 EMEE 에서는 실행된다. 이 엔진은
+						// EM+EE 를 흉내내므로 실행해야 한다. 지원하지 않으면
+						// 게임이 실행되길 기대한 줄을 조용히 건너뛴다
+						// (오류가 나지 않아 더 찾기 어렵다).
+						else if (st.CurrentEqualTo(";^;"))
+						{
+							st.Jump(3);
+							continue;
+						}
 						st.Seek(0, System.IO.SeekOrigin.End);
 						return count;
 				}
@@ -1002,6 +1012,12 @@ namespace MinorShift.Emuera.Sub
 							break;
 						}
 						else if (st.CurrentEqualTo(";!;"))
+						{
+							st.Jump(3);
+							break;
+						}
+						// EMEE 전용 주석 기호. 위와 같은 이유로 실행한다.
+						else if (st.CurrentEqualTo(";^;"))
 						{
 							st.Jump(3);
 							break;
