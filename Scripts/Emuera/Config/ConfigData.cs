@@ -371,7 +371,20 @@ static ConfigData() { }
 
 			try
 			{
-				writer = new StreamWriter(configPath, false, Config.Encode);
+				// 게임 폴더 안의 사용자 파일이다. 두 가지를 지켜야 한다.
+				//
+				// 1. 경로: 실제 파일이 Emuera.config 인데 configPath 그대로
+				//    쓰면 emuera.config 를 하나 더 만든다(Android/Linux).
+				//    아래 needSave 판정은 이미 ResolveFile 로 보고 있는데
+				//    쓰기만 원래 경로를 써서 어긋나 있었다.
+				// 2. 인코딩: 원래 SHIFT-JIS 였던 파일을 UTF-8 로 덮어쓰면
+				//    PC판 Emuera 에서 그 config 가 깨진다. 있던 파일은 그
+				//    파일의 인코딩으로 되돌려 쓴다.
+				var savePath = PathResolver.ResolveFile(configPath);
+				var saveEnc = File.Exists(savePath)
+					? EraEncoding.Detect(savePath)
+					: Config.Encode;
+				writer = new StreamWriter(savePath, false, saveEnc);
 				for (int i = 0; i < configArray.Length; i++)
 				{
 					AConfigItem item = configArray[i];
@@ -624,7 +637,12 @@ static ConfigData() { }
 			StreamWriter writer = null;
 			try
 			{
-				writer = new StreamWriter(configdebugPath, false, Config.Encode);
+				// SaveConfig 와 같은 이유로 경로·인코딩을 보존한다.
+				var debugPath = PathResolver.ResolveFile(configdebugPath);
+				var debugEnc = File.Exists(debugPath)
+					? EraEncoding.Detect(debugPath)
+					: Config.Encode;
+				writer = new StreamWriter(debugPath, false, debugEnc);
 				for (int i = 0; i < debugArray.Length; i++)
 				{
 					AConfigItem item = debugArray[i];

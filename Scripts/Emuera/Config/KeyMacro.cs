@@ -48,7 +48,12 @@ namespace MinorShift.Emuera
 
 			try
 			{
-				writer = new StreamWriter(macroPath, false, Config.Encode);
+				// ConfigData.SaveConfig 와 같은 이유로 경로·인코딩을 보존한다.
+				var savePath = PathResolver.ResolveFile(macroPath);
+				var saveEnc = File.Exists(savePath)
+					? EraEncoding.Detect(savePath)
+					: Config.Encode;
+				writer = new StreamWriter(savePath, false, saveEnc);
 				for (int g = 0; g < MaxGroup; g++)
 				{
 					writer.WriteLine(gID + g.ToString() + ":" + groupName[g]);
