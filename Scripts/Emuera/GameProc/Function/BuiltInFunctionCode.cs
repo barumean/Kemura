@@ -169,6 +169,9 @@ namespace MinorShift.Emuera.GameProc.Function
 		ENDFUNC,
 		CALLF,
 		CALLFORMF,
+		// EE 확장. CALLF / CALLFORMF 의 TRY 판. 함수가 없어도 오류를 내지 않는다.
+		TRYCALLF,
+		TRYCALLFORMF,
 
 		SETCOLOR,
 		SETCOLORBYNAME,

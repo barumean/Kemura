@@ -91,6 +91,7 @@ internal static class SelfTestErb
 	CALL T_GETVAR
 	CALL T_METH
 	CALL T_SERIAL
+	CALL T_TRYCALL
 	PRINTL DONE
 	QUIT
 
@@ -282,6 +283,16 @@ internal static class SelfTestErb
 #FUNCTIONS
 	RETURNF ""x""
 
+; --- TRYCALLF / TRYCALLFORMF: 없는 함수를 불러도 오류가 나지 않는다 ---
+; 오류가 나면 여기서 실행이 끊겨 DONE 이 나오지 않는다.
+@T_TRYCALL
+	#DIM L_I = 1
+	TRYCALLF NOPE_XYZ
+	TRYCALLFORMF NOPE_XYZ_{L_I}
+	; 있는 함수는 실제로 호출된다(반환값은 CALLF 와 같이 버린다)
+	TRYCALLFORMF T_M_INT
+	PRINTFORML TRYC=ok
+
 ; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
 @T_SERIAL
 	#DIMS L_KEYS, 5
@@ -427,6 +438,8 @@ internal static class SelfTestErb
         // 인덱스 1,2 만 채우므로 [0,9,9,88,0] 이 된다(to 는 포함하지 않는다).
         Expect("VSEX", "0:9:9:88");
         Expect("VSEXS", "z:z");
+        // 없는 함수를 TRY 로 불러도 실행이 끊기지 않는다
+        Expect("TRYC", "ok");
         Expect("EM", "1:2:0");
         // MAP / DataTable 의 키 목록과 직렬화
         Expect("MKEYS", "a,b");

@@ -336,6 +336,9 @@ namespace MinorShift.Emuera.GameProc.Function
 			addFunction(FunctionCode.CALLEVENT, new CALLEVENT_Instruction());
 			addFunction(FunctionCode.CALLF, new CALLF_Instruction(false));
 			addFunction(FunctionCode.CALLFORMF, new CALLF_Instruction(true));
+			// EE 확장. 함수가 없으면 조용히 넘어간다(RETURNF 값은 CALLF 와 같이 버린다).
+			addFunction(FunctionCode.TRYCALLF, new CALLF_Instruction(false, isTry: true), EXTENDED);
+			addFunction(FunctionCode.TRYCALLFORMF, new CALLF_Instruction(true, isTry: true), EXTENDED);
 			addFunction(FunctionCode.RESTART, new RESTART_Instruction());//関数の再開。関数の最初に戻る。
 			addFunction(FunctionCode.GOTO, new GOTO_Instruction(false, false, false));//$ラベルへジャンプ
 			addFunction(FunctionCode.TRYGOTO, new GOTO_Instruction(false, true, false), EXTENDED);

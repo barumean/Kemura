@@ -802,13 +802,18 @@ namespace MinorShift.Emuera.GameProc.Function
 
 		private sealed class CALLF_Instruction : AbstractInstruction
 		{
-			public CALLF_Instruction(bool form)
+			// isTry 는 EE 확장의 TRYCALLF / TRYCALLFORMF 용.
+			// 함수가 없을 때 오류를 내지 않는 것이 유일한 차이다.
+			readonly bool isTry;
+
+			public CALLF_Instruction(bool form, bool isTry = false)
 			{
 				if (form)
 					ArgBuilder = ArgumentParser.GetArgumentBuilder(FunctionArgType.SP_CALLFORMF);
 				else
 					ArgBuilder = ArgumentParser.GetArgumentBuilder(FunctionArgType.SP_CALLF);
 				flag = EXTENDED | METHOD_SAFE | FORCE_SETARG;
+				this.isTry = isTry;
 			}
 
 			public override void SetJumpTo(ref bool useCallForm, InstructionLine func, int currentDepth, ref string FunctionoNotFoundName)
@@ -827,11 +832,21 @@ namespace MinorShift.Emuera.GameProc.Function
 				}
 				catch (CodeEE e)
 				{
+					// TRY 판은 여기서도 조용히 넘어간다. GetFunctionMethod 는
+					// 함수가 없을 때 null 을 돌려주기도 하고 CodeEE 를 던지기도
+					// 하므로 두 경로를 모두 막아야 한다.
+					if (isTry)
+						return;
 					ParserMediator.Warn(e.Message, func, 2, true, false);
 					return;
 				}
 				if (callfArg.FuncTerm == null)
 				{
+					// TRY 판은 함수가 없는 것이 정상이므로 경고도 내지 않는다.
+					// 여기서 경고를 내면 TRYCALLFORMF 를 반복 호출하는 게임이
+					// 로그를 경고로 가득 채운다(원래 목적이 그걸 피하는 것이다).
+					if (isTry)
+						return;
 					if (!Program.AnalysisMode)
 						ParserMediator.Warn("지정된 함수명 \"@" + callfArg.ConstStr + "\"은(는) 존재하지 않습니다", func, 2, true, false);
 					else
@@ -848,7 +863,18 @@ namespace MinorShift.Emuera.GameProc.Function
 				{
 					SpCallFArgment spCallformArg = (SpCallFArgment)func.Argument;
 					labelName = spCallformArg.FuncnameTerm.GetStrValue(exm);
-					mToken = GlobalStatic.IdentifierDictionary.GetFunctionMethod(GlobalStatic.LabelDictionary, labelName, spCallformArg.RowArgs, true);
+					// 함수명이 실행 시점에 정해지는 경로. TRYCALLFORMF 는 대부분
+					// 이쪽으로 온다(이름에 {} 가 들어가므로 상수가 아니다).
+					try
+					{
+						mToken = GlobalStatic.IdentifierDictionary.GetFunctionMethod(GlobalStatic.LabelDictionary, labelName, spCallformArg.RowArgs, true);
+					}
+					catch (CodeEE)
+					{
+						if (!isTry)
+							throw;
+						return;
+					}
 				}
 				else
 				{
@@ -856,7 +882,12 @@ namespace MinorShift.Emuera.GameProc.Function
 					mToken = ((SpCallFArgment)func.Argument).FuncTerm;
 				}
 				if (mToken == null)
+				{
+					// TRY 판은 조용히 넘어간다.
+					if (isTry)
+						return;
 					throw new CodeEE("식중 함수 \"@" + labelName + "\"을(를) 찾을 수 없습니다");
+				}
 				mToken.GetValue(exm);
 			}
 		}
