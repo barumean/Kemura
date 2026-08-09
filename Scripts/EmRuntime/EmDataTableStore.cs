@@ -360,6 +360,93 @@ internal static class EmDataTableStore
         }
     }
 
+    /// <summary>
+    /// DT_TOXML: 스키마 XML 과 데이터 XML 을 만든다.
+    /// 반환값이 데이터 XML, out 이 스키마 XML. 테이블이 없으면 둘 다 "".
+    ///
+    /// DataTable.WriteXmlSchema / WriteXml 를 그대로 쓴다. 규격이 이 클래스
+    /// 기반이라고 명시하므로, 직접 만든 형식보다 PC판과 호환될 가능성이 높다.
+    /// </summary>
+    internal static string ToXml(string name, out string schema)
+    {
+        schema = "";
+        if (!TryGet(name, out var t))
+            return "";
+        try
+        {
+            using (var sw = new System.IO.StringWriter())
+            {
+                t.WriteXmlSchema(sw);
+                schema = sw.ToString();
+            }
+            using (var sw = new System.IO.StringWriter())
+            {
+                t.WriteXml(sw, XmlWriteMode.IgnoreSchema);
+                return sw.ToString();
+            }
+        }
+        catch
+        {
+            schema = "";
+            return "";
+        }
+    }
+
+    /// <summary>
+    /// DT_FROMXML: 스키마와 데이터 XML 로 테이블을 덮어쓴다. 성공 1, 실패 0.
+    ///
+    /// 실패했을 때 원래 테이블을 반쯤 망가진 상태로 남기지 않도록, 새 테이블에
+    /// 먼저 읽어들여 성공한 뒤에 교체한다.
+    /// </summary>
+    internal static long FromXml(string name, string schemaXml, string dataXml)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return 0;
+        if (!tables.ContainsKey(name))
+            return 0;
+        DataTable? loaded = null;
+        try
+        {
+            loaded = new DataTable();
+            if (!string.IsNullOrWhiteSpace(schemaXml))
+                using (var sr = new System.IO.StringReader(schemaXml))
+                    loaded.ReadXmlSchema(sr);
+            if (!string.IsNullOrWhiteSpace(dataXml))
+                using (var sr = new System.IO.StringReader(dataXml))
+                    loaded.ReadXml(sr);
+        }
+        catch
+        {
+            loaded?.Dispose();
+            return 0;
+        }
+
+        var old = tables[name];
+        tables[name] = loaded;
+        old.Dispose();
+        // id 자동 증가 카운터를 실제 데이터에 맞춘다. 맞추지 않으면 다음
+        // DT_ROW_ADD 가 이미 있는 id 를 다시 쓴다.
+        nextId[name] = NextIdFrom(loaded);
+        return 1;
+    }
+
+    /// <summary>불러온 테이블의 id 열 최대값 + 1. 없으면 0.</summary>
+    static long NextIdFrom(DataTable t)
+    {
+        if (!t.Columns.Contains(IdColumn))
+            return 0;
+        long max = -1;
+        foreach (DataRow r in t.Rows)
+        {
+            var v = r[IdColumn];
+            if (v == null || v == DBNull.Value)
+                continue;
+            if (long.TryParse(Convert.ToString(v), out var n) && n > max)
+                max = n;
+        }
+        return max + 1;
+    }
+
     /// <summary>타이틀 복귀 / RESETDATA 시 호출.</summary>
     internal static void ClearAll()
     {

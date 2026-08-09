@@ -90,6 +90,7 @@ internal static class SelfTestErb
 	CALL T_REGEXP
 	CALL T_GETVAR
 	CALL T_METH
+	CALL T_SERIAL
 	PRINTL DONE
 	QUIT
 
@@ -258,6 +259,35 @@ internal static class SelfTestErb
 @T_M_STR
 #FUNCTIONS
 	RETURNF ""x""
+
+; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
+@T_SERIAL
+	#DIMS L_KEYS, 5
+	#DIMS L_XML
+	#DIMS L_SCHEMA
+	#DIMS L_DATA
+	#DIM L_CNT
+	MAP_CREATE ""m1""
+	MAP_SET ""m1"", ""a"", ""1""
+	MAP_SET ""m1"", ""b"", ""2""
+	PRINTFORML MKEYS=%MAP_GETKEYS(""m1"")%
+	L_CNT = 0
+	SIF MAP_GETKEYS(""m1"", L_KEYS, 1) == """"
+		L_CNT = 1
+	PRINTFORML MKEYSA={L_CNT}:%L_KEYS:0%:%L_KEYS:1%
+
+	; 직렬화 후 다른 맵으로 되돌린다
+	L_XML '= MAP_TOXML(""m1"")
+	MAP_CREATE ""m2""
+	PRINTFORML MXML={MAP_FROMXML(""m2"", L_XML)}:%MAP_GET(""m2"", ""a"")%:%MAP_GET(""m2"", ""b"")%
+
+	; DataTable 도 같은 방식으로 왕복시킨다
+	DT_CREATE ""t1""
+	DT_COLUMN_ADD ""t1"", ""age"", ""int16""
+	DT_ROW_ADD ""t1"", ""age"", 7
+	L_DATA '= DT_TOXML(""t1"", L_SCHEMA)
+	DT_CREATE ""t2""
+	PRINTFORML DXML={DT_FROMXML(""t2"", L_SCHEMA, L_DATA)}:{DT_ROW_LENGTH(""t2"")}:{DT_CELL_GET(""t2"", 0, ""age"", 1)}
 ");
         File.WriteAllText(Path.Combine(erb, "TEST.ERB"),
             sb.ToString().Replace("\r\n", "\n"));
@@ -363,6 +393,11 @@ internal static class SelfTestErb
         Expect("GV", "10:local:1:2:0");
         Expect("SV", "42:set");
         Expect("EM", "1:2:0");
+        // MAP / DataTable 의 키 목록과 직렬화
+        Expect("MKEYS", "a,b");
+        Expect("MKEYSA", "1:a:b");        // 배열 형태는 빈 문자열을 돌려준다
+        Expect("MXML", "1:1:2");          // 왕복 후 값이 보존된다
+        Expect("DXML", "1:1:7");
 
         // ARG 비초기화: ARGREC 이 10만 10번 나와야 한다.
         //

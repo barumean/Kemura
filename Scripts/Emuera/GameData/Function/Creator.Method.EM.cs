@@ -40,6 +40,9 @@ namespace MinorShift.Emuera.GameData.Function
 			list["MAP_SET"] = new EmMapSetMethod();
 			list["MAP_REMOVE"] = new EmMapRemoveMethod();
 			list["MAP_SIZE"] = new EmMapSizeMethod();
+			list["MAP_GETKEYS"] = new EmMapGetKeysMethod();
+			list["MAP_TOXML"] = new EmMapToXmlMethod();
+			list["MAP_FROMXML"] = new EmMapFromXmlMethod();
 
 			// --- 기타 ---------------------------------------------------------
 			list["EXISTFUNCTION"] = new EmExistFunctionMethod();
@@ -73,6 +76,8 @@ namespace MinorShift.Emuera.GameData.Function
 			list["DT_CELL_ISNULL"] = new EmDtCellGetMethod(isNullCheck: true);
 			list["DT_CELL_SET"] = new EmDtCellSetMethod();
 			list["DT_SELECT"] = new EmDtSelectMethod();
+			list["DT_TOXML"] = new EmDtToXmlMethod();
+			list["DT_FROMXML"] = new EmDtFromXmlMethod();
 
 			// --- XML ----------------------------------------------------------
 			list["XML_DOCUMENT"] = new EmXmlDocumentMethod();
@@ -862,6 +867,122 @@ namespace MinorShift.Emuera.GameData.Function
 		// 범위에서만 보이고, 그 판단도 그 함수가 한다. 규격 문서의 예제도
 		// 다른 함수의 #DIMS 는 보이지 않는다고 명시한다.
 		// =====================================================================
+
+		// =====================================================================
+		// MAP / DataTable 의 직렬화와 키 목록
+		// =====================================================================
+
+		/// <summary>
+		/// MAP_GETKEYS 세 형태.
+		///   1. string MAP_GETKEYS mapName                      → "k1,k2,..."
+		///   2. string MAP_GETKEYS mapName, doOutput            → RESULTS 에 넣고 RESULTS:0
+		///   3. string MAP_GETKEYS mapName, ref out, doOutput   → out 에 넣고 ""
+		/// 맵이 없으면 빈 문자열. 규격이 예외를 던지지 않는다고 명시한다.
+		///
+		/// 구현은 있었지만 함수로 등록되지 않아 게임에서 쓸 수 없었다.
+		/// </summary>
+		private sealed class EmMapGetKeysMethod : EmStrMethod
+		{
+			// 2번째 자리는 형태 2 면 정수, 형태 3 이면 문자열 배열 변수.
+			public EmMapGetKeysMethod() : base(1, 3, typeof(string), null, typeof(Int64)) { }
+
+			static bool IsArrayForm(IOperandTerm[] a)
+				=> a.Length > 2 && a[1] != null
+					&& a[1].GetOperandType() == typeof(string);
+
+			public override string CheckArgumentType(string name, IOperandTerm[] a)
+			{
+				var err = base.CheckArgumentType(name, a);
+				if (err != null) return err;
+				if (IsArrayForm(a))
+					return CheckOutVar(name, a, 1, wantStr: true);
+				if (a.Length > 1 && a[1] != null && a[1].GetOperandType() != typeof(Int64))
+					return $"{name} 함수의 2번째 인수는 정수 또는 문자열 배열 변수여야 합니다";
+				return null;
+			}
+
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var keys = EmMapStore.Keys(Str(exm, a, 0));
+				if (keys == null) return "";
+
+				if (IsArrayForm(a))
+				{
+					if (Int(exm, a, 2, 0) == 0) return "";
+					WriteOut(exm, a, 1, keys);
+					return "";
+				}
+
+				// 형태 1: 쉼표로 이어 붙인 문자열
+				if (a.Length < 2 || a[1] == null)
+					return string.Join(",", keys);
+
+				// 형태 2: RESULTS 에 넣고 RESULTS:0 을 돌려준다
+				if (Int(exm, a, 1, 0) == 0)
+					return "";
+				var arr = exm.VEvaluator.RESULTS_ARRAY;
+				int n = Math.Min(keys.Count, arr.Length);
+				for (int i = 0; i < n; i++) arr[i] = keys[i];
+				return n > 0 ? arr[0] : "";
+			}
+		}
+
+		/// <summary>MAP_TOXML mapName → 규격이 정한 &lt;map&gt;&lt;p&gt;&lt;k/&gt;&lt;v/&gt;&lt;/p&gt;... 형태.</summary>
+		private sealed class EmMapToXmlMethod : EmStrMethod
+		{
+			public EmMapToXmlMethod() : base(1, 1, typeof(string)) { }
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.ToXml(Str(exm, a, 0));
+		}
+
+		/// <summary>MAP_FROMXML mapName, xmlMap → 성공 1, 실패 0.</summary>
+		private sealed class EmMapFromXmlMethod : EmIntMethod
+		{
+			public EmMapFromXmlMethod() : base(2, 2, typeof(string), typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmMapStore.FromXml(Str(exm, a, 0), Str(exm, a, 1));
+		}
+
+		/// <summary>
+		/// DT_TOXML dataTableName(, ref schemaOutput) → 데이터 XML 을 돌려주고
+		/// 스키마 XML 을 schemaOutput(생략하면 RESULTS:1)에 넣는다.
+		/// </summary>
+		private sealed class EmDtToXmlMethod : EmStrMethod
+		{
+			public EmDtToXmlMethod() : base(1, 2, typeof(string), null) { }
+
+			public override string CheckArgumentType(string name, IOperandTerm[] a)
+			{
+				var err = base.CheckArgumentType(name, a);
+				if (err != null) return err;
+				// 2번째는 문자열 변수(스칼라도 허용). 배열이 아니어도 된다.
+				return CheckOutVar(name, a, 1, wantStr: true);
+			}
+
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var data = EmDataTableStore.ToXml(Str(exm, a, 0), out var schema);
+				var outVar = OutVar(a, 1);
+				if (outVar != null)
+					outVar.SetValue(schema, exm);
+				else
+				{
+					// 생략하면 RESULTS:1. RESULTS:0 은 호출부가 반환값으로 쓴다.
+					var arr = exm.VEvaluator.RESULTS_ARRAY;
+					if (arr.Length > 1) arr[1] = schema;
+				}
+				return data;
+			}
+		}
+
+		/// <summary>DT_FROMXML dataTableName, schemaXml, dataXml → 성공 1, 실패 0.</summary>
+		private sealed class EmDtFromXmlMethod : EmIntMethod
+		{
+			public EmDtFromXmlMethod()
+				: base(3, 3, typeof(string), typeof(string), typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmDataTableStore.FromXml(Str(exm, a, 0), Str(exm, a, 1), Str(exm, a, 2));
+		}
 
 		/// <summary>이름으로 변수 토큰을 찾는다. 없으면 null. 예외를 밖으로 내지 않는다.</summary>
 		private static VariableToken? FindVar(string name)
