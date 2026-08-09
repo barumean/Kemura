@@ -4140,6 +4140,9 @@ namespace MinorShift.Emuera.GameData.Function
 					if (arguments[i] == null)
 						return string.Format(Properties.Resources.SyntaxErrMesMethodDefaultArgumentNotNullable0, name, i + 1);
 
+					// EM+EE: 두 번째 인수가 문자열이면 파일 번호가 아니라 경로다.
+					if (i == 1 && arguments[1].GetOperandType() == typeof(string))
+						continue;
 					if (i < argumentTypeArray.Length && argumentTypeArray[i] != arguments[i].GetOperandType())
 						return string.Format(Properties.Resources.SyntaxErrMesMethodDefaultArgumentType0, name, i + 1);
 				}
@@ -4148,21 +4151,45 @@ namespace MinorShift.Emuera.GameData.Function
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] arguments)
 			{
 				string savText = arguments[0].GetStrValue(exm);
-				Int64 i64 = arguments[1].GetIntValue(exm);
-				if (i64 < 0 || i64 > int.MaxValue)
-					return 0;
-				bool forceSavdir = arguments.Length > 2 && (arguments[2].GetIntValue(exm) != 0);
-				bool forceUTF8 = arguments.Length > 3 && (arguments[3].GetIntValue(exm) != 0);
-				int fileIndex = (int)i64;
-				string filepath = forceSavdir ?
-					GetSaveDataPathText(fileIndex, Config.ForceSavDir) :
-					GetSaveDataPathText(fileIndex, Config.SavDir);
+				bool isPathForm = arguments.Length > 1 && arguments[1] != null
+					&& arguments[1].GetOperandType() == typeof(string);
+				string filepath;
+				bool forceSavdir = false;
+				bool forceUTF8;
+				if (isPathForm)
+				{
+					// EM+EE: 두 번째 인수가 문자열이면 경로다(LOADTEXT 는 첫 번째).
+					filepath = Config.ResolveTextPath(arguments[1].GetStrValue(exm));
+					if (filepath == null)
+						return 0;
+					forceUTF8 = arguments.Length > 3 && (arguments[3].GetIntValue(exm) != 0);
+				}
+				else
+				{
+					Int64 i64 = arguments[1].GetIntValue(exm);
+					if (i64 < 0 || i64 > int.MaxValue)
+						return 0;
+					forceSavdir = arguments.Length > 2 && (arguments[2].GetIntValue(exm) != 0);
+					forceUTF8 = arguments.Length > 3 && (arguments[3].GetIntValue(exm) != 0);
+					int fileIndex = (int)i64;
+					filepath = forceSavdir ?
+						GetSaveDataPathText(fileIndex, Config.ForceSavDir) :
+						GetSaveDataPathText(fileIndex, Config.SavDir);
+				}
 				Encoding encoding = forceUTF8 ?
 					Encoding.GetEncoding("UTF-8") :
 					Config.SaveEncode;
 				try
 				{
-					if (forceSavdir)
+					if (isPathForm)
+					{
+						// 경로 형태는 sav 폴더가 아니라 지정된 위치에 쓴다.
+						// 중간 폴더가 없으면 만든다.
+						var dir = System.IO.Path.GetDirectoryName(filepath);
+						if (!string.IsNullOrEmpty(dir))
+							System.IO.Directory.CreateDirectory(dir);
+					}
+					else if (forceSavdir)
 						Config.ForceCreateSavDir();
 					else
 						Config.CreateSavDir();
@@ -4194,6 +4221,11 @@ namespace MinorShift.Emuera.GameData.Function
 				{
 					if (arguments[i] == null)
 						return string.Format(Properties.Resources.SyntaxErrMesMethodDefaultArgumentNotNullable0, name, i + 1);
+					// EM+EE: 첫 인수가 문자열이면 파일 번호가 아니라 경로다.
+					// 예전에는 정수만 받아서 LOADTEXT("dat/x.xml") 이
+					// "第1引数の型が間違っています" 로 실패했다.
+					if (i == 0 && arguments[0].GetOperandType() == typeof(string))
+						continue;
 					if (i < argumentTypeArray.Length && argumentTypeArray[i] != arguments[i].GetOperandType())
 						return string.Format(Properties.Resources.SyntaxErrMesMethodDefaultArgumentType0, name, i + 1);
 				}
@@ -4201,15 +4233,31 @@ namespace MinorShift.Emuera.GameData.Function
 			}
 			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] arguments)
 			{
-                Int64 i64 = arguments[0].GetIntValue(exm);
-                if (i64 < 0 || i64 > int.MaxValue)
-					return "";
-				bool forceSavdir = arguments.Length > 1 && (arguments[1].GetIntValue(exm) != 0);
-				bool forceUTF8 = arguments.Length > 2 && (arguments[2].GetIntValue(exm) != 0);
-				int fileIndex = (int)i64;
-				string filepath = forceSavdir ?
-					GetSaveDataPathText(fileIndex, Config.ForceSavDir) :
-					GetSaveDataPathText(fileIndex, Config.SavDir);
+				bool forceUTF8;
+				string filepath;
+				if (arguments[0].GetOperandType() == typeof(string))
+				{
+					// EM+EE: 문자열 경로 형태. Emuera.exe 기준 상대 경로만
+					// 허용하고, 확장자는 emuera.config 의 허용 목록으로 제한한다
+					// (기본 txt 뿐). 규격이 정한 안전장치다.
+					filepath = Config.ResolveTextPath(arguments[0].GetStrValue(exm));
+					if (filepath == null)
+						return "";
+					forceUTF8 = arguments.Length > 2 && (arguments[2].GetIntValue(exm) != 0);
+				}
+				else
+				{
+					Int64 i64 = arguments[0].GetIntValue(exm);
+					if (i64 < 0 || i64 > int.MaxValue)
+						return "";
+					bool forceSavdir = arguments.Length > 1 && (arguments[1].GetIntValue(exm) != 0);
+					forceUTF8 = arguments.Length > 2 && (arguments[2].GetIntValue(exm) != 0);
+					int fileIndex = (int)i64;
+					filepath = forceSavdir ?
+						GetSaveDataPathText(fileIndex, Config.ForceSavDir) :
+						GetSaveDataPathText(fileIndex, Config.SavDir);
+				}
+				filepath = PathResolver.ResolveFile(filepath);
 				// forceUTF8 인수가 없으면 파일을 보고 판정한다. PC판이 만든
 				// SHIFT-JIS 텍스트도 읽어야 하기 때문이다.
 				Encoding encoding = forceUTF8 ?

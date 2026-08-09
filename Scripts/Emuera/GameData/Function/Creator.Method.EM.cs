@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MinorShift.Emuera.GameData.Expression;
 using MinorShift.Emuera.GameData.Variable;
+using MinorShift.Emuera.Sub;   // CodeEE
 
 namespace MinorShift.Emuera.GameData.Function
 {

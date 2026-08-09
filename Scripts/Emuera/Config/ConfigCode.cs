@@ -149,5 +149,12 @@ namespace MinorShift.Emuera
         RelationDef = 115,
 
 		UseKeyMacro = 162,
+
+		/// <summary>
+		/// LOADTEXT / SAVETEXT 가 문자열 경로로 다룰 수 있는 확장자 목록.
+		/// EM+EE 확장. 기본값은 txt 뿐이고, 게임이 emuera.config 에서 늘린다.
+		/// 임의의 파일을 읽고 쓰지 못하게 막는 안전장치다.
+		/// </summary>
+		TextExtensions = 200,
 	}
 }

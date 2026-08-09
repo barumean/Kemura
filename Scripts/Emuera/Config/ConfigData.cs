@@ -30,7 +30,8 @@ static ConfigData() { }
 		private ConfigData() { setDefault(); }
 
 		//適当に大き目の配列を作っておく。
-		private AConfigItem[] configArray = new AConfigItem[70];
+		// 항목 수와 딱 맞으면 하나 추가할 때 조용히 터진다. 여유를 둔다.
+		private AConfigItem[] configArray = new AConfigItem[80];
 		private AConfigItem[] replaceArray = new AConfigItem[50];
 		private AConfigItem[] debugArray = new AConfigItem[20];
 
@@ -98,6 +99,9 @@ static ConfigData() { }
 			configArray[i++] = new ConfigItem<bool>(ConfigCode.CompatiFunctionNoignoreCase, "関数・属性については大文字小文字を無視しない", false); ;
 			configArray[i++] = new ConfigItem<bool>(ConfigCode.SystemAllowFullSpace, "全角スペースをホワイトスペースに含める", true);
 			configArray[i++] = new ConfigItem<bool>(ConfigCode.SystemSaveInUTF8, "セーブデータをUTF-8で保存する", false);
+			// EM+EE: LOADTEXT/SAVETEXT 가 문자열 경로로 다룰 수 있는 확장자.
+			// 키 이름은 규격 문서 그대로여야 게임의 config 가 적용된다.
+			configArray[i++] = new ConfigItem<string>(ConfigCode.TextExtensions, "LOADTEXTとSAVETEXTで使える拡張子", "txt");
 			configArray[i++] = new ConfigItem<bool>(ConfigCode.CompatiLinefeedAs1739, "ver1739以前の非ボタン折り返しを再現する", false);
             configArray[i++] = new ConfigItem<UseLanguage>(ConfigCode.useLanguage, "内部で使用する東アジア言語", UseLanguage.JAPANESE);
             configArray[i++] = new ConfigItem<bool>(ConfigCode.AllowLongInputByMouse, "ONEINPUT系命令でマウスによる2文字以上の入力を許可する", false);
@@ -144,7 +148,7 @@ static ConfigData() { }
 
         public void Clear()
         {
-            configArray = new AConfigItem[70];
+            configArray = new AConfigItem[80];
             replaceArray = new AConfigItem[50];
             debugArray = new AConfigItem[20];
             setDefault();

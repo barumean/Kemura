@@ -33,6 +33,82 @@ namespace MinorShift.Emuera
         public static Encoding Encode = Encoding.UTF8;
         public static Encoding SaveEncode = Encoding.UTF8;
 
+        // ------------------------------------------------------------------
+        // LOADTEXT / SAVETEXT 의 문자열 경로 (EM+EE 확장)
+        //
+        // 게임이 임의의 파일을 읽고 쓰지 못하게 막는 안전장치가 두 개다.
+        //   1. 확장자 허용 목록 (기본 txt 뿐. 게임이 emuera.config 에서 늘린다)
+        //   2. Emuera.exe 기준 상대 경로만 허용하고 ".." 과 절대 경로를 거부
+        // 규격 문서가 정한 그대로다.
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// 쉼표로 구분된 허용 확장자. 기본 "txt".
+        /// 값을 바꾸면 파싱 결과 캐시를 버린다. 필드로 두면 캐시가 남아
+        /// 조용히 옛 값이 적용된다.
+        /// </summary>
+        public static string TextExtensions
+        {
+            get { return textExtensions; }
+            set
+            {
+                textExtensions = value ?? "txt";
+                textExtSet = null;
+            }
+        }
+        static string textExtensions = "txt";
+
+        static HashSet<string> textExtSet;
+
+        static HashSet<string> TextExtSet
+        {
+            get
+            {
+                if (textExtSet != null)
+                    return textExtSet;
+                var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var raw in (TextExtensions ?? "").Split(','))
+                {
+                    var e = raw.Trim().TrimStart('.');
+                    if (e.Length > 0)
+                        set.Add(e);
+                }
+                if (set.Count == 0)
+                    set.Add("txt");
+                textExtSet = set;
+                return set;
+            }
+        }
+
+        /// <summary>
+        /// LOADTEXT / SAVETEXT 의 문자열 경로를 실제 경로로 바꾼다.
+        /// 허용되지 않으면 null. 호출부는 null 을 "실패"로 다룬다
+        /// (규격상 LOADTEXT 는 빈 문자열, SAVETEXT 는 0).
+        /// </summary>
+        public static string ResolveTextPath(string relative)
+        {
+            if (string.IsNullOrWhiteSpace(relative))
+                return null;
+            var p = relative.Replace('\\', '/').Trim();
+
+            // 절대 경로와 드라이브 지정은 거부한다.
+            if (p.StartsWith("/") || Path.IsPathRooted(p))
+                return null;
+
+            // ".." 은 경로 요소 단위로 거부한다. 문자열 포함 검사만 하면
+            // "..name" 같은 정상 이름까지 막고, 반대로 "a/../b" 를 놓치는
+            // 구현이 되기 쉽다.
+            foreach (var seg in p.Split('/'))
+                if (seg == ".." || seg == ".")
+                    return null;
+
+            var ext = Path.GetExtension(p).TrimStart('.');
+            if (ext.Length == 0 || !TextExtSet.Contains(ext))
+                return null;
+
+            return Sys.ExeDir + p;
+        }
+
         private static Dictionary<ConfigCode, string> nameDic = null;
 		public static string GetConfigName(ConfigCode code)
 		{
@@ -126,6 +202,7 @@ namespace MinorShift.Emuera
 			CompatiLinefeedAs1739 = instance.GetConfigValue<bool>(ConfigCode.CompatiLinefeedAs1739);
 			SystemAllowFullSpace = instance.GetConfigValue<bool>(ConfigCode.SystemAllowFullSpace);
 			SystemSaveInUTF8 = instance.GetConfigValue<bool>(ConfigCode.SystemSaveInUTF8);
+				TextExtensions = instance.GetConfigValue<string>(ConfigCode.TextExtensions) ?? "txt";
 			if (SystemSaveInUTF8)
 				SaveEncode = Encoding.UTF8;
 			SystemSaveInBinary = instance.GetConfigValue<bool>(ConfigCode.SystemSaveInBinary);

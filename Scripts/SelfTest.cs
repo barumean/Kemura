@@ -61,6 +61,7 @@ internal static class SelfTest
             RunArraySizeChecks();
             RunEmExtensionChecks();
             RunEncodingChecks(root);
+            RunTextPathChecks();
             RunAppInfoChecks();
             // ERB 를 실제로 실행해 언어 의미를 검증한다.
             // 엔진 전체를 구동하므로 다른 검사 뒤에 둔다.
@@ -91,6 +92,56 @@ internal static class SelfTest
             ? "[SelfTest] ALL PASS"
             : $"[SelfTest] {failures} FAILED");
         return failures == 0 ? 0 : 1;
+    }
+
+    // ----------------------------------------------------------------------
+    // LOADTEXT / SAVETEXT 의 문자열 경로 (EM+EE)
+    //
+    // 게임이 임의의 파일을 읽고 쓰지 못하게 막는 두 안전장치를 검사한다.
+    // 경로 탈출을 놓치면 게임 스크립트가 기기의 아무 파일이나 열 수 있게 된다.
+    // ----------------------------------------------------------------------
+    static void RunTextPathChecks()
+    {
+        var saved = Config.TextExtensions;
+        try
+        {
+            Config.TextExtensions = "txt,xml";
+
+            Check(Config.ResolveTextPath("dat/schema.xml") != null,
+                "ResolveTextPath: 허용 확장자는 통과한다");
+            Check(Config.ResolveTextPath("a.txt") != null,
+                "ResolveTextPath: 기본 확장자 txt");
+            Check(Config.ResolveTextPath("a.TXT") != null,
+                "ResolveTextPath: 확장자는 대소문자를 구분하지 않는다");
+
+            Check(Config.ResolveTextPath("a.exe") == null,
+                "ResolveTextPath: 허용 목록에 없는 확장자는 거부");
+            Check(Config.ResolveTextPath("noext") == null,
+                "ResolveTextPath: 확장자가 없으면 거부");
+            Check(Config.ResolveTextPath("") == null,
+                "ResolveTextPath: 빈 경로는 거부");
+
+            // 경로 탈출
+            Check(Config.ResolveTextPath("../a.txt") == null,
+                "ResolveTextPath: '..' 로 시작하는 경로는 거부");
+            Check(Config.ResolveTextPath("dat/../../a.txt") == null,
+                "ResolveTextPath: 중간의 '..' 도 거부");
+            Check(Config.ResolveTextPath("./a.txt") == null,
+                "ResolveTextPath: '.' 요소도 거부");
+            Check(Config.ResolveTextPath("/etc/passwd.txt") == null,
+                "ResolveTextPath: 절대 경로는 거부");
+            Check(Config.ResolveTextPath("..\\a.txt") == null,
+                "ResolveTextPath: 역슬래시 경로 탈출도 거부");
+
+            // 확장자 목록을 좁히면 즉시 반영돼야 한다(캐시가 남으면 안 된다).
+            Config.TextExtensions = "txt";
+            Check(Config.ResolveTextPath("a.xml") == null,
+                "ResolveTextPath: 목록을 좁히면 바로 반영된다(캐시 무효화)");
+        }
+        finally
+        {
+            Config.TextExtensions = saved;
+        }
     }
 
     // ----------------------------------------------------------------------
