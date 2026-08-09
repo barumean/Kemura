@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MinorShift.Emuera.GameData.Expression;
+using MinorShift.Emuera.GameData.Variable;
 
 namespace MinorShift.Emuera.GameData.Function
 {
@@ -14,10 +15,14 @@ namespace MinorShift.Emuera.GameData.Function
 	/// METHOD_Instruction 으로 감싸 명령으로도 등록하고, 그 명령은 반환값을
 	/// RESULT / RESULTS 에 넣는다. 즉 별도의 명령 클래스가 필요 없다.
 	///
-	/// 반대로 <b>출력 인수(ref)를 받는 형태는 이 경로로 만들 수 없다.</b>
-	/// (REGEXPMATCH 의 groupCount/matches, DT_SELECT 의 output,
-	///  XML_GET 의 outputArray 등) 그것들은 전용 ArgumentBuilder 를 가진
-	/// AbstractInstruction 이 필요하므로 아직 구현하지 않았다.
+	/// 출력 인수(ref)를 받는 형태도 이 경로로 만들 수 있다. 표현식 인수로
+	/// 넘어온 변수는 <c>VariableTerm</c> 이고, 여기에는 이미
+	/// <c>SetValue</c> 와 <c>GetFixedVariableTerm</c> 이 있다. 전용
+	/// ArgumentBuilder 나 AbstractInstruction 은 필요하지 않다.
+	/// (예전에 "필요하다"고 적어 두고 DT_SELECT 의 4번째 인수와 XML_GET 의
+	///  출력 배열 형태를 빼먹었는데, 그 결과 그 형태를 쓰는 게임이
+	///  "인수가 너무 많습니다" / "3번째 인수가 숫자가 아닙니다" 로 멈췄다.)
+	/// 헬퍼는 EmMethodBase 의 OutVar / WriteOut 이다.
 	/// </summary>
 	internal static partial class FunctionMethodCreator
 	{
@@ -37,6 +42,7 @@ namespace MinorShift.Emuera.GameData.Function
 
 			// --- 기타 ---------------------------------------------------------
 			list["EXISTFUNCTION"] = new EmExistFunctionMethod();
+			list["REGEXPMATCH"] = new EmRegexpMatchMethod();
 			list["HTML_STRINGLEN"] = new EmHtmlStringLenMethod();
 
 			// --- DataTable ----------------------------------------------------
@@ -136,6 +142,113 @@ namespace MinorShift.Emuera.GameData.Function
 
 			protected static long Int(ExpressionMediator exm, IOperandTerm[] a, int i, long def)
 				=> i < a.Length && a[i] != null ? a[i].GetIntValue(exm) : def;
+
+			// -----------------------------------------------------------------
+			// 출력(ref) 인수
+			//
+			// EM 규격에서 DT_SELECT 의 output, XML_GET 의 outputArray,
+			// REGEXPMATCH 의 groupCount/matches, MAP_GETKEYS 의 출력은 모두
+			// "호출자의 변수에 결과를 써넣는" 인수다.
+			//
+			// 표현식 인수로 넘어온 변수는 VariableTerm 이므로 그대로 쓸 수 있다.
+			// 상수와 일반 식은 쓸 수 없으므로 걸러낸다.
+			// -----------------------------------------------------------------
+
+			/// <summary>i 번째 인수가 쓸 수 있는 출력 변수면 그것을, 아니면 null.</summary>
+			protected static VariableTerm? OutVar(IOperandTerm[] a, int i)
+			{
+				if (i >= a.Length || a[i] == null)
+					return null;
+				if (a[i] is not VariableTerm v)
+					return null;
+				if (v.Identifier == null || v.Identifier.IsConst)
+					return null;   // 상수에는 쓸 수 없다
+				return v;
+			}
+
+			/// <summary>
+			/// 출력 인수 자리를 검증한다. 문제가 없으면 null, 있으면 오류 문구.
+			/// </summary>
+			protected static string? CheckOutVar(
+				string name, IOperandTerm[] a, int i, bool wantStr)
+			{
+				if (i >= a.Length || a[i] == null)
+					return null;    // 생략은 허용(호출부가 필수 여부를 정한다)
+				var v = OutVar(a, i);
+				if (v == null)
+					return $"{name} 함수의 {i + 1}번째 인수는 대입할 수 있는 변수여야 합니다";
+				bool isStr = v.GetOperandType() == typeof(string);
+				if (isStr != wantStr)
+					return wantStr
+						? $"{name} 함수의 {i + 1}번째 인수는 문자열 변수여야 합니다"
+						: $"{name} 함수의 {i + 1}번째 인수는 숫자 변수여야 합니다";
+				return null;
+			}
+
+			/// <summary>출력 변수에 스칼라 하나를 쓴다.</summary>
+			protected static void WriteOut(
+				ExpressionMediator exm, IOperandTerm[] a, int i, long value)
+				=> OutVar(a, i)?.SetValue(value, exm);
+
+			/// <summary>
+			/// 출력 배열 변수에 순서대로 쓴다. 실제로 쓴 개수를 돌려준다.
+			///
+			/// 규격이 "반환값이 출력 배열의 요소 수를 넘을 수 있다"고 명시하므로
+			/// <b>넘치면 예외가 아니라 잘라낸다.</b> 그대로 SetValue 에 넘기면
+			/// 엔진이 "배열 변수의 요소 수를 넘겨 대입하려 했습니다"로 게임을
+			/// 멈춘다.
+			/// </summary>
+			protected static int WriteOut(
+				ExpressionMediator exm, IOperandTerm[] a, int i, IReadOnlyList<long> values)
+			{
+				var (fv, room) = OutRoom(exm, a, i);
+				if (fv == null) return 0;
+				int n = Math.Min(values.Count, room);
+				if (n <= 0) return 0;
+				var buf = new long[n];
+				for (int k = 0; k < n; k++) buf[k] = values[k];
+				fv.SetValue(buf, exm);
+				return n;
+			}
+
+			/// <summary>문자열 배열용. 위와 같다.</summary>
+			protected static int WriteOut(
+				ExpressionMediator exm, IOperandTerm[] a, int i, IReadOnlyList<string> values)
+			{
+				var (fv, room) = OutRoom(exm, a, i);
+				if (fv == null) return 0;
+				int n = Math.Min(values.Count, room);
+				if (n <= 0) return 0;
+				var buf = new string[n];
+				for (int k = 0; k < n; k++) buf[k] = values[k] ?? "";
+				fv.SetValue(buf, exm);
+				return n;
+			}
+
+			/// <summary>
+			/// 출력 변수를 인덱스가 확정된 형태로 만들고, 그 위치부터 남은
+			/// 칸 수를 함께 돌려준다.
+			/// </summary>
+			static (FixedVariableTerm? fv, int room) OutRoom(
+				ExpressionMediator exm, IOperandTerm[] a, int i)
+			{
+				var v = OutVar(a, i);
+				if (v == null) return (null, 0);
+				var fv = v.GetFixedVariableTerm(exm);
+				int cap = fv.GetLastLength();
+				if (cap <= 0)
+					return (null, 0);   // 배열이 아니면 배열 대입을 하지 않는다
+				// 배열 대입은 마지막 차원의 인덱스부터 채워진다.
+				long start = fv.Identifier.Dimension switch
+				{
+					<= 1 => fv.Index1,
+					2 => fv.Index2,
+					_ => fv.Index3,
+				};
+				if (start < 0) return (null, 0);
+				int room = (int)Math.Max(0, cap - start);
+				return (fv, room);
+			}
 		}
 
 		/// <summary>문자열 인수를 받고 정수를 돌려주는 EM 함수.</summary>
@@ -466,8 +579,20 @@ namespace MinorShift.Emuera.GameData.Function
 		/// </summary>
 		private sealed class EmDtSelectMethod : EmIntMethod
 		{
+			// 규격: string(, string, string, ref int[])
+			// 4번째가 출력 배열이다. 예전에는 3인수까지만 받아서, 문서대로
+			// 출력 변수를 넘기는 게임이 "인수가 너무 많습니다"로 멈췄다.
 			public EmDtSelectMethod()
-				: base(1, 3, typeof(string), typeof(string), typeof(string)) { }
+				: base(1, 4, typeof(string), typeof(string), typeof(string), null) { }
+
+			public override string CheckArgumentType(string name, IOperandTerm[] a)
+			{
+				var err = base.CheckArgumentType(name, a);
+				if (err != null) return err;
+				// 4번째는 정수 배열 변수여야 한다.
+				return CheckOutVar(name, a, 3, wantStr: false);
+			}
+
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
 			{
 				var ids = EmDataTableStore.Select(
@@ -476,8 +601,15 @@ namespace MinorShift.Emuera.GameData.Function
 					a.Length > 2 && a[2] != null ? Str(exm, a, 2) : null);
 				if (ids == null) return -1;
 
-				// 문서대로 RESULT:1 부터 넣는다. SetResultX 는 0번부터 쓰므로
-				// 선두에 자리표시자를 하나 넣어 한 칸 밀어준다.
+				if (OutVar(a, 3) != null)
+				{
+					// 출력 변수를 넘겼으면 그쪽에만 쓴다.
+					WriteOut(exm, a, 3, ids);
+					return ids.Count;
+				}
+
+				// 출력 변수가 없으면 문서대로 RESULT:1 부터 넣는다. SetResultX 는
+				// 0번부터 쓰므로 선두에 자리표시자를 하나 넣어 한 칸 밀어준다.
 				// RESULT:0 은 이 메서드가 끝난 뒤 METHOD_Instruction 이
 				// 반환값으로 덮어쓰므로 자리표시자 값은 의미가 없다.
 				var buf = new List<long>(ids.Count + 1) { 0 };
@@ -499,9 +631,11 @@ namespace MinorShift.Emuera.GameData.Function
 		// =====================================================================
 		// XML (XML_*)
 		//
-		// 출력 배열 인수를 받는 형태(형태 2·4)는 전용 ArgumentBuilder 가
-		// 필요해 아직 없다. 문서의 형태 1·3 (doOutput 이 0 이 아니면 RESULTS 에
-		// 대입) 쪽을 구현했다.
+		// 문서의 네 형태를 모두 지원한다.
+		//   1. XML_GET xml, xpath(, doOutput, outputType)
+		//   2. XML_GET xml, xpath, ref string[] outputArray(, outputType)
+		//   3·4. XML_GET_BYNAME 의 같은 두 형태
+		// 3번째 인수가 문자열 변수면 형태 2·4, 아니면 형태 1·3 이다.
 		// =====================================================================
 
 		/// <summary>XML_DOCUMENT xmlId, xmlContent</summary>
@@ -543,17 +677,44 @@ namespace MinorShift.Emuera.GameData.Function
 		private sealed class EmXmlGetMethod : EmIntMethod
 		{
 			readonly bool byName;
+			// 3번째 자리는 형태에 따라 정수(doOutput) 또는 문자열 배열 변수
+			// (outputArray) 이므로 타입을 고정하지 않는다(null = 아무 타입).
 			public EmXmlGetMethod(bool byName)
-				: base(2, 4, null, typeof(string), typeof(Int64), typeof(Int64))
+				: base(2, 4, null, typeof(string), null, typeof(Int64))
 			{
 				this.byName = byName;
+			}
+
+			/// <summary>3번째 인수가 출력 배열 형태인지.</summary>
+			static bool IsArrayForm(IOperandTerm[] a)
+				=> a.Length > 2 && a[2] != null
+					&& a[2].GetOperandType() == typeof(string);
+
+			public override string CheckArgumentType(string name, IOperandTerm[] a)
+			{
+				var err = base.CheckArgumentType(name, a);
+				if (err != null) return err;
+				if (!IsArrayForm(a))
+				{
+					// 형태 1·3: 3번째는 정수식이어야 한다.
+					if (a.Length > 2 && a[2] != null
+						&& a[2].GetOperandType() != typeof(Int64))
+						return $"{name} 함수의 3번째 인수는 정수 또는 문자열 배열 변수여야 합니다";
+					return null;
+				}
+				// 형태 2·4: 3번째는 문자열 배열 변수여야 한다.
+				return CheckOutVar(name, a, 2, wantStr: true);
 			}
 
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
 			{
 				var xpath = Str(exm, a, 1);
-				long doOutput = Int(exm, a, 2, 0);
+				bool arrayForm = IsArrayForm(a);
+				// 형태 2·4 에서는 outputType 이 4번째, 형태 1·3 에서는 4번째가
+				// outputType, 3번째가 doOutput 이다.
+				// outputType 은 두 형태 모두 4번째 인수다.
 				long outputType = Int(exm, a, 3, 0);
+				long doOutput = arrayForm ? 1 : Int(exm, a, 2, 0);
 
 				List<string>? hits;
 				if (!byName && a[0].GetOperandType() == typeof(string))
@@ -562,7 +723,12 @@ namespace MinorShift.Emuera.GameData.Function
 					hits = EmXmlStore.Get(AnyToStr(exm, a, 0), xpath, outputType);
 
 				if (hits == null) return -1;
-				if (doOutput != 0)
+
+				if (arrayForm)
+				{
+					WriteOut(exm, a, 2, hits);
+				}
+				else if (doOutput != 0)
 				{
 					// RESULTS 배열에 순서대로 넣는다. 배열 크기를 넘기지 않는다.
 					var arr = exm.VEvaluator.RESULTS_ARRAY;
@@ -672,6 +838,121 @@ namespace MinorShift.Emuera.GameData.Function
 					Op.ExistSound => EmAudio.ExistSound(Str(exm, a, 0)),
 					_ => 0,
 				};
+		}
+
+		// =====================================================================
+		// REGEXPMATCH
+		//
+		// 규격(두 형태):
+		//   1. int REGEXPMATCH str, pattern(, output)
+		//   2. int REGEXPMATCH str, pattern, ref groupCount, ref matches
+		//
+		// 반환값은 매치 수. 매치 결과는 "그룹 수 × 매치 수" 개가
+		// matches:(i*groupCount + j) 순서로 들어간다(j=0 은 매치 전체).
+		// 형태 1 에서 output 이 0 이 아니면 groupCount 는 RESULT:1,
+		// 결과는 RESULTS 에 들어간다.
+		// =====================================================================
+
+		private sealed class EmRegexpMatchMethod : EmIntMethod
+		{
+			// 3번째는 형태 1 이면 정수식, 형태 2 이면 정수 변수다.
+			// 4번째가 있으면 형태 2 이고 문자열 배열 변수여야 한다.
+			public EmRegexpMatchMethod()
+				: base(2, 4, typeof(string), typeof(string), null, null) { }
+
+			static bool IsRefForm(IOperandTerm[] a) => a.Length > 3 && a[3] != null;
+
+			public override string CheckArgumentType(string name, IOperandTerm[] a)
+			{
+				var err = base.CheckArgumentType(name, a);
+				if (err != null) return err;
+				if (!IsRefForm(a))
+				{
+					if (a.Length > 2 && a[2] != null
+						&& a[2].GetOperandType() != typeof(Int64))
+						return $"{name} 함수의 3번째 인수가 숫자가 아닙니다";
+					return null;
+				}
+				// 형태 2 는 3번째가 필수다(생략하면 어디에 그룹 수를 쓸지 없다).
+				if (a[2] == null)
+					return $"{name} 함수의 3번째 인수는 생략할 수 없습니다";
+				return CheckOutVar(name, a, 2, wantStr: false)
+					?? CheckOutVar(name, a, 3, wantStr: true);
+			}
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var input = Str(exm, a, 0);
+				var pattern = Str(exm, a, 1);
+
+				System.Text.RegularExpressions.MatchCollection ms;
+				try
+				{
+					ms = GetRegex(pattern).Matches(input);
+				}
+				catch (System.Text.RegularExpressions.RegexMatchTimeoutException)
+				{
+					// 파멸적 백트래킹으로 엔진 스레드가 멈추는 것을 막는다.
+					return 0;
+				}
+				catch (ArgumentException)
+				{
+					// 잘못된 정규식. 게임을 죽이지 않고 "매치 없음"으로 둔다.
+					return 0;
+				}
+
+				int count = ms.Count;
+				if (count == 0)
+				{
+					if (IsRefForm(a))
+						WriteOut(exm, a, 2, 0L);
+					else if (Int(exm, a, 2, 0) != 0)
+						exm.VEvaluator.SetResultX(new List<long> { 0, 0 });
+					return 0;
+				}
+
+				// 그룹 수는 매치 전체(그룹 0)를 포함한다.
+				int groupCount = ms[0].Groups.Count;
+				var flat = new List<string>(groupCount * count);
+				for (int i = 0; i < count; i++)
+					for (int j = 0; j < groupCount; j++)
+						flat.Add(j < ms[i].Groups.Count ? ms[i].Groups[j].Value : "");
+
+				if (IsRefForm(a))
+				{
+					WriteOut(exm, a, 2, (long)groupCount);
+					WriteOut(exm, a, 3, flat);
+				}
+				else if (Int(exm, a, 2, 0) != 0)
+				{
+					// RESULT:1 에 그룹 수. RESULT:0 은 이 메서드가 끝난 뒤
+					// METHOD_Instruction 이 반환값으로 덮어쓴다.
+					exm.VEvaluator.SetResultX(new List<long> { 0, groupCount });
+					var arr = exm.VEvaluator.RESULTS_ARRAY;
+					int n = Math.Min(flat.Count, arr.Length);
+					for (int i = 0; i < n; i++) arr[i] = flat[i];
+				}
+				return count;
+			}
+
+			// 같은 패턴을 루프에서 반복 호출하는 게임이 많아 컴파일 결과를
+			// 재사용한다. 무한히 늘지 않게 상한을 둔다.
+			const int CacheMax = 64;
+			static readonly Dictionary<string, System.Text.RegularExpressions.Regex> cache = new();
+
+			static System.Text.RegularExpressions.Regex GetRegex(string pattern)
+			{
+				if (cache.TryGetValue(pattern, out var re))
+					return re;
+				re = new System.Text.RegularExpressions.Regex(
+					pattern,
+					System.Text.RegularExpressions.RegexOptions.None,
+					TimeSpan.FromSeconds(1));
+				if (cache.Count >= CacheMax)
+					cache.Clear();
+				cache[pattern] = re;
+				return re;
+			}
 		}
 
 		// =====================================================================

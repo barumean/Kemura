@@ -85,6 +85,9 @@ internal static class SelfTestErb
 	CALL T_LOCAL_OUTER
 	CALL T_ARG_RECURSE, 0
 	CALL T_TIMES
+	CALL T_DT_SELECT
+	CALL T_XML_GET
+	CALL T_REGEXP
 	PRINTL DONE
 	QUIT
 
@@ -196,6 +199,40 @@ internal static class SelfTestErb
 	TIMES LOCAL, 1.5
 	PRINTL
 	PRINTFORML TIMES={LOCAL}
+
+; --- DT_SELECT: 4번째 인수(출력 배열) ---
+; 규격 문서의 예제를 줄인 것. 예전에는 3인수까지만 받아서
+; ""인수가 너무 많습니다"" 로 실패했다.
+@T_DT_SELECT
+	#DIM L_IDX, 10
+	#DIM L_CNT
+	DT_CREATE ""db""
+	DT_COLUMN_ADD ""db"", ""age"", ""int16""
+	DT_ROW_ADD ""db"", ""age"", 11
+	DT_ROW_ADD ""db"", ""age"", 21
+	DT_ROW_ADD ""db"", ""age"", 18
+	L_CNT = DT_SELECT(""db"", ""age >= 18"", ""age ASC"", L_IDX)
+	PRINTFORML DTSEL={L_CNT}:{L_IDX:0}:{L_IDX:1}
+
+; --- XML_GET: 3번째 인수가 출력 배열인 형태 ---
+; 예전에는 3번째를 정수로만 받아 ""3번째 인수가 숫자가 아닙니다"" 로 실패했다.
+@T_XML_GET
+	#DIMS L_X
+	#DIMS L_NODES, 10
+	#DIM L_N
+	L_X = <a><b>hello</b><b>world</b></a>
+	XML_DOCUMENT 0, L_X
+	L_N = XML_GET(0, ""/a/b"", L_NODES, 1)
+	PRINTFORML XMLARR={L_N}:%L_NODES:0%:%L_NODES:1%
+
+; --- REGEXPMATCH: 출력 인수 형태 ---
+; 규격 문서의 예제. 매치 3건, 그룹 2개, 첫 매치는 ple / le.
+@T_REGEXP
+	#DIM L_GC
+	#DIMS L_M, 10
+	#DIM L_C
+	L_C = REGEXPMATCH(""Apple Banana Car"", "".(.{2})\\b"", L_GC, L_M)
+	PRINTFORML REGEXP={L_C}:{L_GC}:%L_M:0%:%L_M:1%
 ");
         File.WriteAllText(Path.Combine(erb, "TEST.ERB"),
             sb.ToString().Replace("\r\n", "\n"));
@@ -293,6 +330,10 @@ internal static class SelfTestErb
         Expect("SIFCOMMENT", "ok");
         Expect("LOCALSCOPE", "123");      // 함수마다 별개
         Expect("TIMES", "1500");
+        // 출력(ref) 인수를 받는 형태. 규격 문서의 예제 기댓값이다.
+        Expect("DTSEL", "2:2:1");             // age ASC 이므로 18(id2), 21(id1)
+        Expect("XMLARR", "2:hello:world");    // outputType 1 = InnerText
+        Expect("REGEXP", "3:2:ple:le");
 
         // ARG 비초기화: ARGREC 이 10만 10번 나와야 한다.
         //
