@@ -86,7 +86,12 @@ public partial class EmueraContent : Control
         fontSample = GetNodeOrNull<Label>(fontRoot + "/Sample");
 
         if (inputEdit != null)
+        {
             inputEdit.TextSubmitted += _ => SubmitTypedInput();
+            // GETTEXTBOX 가 읽을 스냅샷. 엔진 스레드에서 노드를 직접 읽을 수
+            // 없으므로 바뀔 때마다 값만 넘겨둔다.
+            inputEdit.TextChanged += t => EmTextBox.OnTextChanged(t);
+        }
         if (inputSubmit != null)
             inputSubmit.Pressed += SubmitTypedInput;
 
@@ -498,6 +503,10 @@ public partial class EmueraContent : Control
         label.Text = BuildBbcode(line);
         // ボタン部分は [url=...] で囲んでいるので meta_clicked で入力に変換する
         label.MetaClicked += meta => OnButtonClicked(meta.AsString());
+        // MOUSEB 는 "올라가 있는 버튼의 내용"을 돌려준다. 터치에는 호버가
+        // 없으므로 대개 빈 문자열이 되지만, 그게 규격에 맞는 값이다.
+        label.MetaHoverStarted += meta => EmTextBox.SetHovered(meta.AsString());
+        label.MetaHoverEnded += _ => EmTextBox.ClearHovered();
 
         textContainer!.AddChild(label);
         lines.Add(line);
@@ -574,6 +583,15 @@ public partial class EmueraContent : Control
 
     public override void _Process(double delta)
     {
+        // SETTEXTBOX 요청 반영. 엔진 스레드가 노드를 만질 수 없으므로
+        // 여기서 가져와 넣는다.
+        var pending = EmTextBox.TakePendingSet();
+        if (pending != null && inputEdit != null)
+        {
+            inputEdit.Text = pending;
+            inputEdit.CaretColumn = pending.Length;
+        }
+
         if (scrollFramesLeft > 0)
         {
             --scrollFramesLeft;
@@ -717,6 +735,8 @@ public partial class EmueraContent : Control
                                               : "문자 입력 (탭하면 키보드)";
             inputEdit.Editable = true;
             inputEdit.Text = "";
+            // 스냅샷도 비운다. 안 하면 GETTEXTBOX 가 지난 입력을 돌려준다.
+            EmTextBox.OnTextChanged("");
         }
         else
         {

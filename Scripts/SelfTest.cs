@@ -62,6 +62,7 @@ internal static class SelfTest
             RunEmExtensionChecks();
             RunEncodingChecks(root);
             RunTextPathChecks();
+            RunTextBoxChecks();
             RunAppInfoChecks();
             // ERB 를 실제로 실행해 언어 의미를 검증한다.
             // 엔진 전체를 구동하므로 다른 검사 뒤에 둔다.
@@ -92,6 +93,39 @@ internal static class SelfTest
             ? "[SelfTest] ALL PASS"
             : $"[SelfTest] {failures} FAILED");
         return failures == 0 ? 0 : 1;
+    }
+
+    // ----------------------------------------------------------------------
+    // 입력창 / 호버 다리 (GETTEXTBOX / SETTEXTBOX / MOUSEB)
+    //
+    // 값을 주고받는 부분만 검사한다. 실제 노드 반영은 Godot 메인 스레드가
+    // 하므로 헤드리스 자기 검증에서는 확인할 수 없다.
+    // ----------------------------------------------------------------------
+    static void RunTextBoxChecks()
+    {
+        EmTextBox.Reset();
+        Check(EmTextBox.Get() == "", "GETTEXTBOX: 초기값은 빈 문자열");
+        Check(EmTextBox.GetHovered() == "", "MOUSEB: 초기값은 빈 문자열");
+
+        EmTextBox.OnTextChanged("abc");
+        Check(EmTextBox.Get() == "abc", "GETTEXTBOX: UI 가 바꾼 값을 읽는다");
+
+        // SETTEXTBOX 는 요청만 남긴다. UI 가 가져가기 전에도 GETTEXTBOX 가
+        // 새 값을 봐야 한다 — 그러지 않으면 SETTEXTBOX 직후의 GETTEXTBOX 가
+        // 한 프레임 동안 옛 값을 돌려준다.
+        EmTextBox.RequestSet("xyz");
+        var taken = EmTextBox.TakePendingSet();
+        Check(taken == "xyz", $"SETTEXTBOX: UI 가 요청을 가져간다 (실제 '{taken}')");
+        Check(EmTextBox.Get() == "xyz", "SETTEXTBOX 직후 GETTEXTBOX 가 새 값을 본다");
+        Check(EmTextBox.TakePendingSet() == null,
+            "SETTEXTBOX: 같은 요청이 두 번 반영되지 않는다");
+
+        EmTextBox.SetHovered("choice1");
+        Check(EmTextBox.GetHovered() == "choice1", "MOUSEB: 호버 중인 버튼 내용");
+        EmTextBox.ClearHovered();
+        Check(EmTextBox.GetHovered() == "", "MOUSEB: 호버가 끝나면 빈 문자열");
+
+        EmTextBox.Reset();
     }
 
     // ----------------------------------------------------------------------

@@ -55,6 +55,11 @@ namespace MinorShift.Emuera.GameData.Function
 			list["SETVAR"] = new EmSetVarMethod();
 			list["EXISTMETH"] = new EmExistMethMethod();
 			list["VARSETEX"] = new EmVarSetExMethod();
+
+			// --- 입력창 / 마우스 -------------------------------------------------
+			list["GETTEXTBOX"] = new EmGetTextBoxMethod();
+			list["SETTEXTBOX"] = new EmSetTextBoxMethod();
+			list["MOUSEB"] = new EmMouseBMethod();
 			list["HTML_STRINGLEN"] = new EmHtmlStringLenMethod();
 
 			// --- DataTable ----------------------------------------------------
@@ -1148,6 +1153,51 @@ namespace MinorShift.Emuera.GameData.Function
 				}
 				return 1;
 			}
+		}
+
+		// =====================================================================
+		// 입력창 / 마우스
+		//
+		//   string GETTEXTBOX
+		//   1      SETTEXTBOX text
+		//   string MOUSEB
+		//
+		// 입력창은 Godot 노드이고 노드는 메인 스레드에서만 만질 수 있다.
+		// era 명령은 엔진 스레드에서 돌아가므로 EmTextBox 가 값만 주고받는다.
+		// =====================================================================
+
+		/// <summary>GETTEXTBOX: 입력창에 지금 들어 있는 문자열.</summary>
+		private sealed class EmGetTextBoxMethod : EmStrMethod
+		{
+			public EmGetTextBoxMethod() : base(0, 0) { }
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmTextBox.Get();
+		}
+
+		/// <summary>SETTEXTBOX text: 입력창 내용을 바꾼다. 항상 1.</summary>
+		private sealed class EmSetTextBoxMethod : EmIntMethod
+		{
+			public EmSetTextBoxMethod() : base(1, 1, typeof(string)) { }
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				// 실제 반영은 다음 프레임에 UI 가 한다.
+				EmTextBox.RequestSet(Str(exm, a, 0));
+				return 1;
+			}
+		}
+
+		/// <summary>
+		/// MOUSEB: 마우스가 올라가 있는 버튼의 내용.
+		///
+		/// 터치 화면에는 호버가 없으므로 손가락 조작 중에는 대개 빈 문자열이다.
+		/// 그것이 규격에 맞는 값이다(아무것도 올라가 있지 않다). 마우스나
+		/// 스타일러스를 쓰면 실제 값이 들어온다.
+		/// </summary>
+		private sealed class EmMouseBMethod : EmStrMethod
+		{
+			public EmMouseBMethod() : base(0, 0) { }
+			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
+				=> EmTextBox.GetHovered();
 		}
 
 		/// <summary>
