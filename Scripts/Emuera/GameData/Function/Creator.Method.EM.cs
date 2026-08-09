@@ -984,30 +984,77 @@ namespace MinorShift.Emuera.GameData.Function
 				=> EmDataTableStore.FromXml(Str(exm, a, 0), Str(exm, a, 1), Str(exm, a, 2));
 		}
 
-		/// <summary>이름으로 변수 토큰을 찾는다. 없으면 null. 예외를 밖으로 내지 않는다.</summary>
-		private static VariableToken? FindVar(string name)
+		// ---------------------------------------------------------------------
+		// 이름 문자열을 변수 참조로 바꾸기
+		//
+		// 처음에는 IdentifierDictionary 에서 이름을 그대로 찾기만 했다. 그런데
+		// 실제 게임은 인덱스가 붙은 <b>요소 참조</b>를 넘긴다.
+		//
+		//   GETVARS(@"TALENT_%TALENT_CATEGORY_LIST:INDEX_CATEGORY%:INDEX")
+		//     → 런타임에는 "TALENT_미모:INDEX" 라는 문자열이 된다
+		//   VARSETEX @"BREWING_OPTIONS:{DEPTH}:0", "", 0
+		//     → "BREWING_OPTIONS:3:0"
+		//
+		// 인덱스가 정수 리터럴일 수도 있고 INDEX 처럼 변수 이름일 수도 있다.
+		// 그래서 직접 ':' 로 쪼개는 대신 엔진의 렉서와 파서를 그대로 태운다.
+		// 그러면 EM 이 규정한 "변수 이름으로 표현되는 변수"의 의미가 일반
+		// 변수 참조와 정확히 같아진다.
+		// ---------------------------------------------------------------------
+
+		/// <summary>
+		/// 이름 문자열을 파싱해 변수 참조로 만든다. 변수가 아니면 null.
+		///
+		/// 같은 문자열이 루프에서 반복되므로 결과를 캐시한다. 캐시 키에는
+		/// 현재 함수 이름을 넣는다 — 프라이빗 변수(#DIM)는 함수마다 다른
+		/// 변수이므로, 이름만으로 캐시하면 다른 함수의 변수를 돌려준다.
+		/// </summary>
+		private static VariableTerm? FindVarTerm(string name)
 		{
-			if (string.IsNullOrEmpty(name))
+			if (string.IsNullOrWhiteSpace(name))
 				return null;
-			var dic = GlobalStatic.IdentifierDictionary;
-			if (dic == null)
-				return null;
+
+			var scope = CurrentFunctionName();
+			var key = scope + "\u0000" + name;
+			if (varTermCache.TryGetValue(key, out var cached))
+				return cached;
+
+			VariableTerm? term = null;
 			try
 			{
-				// subKey=null, allowPrivate=true 로 현재 함수의 프라이빗 변수까지 본다.
-				return dic.GetVariableToken(name, null, true);
+				var st = new StringStream(name.Trim());
+				var wc = LexicalAnalyzer.Analyse(st, LexEndWith.EoL, LexAnalyzeFlag.None);
+				term = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.EoL) as VariableTerm;
+				if (term != null && term.Identifier == null)
+					term = null;
 			}
-			catch (CodeEE)
+			catch (EmueraException)
 			{
-				// 설정으로 사용이 금지된 변수, 실행 중인 함수가 없어 LOCAL 을
-				// 해석할 수 없는 경우 등. "없다"로 취급한다. 여기서 예외를
-				// 올리면 EXISTVAR 로 존재를 확인하는 코드가 오히려 멈춘다.
-				return null;
+				// 해석할 수 없는 이름. 존재하지 않는 것으로 다룬다.
+				// EXISTVAR 로 존재를 확인하려는 코드가 여기서 멈추면 안 된다.
+				term = null;
 			}
+
+			if (varTermCache.Count >= VarTermCacheMax)
+				varTermCache.Clear();
+			varTermCache[key] = term;
+			return term;
 		}
 
-		/// <summary>인덱스가 필요한 변수도 0번 요소를 본다.</summary>
-		static readonly Int64[] ZeroIndex = new Int64[] { 0, 0, 0 };
+		const int VarTermCacheMax = 512;
+		static readonly Dictionary<string, VariableTerm?> varTermCache = new();
+
+		/// <summary>지금 실행 중인 함수 이름. 없으면 빈 문자열.</summary>
+		static string CurrentFunctionName()
+		{
+			var line = GlobalStatic.Process?.GetScaningLine();
+			return line?.ParentLabelLine?.LabelName ?? "";
+		}
+
+		/// <summary>
+		/// 캐시를 버린다. 게임을 다시 로드하면 변수 토큰이 전부 새로 만들어지므로
+		/// 낡은 참조를 들고 있으면 안 된다.
+		/// </summary>
+		internal static void ClearVarTermCache() => varTermCache.Clear();
 
 		/// <summary>
 		/// EXISTVAR: 정의돼 있으면 종류에 따른 비트를 세운 양수, 없으면 0.
@@ -1021,8 +1068,9 @@ namespace MinorShift.Emuera.GameData.Function
 			public EmExistVarMethod() : base(1, 1, typeof(string)) { }
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
 			{
-				var v = FindVar(Str(exm, a, 0));
-				if (v == null) return 0;
+				var t = FindVarTerm(Str(exm, a, 0));
+				if (t == null) return 0;
+				var v = t.Identifier;
 				long bits = v.IsInteger ? 1 : 2;
 				if (v.IsConst) bits |= 4;
 				if (v.IsArray2D) bits |= 8;
@@ -1048,23 +1096,24 @@ namespace MinorShift.Emuera.GameData.Function
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
 			{
 				var name = Str(exm, a, 0);
-				var v = FindVar(name);
-				if (v == null)
+				var t = FindVarTerm(name);
+				if (t == null)
 					throw new CodeEE($"GETVAR: \"{name}\"은(는) 해석할 수 없는 식별자입니다");
-				if (!v.IsInteger)
+				if (!t.Identifier.IsInteger)
 					throw new CodeEE($"GETVAR: \"{name}\"은(는) 정수형이 아닙니다");
-				return v.GetIntValue(exm, ZeroIndex);
+				// 이름에 인덱스가 붙어 있으면 그 요소를 읽는다.
+				return t.GetIntValue(exm);
 			}
 
 			public override string GetStrValue(ExpressionMediator exm, IOperandTerm[] a)
 			{
 				var name = Str(exm, a, 0);
-				var v = FindVar(name);
-				if (v == null)
+				var t = FindVarTerm(name);
+				if (t == null)
 					throw new CodeEE($"GETVARS: \"{name}\"은(는) 해석할 수 없는 식별자입니다");
-				if (v.IsInteger)
+				if (t.Identifier.IsInteger)
 					throw new CodeEE($"GETVARS: \"{name}\"은(는) 문자열형이 아닙니다");
-				return v.GetStrValue(exm, ZeroIndex) ?? "";
+				return t.GetStrValue(exm) ?? "";
 			}
 		}
 
@@ -1077,24 +1126,24 @@ namespace MinorShift.Emuera.GameData.Function
 			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
 			{
 				var name = Str(exm, a, 0);
-				var v = FindVar(name);
-				if (v == null)
+				var t = FindVarTerm(name);
+				if (t == null)
 					throw new CodeEE($"SETVAR: \"{name}\"은(는) 해석할 수 없는 식별자입니다");
-				if (v.IsConst)
+				if (t.Identifier.IsConst)
 					throw new CodeEE($"SETVAR: \"{name}\"은(는) 상수이므로 대입할 수 없습니다");
 
 				bool valueIsStr = a[1] != null && a[1].GetOperandType() == typeof(string);
-				if (v.IsInteger)
+				if (t.Identifier.IsInteger)
 				{
 					if (valueIsStr)
 						throw new CodeEE($"SETVAR: \"{name}\"은(는) 정수형인데 문자열을 대입하려 했습니다");
-					v.SetValue(a[1].GetIntValue(exm), ZeroIndex);
+					t.SetValue(a[1].GetIntValue(exm), exm);
 				}
 				else
 				{
 					if (!valueIsStr)
 						throw new CodeEE($"SETVAR: \"{name}\"은(는) 문자열형인데 숫자를 대입하려 했습니다");
-					v.SetValue(a[1].GetStrValue(exm) ?? "", ZeroIndex);
+					t.SetValue(a[1].GetStrValue(exm) ?? "", exm);
 				}
 				return 1;
 			}

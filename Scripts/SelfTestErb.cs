@@ -248,6 +248,17 @@ internal static class SelfTestErb
 	SETVAR ""L_S"", ""set""
 	PRINTFORML SV={L_N}:%L_S%
 
+	; 이름에 인덱스가 붙은 요소 참조. 게임이 실제로 이 형태를 쓴다.
+	; 인덱스는 리터럴일 수도 있고 변수 이름일 수도 있다.
+	#DIM L_ARR, 5
+	#DIMS L_SARR, 5
+	#DIM L_IDX = 2
+	L_ARR:2 = 77
+	L_SARR:2 = ""hit""
+	PRINTFORML GVIX={GETVAR(""L_ARR:2"")}:{GETVAR(""L_ARR:L_IDX"")}:%GETVARS(""L_SARR:2"")%
+	SETVAR ""L_ARR:3"", 88
+	PRINTFORML SVIX={L_ARR:3}
+
 ; --- EXISTMETH: #FUNCTION 은 1, #FUNCTIONS 는 2, 없으면 0 ---
 @T_METH
 	PRINTFORML EM={EXISTMETH(""T_M_INT"")}:{EXISTMETH(""T_M_STR"")}:{EXISTMETH(""NOPE_XYZ"")}
@@ -392,6 +403,9 @@ internal static class SelfTestErb
         // 이름으로 변수 다루기
         Expect("GV", "10:local:1:2:0");
         Expect("SV", "42:set");
+        // 이름에 인덱스가 붙은 요소 참조 (리터럴 인덱스 / 변수 인덱스)
+        Expect("GVIX", "77:77:hit");
+        Expect("SVIX", "88");
         Expect("EM", "1:2:0");
         // MAP / DataTable 의 키 목록과 직렬화
         Expect("MKEYS", "a,b");
