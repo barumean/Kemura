@@ -74,8 +74,19 @@ internal static class SelfTestErb
 
         // 상수는 ERH 에 선언한다(규격 문서 예제와 같은 구성).
         // EXISTVAR 은 상수에 비트 3 을 세워야 하므로 상수 경로를 반드시 봐야 한다.
-        File.WriteAllText(Path.Combine(erb, "DEFINE.ERH"),
-            "#DIM CONST TBIT = 0, 1, 2, 4, 8, 16\n");
+        // 실제 게임(TALENT_MAP.ERH)과 같은 구성을 흉내낸다.
+        //  - 상수 문자열 배열(첫 요소가 빈 문자열)
+        //  - '{' '}' 로 여러 행에 걸친 #DIMS
+        // 둘 다 지금까지 하네스에 없던 형태다.
+        File.WriteAllText(Path.Combine(erb, "DEFINE.ERH"), string.Join("\n", new[]
+        {
+            "#DIM CONST TBIT = 0, 1, 2, 4, 8, 16",
+            "#DIMS CONST TCAT_LIST = \"\", \"RACE\", \"SEXUAL\"",
+            "{",
+            "#DIMS TCAT_RACE = \"\", \"human\",",
+            "                  \"youkai\"",
+            "}",
+        }) + "\n");
 
         var sb = new System.Text.StringBuilder();
         sb.Append(@"
@@ -99,6 +110,7 @@ internal static class SelfTestErb
 	CALL T_TRYCALL
 	CALL T_EMEE_COMMENT
 	CALL T_EXISTVAR_KINDS
+	CALL T_TALENT_MAP_REPRO
 	PRINTL DONE
 	QUIT
 
@@ -338,6 +350,26 @@ internal static class SelfTestErb
 	; 상수도 값을 읽을 수 있어야 한다
 	PRINTFORML EVC={GETVAR(""TBIT:3"")}
 
+; --- 실제 게임의 @MAKE_TALENT_MAP 을 그대로 축소 재현 ---
+; 게임이 THROW 하는 조건은 MAP_EXIST(@""TALENT_%CATEGORY%_MAP"") == 0 이다.
+; 그 맵을 만드는 경로가 이 형태이므로, 이 검사가 통과하면 엔진 쪽은
+; 이 연쇄에 문제가 없다는 뜻이 된다.
+@T_TALENT_MAP_REPRO
+	#DIM L_I
+	; 없는 맵을 지우는 것부터 시작한다(게임이 그렇게 한다)
+	MAP_RELEASE ""REG_MAP""
+	FOR L_I, 1, VARSIZE(""TCAT_LIST"")
+		MAP_RELEASE @""TCAT_%TCAT_LIST:L_I%_MAP""
+	NEXT
+	IF !MAP_EXIST(""REG_MAP"")
+		MAP_CREATE ""REG_MAP""
+		FOR L_I, 1, VARSIZE(""TCAT_LIST"")
+			MAP_CREATE @""TCAT_%TCAT_LIST:L_I%_MAP""
+		NEXT
+	ENDIF
+	; VARSIZE(상수 문자열 배열) : VARSIZE({} 다중행 배열) : 맵 두 개가 만들어졌는가
+	PRINTFORML TMAP={VARSIZE(""TCAT_LIST"")}:{VARSIZE(""TCAT_RACE"")}:{MAP_EXIST(""TCAT_RACE_MAP"")}:{MAP_EXIST(""TCAT_SEXUAL_MAP"")}
+
 ; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
 @T_SERIAL
 	#DIMS L_KEYS, 5
@@ -490,6 +522,9 @@ internal static class SelfTestErb
         // 규격 문서 예제의 기댓값. 상수(5)와 2차원(9)은 처음 검사한다.
         Expect("EV", "9:5:2:0");
         Expect("EVC", "4");           // TBIT:3 == 4
+        // 실제 게임의 맵 생성 연쇄. 3=상수배열 크기, 3={} 다중행 배열 크기,
+        // 1:1=FORM 문자열로 만든 맵 두 개가 존재.
+        Expect("TMAP", "3:3:1:1");
         Expect("EM", "1:2:0");
         // GETMETH / GETMETHS. 없으면 기본값, 종류가 달라도 기본값.
         Expect("GM", "1:9");
