@@ -54,6 +54,7 @@ namespace MinorShift.Emuera.GameData.Function
 			list["GETVARS"] = new EmGetVarMethod(wantStr: true);
 			list["SETVAR"] = new EmSetVarMethod();
 			list["EXISTMETH"] = new EmExistMethMethod();
+			list["VARSETEX"] = new EmVarSetExMethod();
 			list["HTML_STRINGLEN"] = new EmHtmlStringLenMethod();
 
 			// --- DataTable ----------------------------------------------------
@@ -1146,6 +1147,106 @@ namespace MinorShift.Emuera.GameData.Function
 					t.SetValue(a[1].GetStrValue(exm) ?? "", exm);
 				}
 				return 1;
+			}
+		}
+
+		/// <summary>
+		/// VARSETEX varName, value(, setAllDim, from, to) — 항상 1.
+		///
+		/// VARSET 의 이름 지정 버전. 식별자를 직접 쓰는 대신 이름 문자열로
+		/// 배열을 채운다. to 위치는 포함하지 않는다.
+		///
+		/// setAllDim 이 0 이 아니거나 생략되면 배열의 모든 차원에 채우고,
+		/// 0 이면 최하위 차원만 채운다. 이 둘을 같은 방식으로 구현할 수 없다 —
+		/// 엔진의 SetValueAll 은 다차원 배열의 모든 행을 훑기 때문에,
+		/// setAllDim=0 에 그걸 쓰면 배열 전체를 지워 버린다. 그래서 0 일 때는
+		/// 요소 단위로 쓴다.
+		/// </summary>
+		private sealed class EmVarSetExMethod : EmIntMethod
+		{
+			public EmVarSetExMethod()
+				: base(2, 5, typeof(string), null,
+					typeof(Int64), typeof(Int64), typeof(Int64)) { }
+
+			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
+			{
+				var name = Str(exm, a, 0);
+				var t = FindVarTerm(name);
+				if (t == null)
+					throw new CodeEE($"VARSETEX: \"{name}\"은(는) 해석할 수 없는 식별자입니다");
+				if (t.Identifier.IsConst)
+					throw new CodeEE($"VARSETEX: \"{name}\"은(는) 상수이므로 대입할 수 없습니다");
+
+				bool wantStr = !t.Identifier.IsInteger;
+				bool valueIsStr = a[1] != null && a[1].GetOperandType() == typeof(string);
+				if (wantStr != valueIsStr)
+					throw new CodeEE(wantStr
+						? $"VARSETEX: \"{name}\"은(는) 문자열형인데 숫자를 대입하려 했습니다"
+						: $"VARSETEX: \"{name}\"은(는) 정수형인데 문자열을 대입하려 했습니다");
+
+				var fv = t.GetFixedVariableTerm(exm);
+				int cap = fv.GetLastLength();
+
+				// 배열이 아니면 그 자리에 한 번 쓰고 끝낸다.
+				if (cap <= 0)
+				{
+					if (wantStr) fv.SetValue(a[1].GetStrValue(exm) ?? "", exm);
+					else fv.SetValue(a[1].GetIntValue(exm), exm);
+					return 1;
+				}
+
+				// 생략하면 모든 차원(규격). 0 이면 최하위 차원만.
+				bool allDim = Int(exm, a, 2, 1) != 0;
+				int from = (int)Int(exm, a, 3, 0);
+				int to = a.Length > 4 && a[4] != null ? (int)Int(exm, a, 4, 0) : cap;
+				// VARSET 과 같이 뒤집혀 있으면 바꿔준다.
+				if (from > to)
+					(from, to) = (to, from);
+				if (from < 0) from = 0;
+				if (to > cap) to = cap;
+				if (from >= to)
+					return 1;
+
+				if (allDim)
+				{
+					if (wantStr)
+						exm.VEvaluator.SetValueAll(fv, a[1].GetStrValue(exm) ?? "", from, to);
+					else
+						exm.VEvaluator.SetValueAll(fv, a[1].GetIntValue(exm), from, to);
+					return 1;
+				}
+
+				// 최하위 차원만. 마지막 인덱스를 옮겨가며 직접 쓴다.
+				if (wantStr)
+				{
+					var v = a[1].GetStrValue(exm) ?? "";
+					for (int i = from; i < to; i++)
+					{
+						SetLastIndex(fv, i);
+						fv.SetValue(v, exm);
+					}
+				}
+				else
+				{
+					var v = a[1].GetIntValue(exm);
+					for (int i = from; i < to; i++)
+					{
+						SetLastIndex(fv, i);
+						fv.SetValue(v, exm);
+					}
+				}
+				return 1;
+			}
+
+			/// <summary>차원 수에 맞는 마지막 인덱스를 바꾼다.</summary>
+			static void SetLastIndex(FixedVariableTerm fv, int i)
+			{
+				switch (fv.Identifier.Dimension)
+				{
+					case <= 1: fv.Index1 = i; break;
+					case 2: fv.Index2 = i; break;
+					default: fv.Index3 = i; break;
+				}
 			}
 		}
 

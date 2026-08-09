@@ -263,6 +263,13 @@ internal static class SelfTestErb
 	SETVAR ""L_ARR:3"", 88
 	PRINTFORML SVIX={L_ARR:3}
 
+	; VARSETEX: 이름으로 배열 채우기. to 위치는 포함하지 않는다.
+	VARSETEX ""L_ARR"", 9, 1, 1, 3
+	PRINTFORML VSEX={L_ARR:0}:{L_ARR:1}:{L_ARR:2}:{L_ARR:3}
+	; 범위를 생략하면 끝까지
+	VARSETEX ""L_SARR"", ""z"", 1
+	PRINTFORML VSEXS=%L_SARR:0%:%L_SARR:4%
+
 ; --- EXISTMETH: #FUNCTION 은 1, #FUNCTIONS 는 2, 없으면 0 ---
 @T_METH
 	PRINTFORML EM={EXISTMETH(""T_M_INT"")}:{EXISTMETH(""T_M_STR"")}:{EXISTMETH(""NOPE_XYZ"")}
@@ -416,6 +423,10 @@ internal static class SelfTestErb
         // 이름에 인덱스가 붙은 요소 참조 (리터럴 인덱스 / 변수 인덱스)
         Expect("GVIX", "77:77:hit");
         Expect("SVIX", "88");
+        // VARSETEX. L_ARR 은 앞에서 [0,0,77,88,0] 이 됐고, from=1 to=3 은
+        // 인덱스 1,2 만 채우므로 [0,9,9,88,0] 이 된다(to 는 포함하지 않는다).
+        Expect("VSEX", "0:9:9:88");
+        Expect("VSEXS", "z:z");
         Expect("EM", "1:2:0");
         // MAP / DataTable 의 키 목록과 직렬화
         Expect("MKEYS", "a,b");
