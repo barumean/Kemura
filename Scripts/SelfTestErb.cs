@@ -355,7 +355,9 @@ internal static class SelfTestErb
 ; 그 맵을 만드는 경로가 이 형태이므로, 이 검사가 통과하면 엔진 쪽은
 ; 이 연쇄에 문제가 없다는 뜻이 된다.
 @T_TALENT_MAP_REPRO
+	; 선언은 전부 맨 위. 실행문 뒤에 두면 파일 전체가 해석 실패한다.
 	#DIM L_I
+	#DIMS L_N
 	; 없는 맵을 지우는 것부터 시작한다(게임이 그렇게 한다)
 	MAP_RELEASE ""REG_MAP""
 	FOR L_I, 1, VARSIZE(""TCAT_LIST"")
@@ -375,7 +377,6 @@ internal static class SelfTestErb
 	; 위의 TMAP 검사는 FORM 문자열을 '명령'의 인수로만 썼기 때문에 이 경로를
 	; 덮지 못했다. %...% 가 펼쳐지지 않으면 이름이 리터럴이 되어 조회가
 	; 실패하는데, 문자열 자체는 유효하므로 경고가 하나도 안 남는다.
-	#DIMS L_N
 	L_N '= @""TCAT_%TCAT_LIST:1%_MAP""
 	; 1) FORM 문자열 자체가 펼쳐지는가
 	PRINTFORML TFORM=%L_N%
@@ -489,8 +490,9 @@ internal static class SelfTestErb
         if (!done)
         {
             // 진단을 위해 실제로 무엇이 나왔는지 남긴다.
-            if (output.Count == 0)
-                GD.Print("[SelfTest] ERB 출력이 하나도 없습니다. "
+            GD.Print($"[SelfTest] ERB 출력 {output.Count}줄 (DONE 없음)");
+            if (output.Count == 0 || string.IsNullOrWhiteSpace(all))
+                GD.Print("[SelfTest] ERB 의미 있는 출력이 없습니다. "
                     + "게임이 실행되기 전(ERB 로드/해석) 단계에서 실패했다는 뜻입니다. "
                     + "테스트 ERB 자체의 문법 오류일 가능성이 큽니다 "
                     + "(예: #DIM 을 실행문 사이에 두면 파일 전체가 해석 실패한다).");
