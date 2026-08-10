@@ -370,6 +370,18 @@ internal static class SelfTestErb
 	; VARSIZE(상수 문자열 배열) : VARSIZE({} 다중행 배열) : 맵 두 개가 만들어졌는가
 	PRINTFORML TMAP={VARSIZE(""TCAT_LIST"")}:{VARSIZE(""TCAT_RACE"")}:{MAP_EXIST(""TCAT_RACE_MAP"")}:{MAP_EXIST(""TCAT_SEXUAL_MAP"")}
 
+	; 게임이 실제로 실패하는 형태: FORM 문자열을 '식 함수의 인수'로 넘긴다.
+	;   SIF !MAP_EXIST(@""TALENT_%CATEGORY%_MAP"")
+	; 위의 TMAP 검사는 FORM 문자열을 '명령'의 인수로만 썼기 때문에 이 경로를
+	; 덮지 못했다. %...% 가 펼쳐지지 않으면 이름이 리터럴이 되어 조회가
+	; 실패하는데, 문자열 자체는 유효하므로 경고가 하나도 안 남는다.
+	#DIMS L_N
+	L_N '= @""TCAT_%TCAT_LIST:1%_MAP""
+	; 1) FORM 문자열 자체가 펼쳐지는가
+	PRINTFORML TFORM=%L_N%
+	; 2) 식 함수의 인수 자리에서도 펼쳐지는가
+	PRINTFORML TMAPF={MAP_EXIST(@""TCAT_%TCAT_LIST:1%_MAP"")}:{MAP_SIZE(@""TCAT_%TCAT_LIST:1%_MAP"")}
+
 ; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
 @T_SERIAL
 	#DIMS L_KEYS, 5
@@ -525,6 +537,11 @@ internal static class SelfTestErb
         // 실제 게임의 맵 생성 연쇄. 3=상수배열 크기, 3={} 다중행 배열 크기,
         // 1:1=FORM 문자열로 만든 맵 두 개가 존재.
         Expect("TMAP", "3:3:1:1");
+        // FORM 문자열이 대입에서 펼쳐지는가
+        Expect("TFORM", "TCAT_RACE_MAP");
+        // FORM 문자열이 '식 함수의 인수' 자리에서도 펼쳐지는가.
+        // 게임이 THROW 하는 지점이 정확히 이 형태다. 맵은 비어 있으므로 크기는 0.
+        Expect("TMAPF", "1:0");
         Expect("EM", "1:2:0");
         // GETMETH / GETMETHS. 없으면 기본값, 종류가 달라도 기본값.
         Expect("GM", "1:9");
