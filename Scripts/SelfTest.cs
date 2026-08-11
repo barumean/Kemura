@@ -377,6 +377,38 @@ internal static class SelfTest
         Check(viaConfig.Count == 3,
             $"Config.GetFiles(\"*.ERB\"): 엔진 진입점도 대소문자를 무시한다 (기대 3, 실제 {viaConfig.Count})");
 
+        // --- 로드 순서가 결정적인가 -------------------------------------------
+        //
+        // 이게 왜 중요한가: 같은 이름의 이벤트 함수(@EVENTFIRST 등)가 여러
+        // 파일에 정의되면, 같은 그룹 안에서는 <b>로드 순서대로</b> 실행된다.
+        // 원본 Emuera 는 「読み込み順をファイル名順にソートする」가 꺼지면
+        // Directory.GetFiles 가 주는 순서를 그대로 썼다. Windows(NTFS)에서는
+        // 그게 대체로 이름순이라 문제가 없었지만, Android/Linux(ext4)에서는
+        // 해시 순서라 사실상 무작위이고 실행마다 달라질 수도 있다.
+        //
+        // 그러면 초기화를 담당하는 @EVENTFIRST 가 그것을 필요로 하는 쪽보다
+        // 늦게 돌 수 있다. 파싱은 전부 성공하므로 경고가 하나도 남지 않고,
+        // 게임만 이상하게 동작한다. 찾기가 매우 어려운 종류의 버그다.
+        var names = new List<string>();
+        foreach (var kv in viaConfig)
+            names.Add(kv.Key);
+        var sortedNames = new List<string>(names);
+        sortedNames.Sort(StringComparer.OrdinalIgnoreCase);
+        bool inOrder = true;
+        for (int i = 0; i < names.Count; i++)
+            if (!string.Equals(names[i], sortedNames[i], StringComparison.Ordinal))
+                inOrder = false;
+        Check(inOrder,
+            $"Config.GetFiles: 로드 순서가 이름순으로 결정적이다 (실제 {string.Join(", ", names)})");
+
+        // 두 번 불러도 같은 순서여야 한다(같은 실행 안에서도 흔들리면 안 된다).
+        var again = Config.GetFiles(erbDir, "*.ERB");
+        bool stable = again.Count == viaConfig.Count;
+        for (int i = 0; stable && i < again.Count; i++)
+            if (!string.Equals(again[i].Key, viaConfig[i].Key, StringComparison.Ordinal))
+                stable = false;
+        Check(stable, "Config.GetFiles: 같은 폴더를 두 번 읽어도 순서가 같다");
+
         // --- 캐시 무효화 ------------------------------------------------------
         // 앱을 켠 채로 게임을 복사해 넣는 경우가 흔하다. 캐시가 남으면
         // 새로 넣은 파일이 영원히 보이지 않는다.

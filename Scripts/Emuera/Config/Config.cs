@@ -458,8 +458,8 @@ namespace MinorShift.Emuera
 				string[] dirList = Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly);
 				if (dirList.Length > 0)
 				{
-					if (sort)
-						Array.Sort(dirList, ignoreCaseComparer);
+					// sort 옵션과 무관하게 항상 정렬한다. 이유는 아래 파일 정렬과 같다.
+					Array.Sort(dirList, ignoreCaseComparer);
 					for (int i = 0; i < dirList.Length; i++)
 						retList.AddRange(getFiles(dirList[i], rootdir, pattern, toponly, sort));
 				}
@@ -480,8 +480,24 @@ namespace MinorShift.Emuera
 			//Directory.GetFilesはLinux/Androidでパターンの大文字小文字も区別するため、
 			//"*.ERB"で小文字拡張子のファイルが1件も拾えなかった(Windowsでは拾えた)。
 			string[] filepaths = PathResolver.GetFiles(dir, pattern, SearchOption.TopDirectoryOnly);
-			if (sort)
-				Array.Sort(filepaths, ignoreCaseComparer);
+			// 「読み込み順をファイル名順にソートする」(SortWithFilename) 이 꺼져
+			// 있어도 항상 이름순으로 정렬한다.
+			//
+			// 원본 Emuera 는 이 옵션이 꺼지면 Directory.GetFiles 가 주는 순서를
+			// 그대로 쓴다. Windows(NTFS)에서는 그게 대체로 이름순이라 문제가
+			// 없었지만, Android/Linux(ext4)에서는 해시 순서라 사실상 무작위이고
+			// 실행마다 달라질 수도 있다.
+			//
+			// 로드 순서는 눈에 보이지 않는 곳에서 의미를 가진다. 같은 이름의
+			// 이벤트 함수(@EVENTFIRST 등)가 여러 파일에 정의되면 같은 그룹
+			// 안에서는 <b>로드 순서대로</b> 실행되기 때문이다. 순서가 무작위면
+			// 초기화를 담당하는 @EVENTFIRST 가 그것을 필요로 하는 쪽보다 늦게
+			// 돌 수 있고, 그러면 파싱은 전부 성공하는데 게임만 이상하게
+			// 동작한다(경고가 한 줄도 남지 않아 원인을 찾기 어렵다).
+			//
+			// 그래서 sort 값과 무관하게 결정적인 순서를 만든다. Windows 의
+			// 동작에 가장 가깝고, 무엇보다 실행마다 같다.
+			Array.Sort(filepaths, ignoreCaseComparer);
 			for (int i = 0; i < filepaths.Length; i++)
 				if (Path.GetExtension(filepaths[i]).Length <= 4)//".erb"や".csv"であること。放置すると".erb*"等を拾う。
 					retList.Add(new KeyValuePair<string, string>(RelativePath + Path.GetFileName(filepaths[i]), filepaths[i]));
