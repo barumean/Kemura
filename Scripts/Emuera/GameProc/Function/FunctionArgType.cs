@@ -73,5 +73,8 @@ namespace MinorShift.Emuera.GameProc.Function
 		SP_REF,
 		SP_REFBYNAME,
 		SP_HTMLSPLIT,
+		// EM 확장. DT_COLUMN_OPTIONS <테이블>, <컬럼>, <키워드>, <값>(, <키워드>, <값>...)
+		// 세 번째 인수가 DEFAULT 같은 키워드이므로 식으로 해석하면 안 된다.
+		SP_DT_COLUMN_OPTIONS,
 	}
 }

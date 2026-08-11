@@ -172,6 +172,8 @@ namespace MinorShift.Emuera.GameProc.Function
 		// EE 확장. CALLF / CALLFORMF 의 TRY 판. 함수가 없어도 오류를 내지 않는다.
 		TRYCALLF,
 		TRYCALLFORMF,
+		// EM 확장. 키워드 인수를 받으므로 명령 전용이다(식 함수로 만들 수 없다).
+		DT_COLUMN_OPTIONS,
 
 		SETCOLOR,
 		SETCOLORBYNAME,

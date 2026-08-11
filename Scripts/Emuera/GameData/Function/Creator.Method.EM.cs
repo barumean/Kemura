@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MinorShift.Emuera.GameData.Expression;
 using MinorShift.Emuera.GameData.Variable;
@@ -75,7 +75,11 @@ namespace MinorShift.Emuera.GameData.Function
 			list["DT_COLUMN_ADD"] = new EmDtColumnAddMethod();
 			list["DT_COLUMN_EXIST"] = new EmDtColumnMethod(EmDtColumnMethod.Op.Exist);
 			list["DT_COLUMN_REMOVE"] = new EmDtColumnMethod(EmDtColumnMethod.Op.Remove);
-			list["DT_COLUMN_OPTIONS"] = new EmDtColumnOptionsMethod();
+			// DT_COLUMN_OPTIONS 는 여기에 등록하지 않는다. 규격상 명령 전용이고
+			// 옵션이 DEFAULT 같은 키워드라서 식 함수로 만들 수 없다. 식 함수로
+			// 두면 인수를 식으로 평가하다가 DEFAULT 를 변수 이름으로 취급해
+			// 게임이 멈춘다. 명령 구현은
+			// Instraction.Child.cs 의 DT_COLUMN_OPTIONS_Instruction 이다.
 			list["DT_ROW_ADD"] = new EmDtRowWriteMethod(isAdd: true);
 			list["DT_ROW_SET"] = new EmDtRowWriteMethod(isAdd: false);
 			list["DT_ROW_REMOVE"] = new EmDtRowRemoveMethod();
@@ -499,21 +503,6 @@ namespace MinorShift.Emuera.GameData.Function
 				return op == Op.Exist
 					? EmDataTableStore.ColumnExist(n, c)
 					: EmDataTableStore.ColumnRemove(n, c);
-			}
-		}
-
-		/// <summary>DT_COLUMN_OPTIONS name, column, option, value(, option, value ...)</summary>
-		private sealed class EmDtColumnOptionsMethod : EmIntMethod
-		{
-			public EmDtColumnOptionsMethod() : base(4, 64, typeof(string), typeof(string)) { }
-			public override Int64 GetIntValue(ExpressionMediator exm, IOperandTerm[] a)
-			{
-				var n = Str(exm, a, 0);
-				var c = Str(exm, a, 1);
-				long last = -1;
-				for (int i = 2; i + 1 < a.Length; i += 2)
-					last = EmDataTableStore.ColumnOption(n, c, Str(exm, a, i), AnyToStr(exm, a, i + 1));
-				return last;
 			}
 		}
 

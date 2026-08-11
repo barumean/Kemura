@@ -726,7 +726,9 @@ internal static class SelfTest
             "CBRT", "LOG", "LOG10", "EXPONENT",
             "DT_CREATE", "DT_EXIST", "DT_RELEASE", "DT_CLEAR", "DT_NOCASE",
             "DT_COLUMN_ADD", "DT_COLUMN_EXIST", "DT_COLUMN_REMOVE",
-            "DT_COLUMN_LENGTH", "DT_COLUMN_OPTIONS",
+            "DT_COLUMN_LENGTH",
+            // DT_COLUMN_OPTIONS 는 식 함수가 아니다(규격상 명령 전용).
+            // 명령으로 등록됐는지는 아래에서 따로 본다.
             "DT_ROW_ADD", "DT_ROW_SET", "DT_ROW_REMOVE", "DT_ROW_LENGTH",
             "DT_CELL_GET", "DT_CELL_GETS", "DT_CELL_ISNULL", "DT_CELL_SET",
             "DT_SELECT",

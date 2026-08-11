@@ -892,6 +892,43 @@ namespace MinorShift.Emuera.GameProc.Function
 			}
 		}
 
+		/// <summary>
+		/// DT_COLUMN_OPTIONS 테이블명, 컬럼명, 옵션, 값(, 옵션, 값 ...)
+		///
+		/// EM 규격에서 이것만 명령 전용이다. 옵션이 DEFAULT 같은 키워드이므로
+		/// 식 함수로는 만들 수 없다(인수를 식으로 평가하는 순간 DEFAULT 가
+		/// 변수 이름이 된다).
+		///
+		/// 반환값은 마지막 옵션의 결과를 RESULT 에 넣는다. 규격이 int 를
+		/// 돌려준다고 하고, 명령 형태에서 값을 받는 관례가 RESULT 이기 때문이다.
+		/// </summary>
+		private sealed class DT_COLUMN_OPTIONS_Instruction : AbstractInstruction
+		{
+			public DT_COLUMN_OPTIONS_Instruction()
+			{
+				ArgBuilder = ArgumentParser.GetArgumentBuilder(FunctionArgType.SP_DT_COLUMN_OPTIONS);
+				flag = METHOD_SAFE | EXTENDED;
+			}
+
+			public override void DoInstruction(ExpressionMediator exm, InstructionLine func, ProcessState state)
+			{
+				var arg = (SpDtColumnOptionsArgument)func.Argument;
+				var table = arg.TableName.GetStrValue(exm) ?? "";
+				var column = arg.ColumnName.GetStrValue(exm) ?? "";
+				long ret = 0;
+				for (int i = 0; i < arg.Options.Length; i++)
+				{
+					// 값은 문자열로 넘긴다. 컬럼 타입에 맞춘 변환은 저장소가 한다.
+					var v = arg.Values[i];
+					string sv = v.GetOperandType() == typeof(string)
+						? v.GetStrValue(exm) ?? ""
+						: v.GetIntValue(exm).ToString();
+					ret = EmDataTableStore.ColumnOption(table, column, arg.Options[i], sv);
+				}
+				exm.VEvaluator.RESULT = ret;
+			}
+		}
+
 		private sealed class BAR_Instruction : AbstractInstruction
 		{
 			public BAR_Instruction(bool newline)

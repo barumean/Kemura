@@ -227,9 +227,79 @@ namespace MinorShift.Emuera.GameProc.Function
 			argb[FunctionArgType.SP_REF] = new SP_REF_ArgumentBuilder(false);
 			argb[FunctionArgType.SP_REFBYNAME] = new SP_REF_ArgumentBuilder(true);
 			argb[FunctionArgType.SP_HTMLSPLIT] = new SP_HTMLSPLIT_ArgumentBuilder();
+			argb[FunctionArgType.SP_DT_COLUMN_OPTIONS] = new SP_DT_COLUMN_OPTIONS_ArgumentBuilder();
 			
         }
 		
+		/// <summary>
+		/// DT_COLUMN_OPTIONS 테이블명, 컬럼명, 옵션, 값(, 옵션, 값 ...)
+		///
+		/// 옵션은 DEFAULT 같은 키워드다. SORTARRAY 의 FORWARD/BACK 과 같은
+		/// 방식으로, 식으로 해석하지 않고 IdentifierWord 를 그대로 읽는다.
+		/// 식으로 해석하면 변수 이름으로 취급되어 게임이 멈춘다.
+		/// </summary>
+		private sealed class SP_DT_COLUMN_OPTIONS_ArgumentBuilder : ArgumentBuilder
+		{
+			public override Argument CreateArgument(InstructionLine line, ExpressionMediator exm)
+			{
+				WordCollection wc = popWords(line);
+				if (wc.EOL)
+				{ warn("인수가 부족합니다", line, 2, false); return null; }
+
+				// 1번째: 테이블명
+				IOperandTerm name = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.Comma);
+				if (name == null)
+				{ warn("제1인수(테이블명)를 해석할 수 없습니다", line, 2, false); return null; }
+				name = name.Restructure(exm);
+				wc.ShiftNext();
+
+				// 2번째: 컬럼명
+				if (wc.EOL)
+				{ warn("제2인수(컬럼명)가 없습니다", line, 2, false); return null; }
+				IOperandTerm column = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.Comma);
+				if (column == null)
+				{ warn("제2인수(컬럼명)를 해석할 수 없습니다", line, 2, false); return null; }
+				column = column.Restructure(exm);
+				wc.ShiftNext();
+
+				// 3번째 이후: (키워드, 값) 쌍의 반복
+				var options = new List<string>();
+				var values = new List<IOperandTerm>();
+				while (!wc.EOL)
+				{
+					IdentifierWord id = wc.Current as IdentifierWord;
+					if (id == null)
+					{
+						warn("옵션 이름은 DEFAULT 처럼 키워드로 써야 합니다", line, 2, false);
+						return null;
+					}
+					options.Add(id.Code);
+					wc.ShiftNext();   // 키워드를 소비
+					wc.ShiftNext();   // 쉼표를 소비
+
+					if (wc.EOL)
+					{
+						warn($"옵션 {id.Code} 의 값이 없습니다", line, 2, false);
+						return null;
+					}
+					IOperandTerm value = ExpressionParser.ReduceExpressionTerm(wc, TermEndWith.Comma);
+					if (value == null)
+					{
+						warn($"옵션 {id.Code} 의 값을 해석할 수 없습니다", line, 2, false);
+						return null;
+					}
+					values.Add(value.Restructure(exm));
+					wc.ShiftNext();
+				}
+
+				if (options.Count == 0)
+				{ warn("옵션이 하나도 지정되지 않았습니다", line, 2, false); return null; }
+
+				return new SpDtColumnOptionsArgument(
+					name, column, options.ToArray(), values.ToArray());
+			}
+		}
+
 		private sealed class SP_PRINTV_ArgumentBuilder : ArgumentBuilder
 		{
 			public override Argument CreateArgument(InstructionLine line, ExpressionMediator exm)

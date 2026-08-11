@@ -111,6 +111,7 @@ internal static class SelfTestErb
 	CALL T_EMEE_COMMENT
 	CALL T_EXISTVAR_KINDS
 	CALL T_TALENT_MAP_REPRO
+	CALL T_DT_COLOPT
 	PRINTL DONE
 	QUIT
 
@@ -383,6 +384,21 @@ internal static class SelfTestErb
 	; 2) 식 함수의 인수 자리에서도 펼쳐지는가
 	PRINTFORML TMAPF={MAP_EXIST(@""TCAT_%TCAT_LIST:1%_MAP"")}:{MAP_SIZE(@""TCAT_%TCAT_LIST:1%_MAP"")}
 
+; --- DT_COLUMN_OPTIONS: 키워드 인수 (명령 전용) ---
+; 게임의 실제 형태:
+;   DT_COLUMN_OPTIONS DT_REGION, DT_REGION_ABLE + TOSTR(CNT_0), DEFAULT, 1
+; 세 번째 인수 DEFAULT 는 키워드다. 식으로 해석하면 변수 이름이 되어
+; 「変数""DEFAULT""はこの関数中では定義されていません」 로 실패한다.
+; 컬럼명은 식이어도 되어야 하므로 여기서도 문자열 연결로 넘긴다.
+@T_DT_COLOPT
+	DT_CREATE ""t3""
+	DT_COLUMN_ADD ""t3"", ""age"", ""int16""
+	DT_COLUMN_OPTIONS ""t3"", ""a"" + ""ge"", DEFAULT, 7
+	PRINTFORML DTOPT={RESULT}
+	; 값을 주지 않고 행을 추가하면 기본값이 들어가야 한다
+	DT_ROW_ADD ""t3""
+	PRINTFORML DTOPTV={DT_CELL_GET(""t3"", 0, ""age"", 1)}
+
 ; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
 @T_SERIAL
 	#DIMS L_KEYS, 5
@@ -544,6 +560,9 @@ internal static class SelfTestErb
         // FORM 문자열이 '식 함수의 인수' 자리에서도 펼쳐지는가.
         // 게임이 THROW 하는 지점이 정확히 이 형태다. 맵은 비어 있으므로 크기는 0.
         Expect("TMAPF", "1:0");
+        // DT_COLUMN_OPTIONS: DEFAULT 키워드가 파싱되고 기본값이 실제로 적용된다
+        Expect("DTOPT", "1");
+        Expect("DTOPTV", "7");
         Expect("EM", "1:2:0");
         // GETMETH / GETMETHS. 없으면 기본값, 종류가 달라도 기본값.
         Expect("GM", "1:9");

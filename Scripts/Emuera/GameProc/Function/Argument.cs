@@ -64,6 +64,32 @@ namespace MinorShift.Emuera.GameProc.Function
 		readonly public IOperandTerm[] TermList;
 	}
 
+	/// <summary>
+	/// DT_COLUMN_OPTIONS 전용.
+	///
+	/// 규격: DT_COLUMN_OPTIONS 테이블명, 컬럼명, 옵션, 값(, 옵션, 값 ...)
+	/// 옵션은 DEFAULT 같은 <b>키워드</b>다. 식으로 해석하면 변수 이름으로
+	/// 취급되어 "変数\"DEFAULT\"はこの関数中では定義されていません" 가 된다.
+	/// 그래서 파싱 단계에서 식별어를 문자열로 그대로 집어둔다.
+	/// </summary>
+	internal sealed class SpDtColumnOptionsArgument : Argument
+	{
+		public SpDtColumnOptionsArgument(
+			IOperandTerm name, IOperandTerm column,
+			string[] options, IOperandTerm[] values)
+		{
+			TableName = name;
+			ColumnName = column;
+			Options = options;
+			Values = values;
+		}
+		readonly public IOperandTerm TableName;
+		readonly public IOperandTerm ColumnName;
+		/// <summary>옵션 키워드. Values 와 같은 길이다.</summary>
+		readonly public string[] Options;
+		readonly public IOperandTerm[] Values;
+	}
+
 	internal sealed class SpPrintVArgument : Argument
 	{
 		public SpPrintVArgument(IOperandTerm[] list)
