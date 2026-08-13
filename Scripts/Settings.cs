@@ -111,6 +111,25 @@ internal static class Settings
     /// </summary>
     public const string PackageName = "com.kemura.emuera";
 
+    /// <summary>
+    /// 진단 로그를 쓸 폴더.
+    ///
+    /// Android 에서는 앱 전용 외부 경로를 쓴다. 어떤 버전에서도 권한 없이
+    /// 쓸 수 있고, 사용자가 파일 관리자나 USB 로 꺼낼 수 있는 유일한
+    /// 확실한 위치다. (게임 폴더에 쓰면 권한이 없을 때 실패한다.)
+    /// </summary>
+    public static string DiagDir
+    {
+        get
+        {
+#if GODOT_ANDROID
+            return $"/storage/emulated/0/Android/data/{PackageName}/files/";
+#else
+            return OS.GetUserDataDir() + "/";
+#endif
+        }
+    }
+
     /// <summary>설정이 비어 있을 때 사용할 플랫폼별 기본 경로.</summary>
     public static string DefaultGameRoot
     {

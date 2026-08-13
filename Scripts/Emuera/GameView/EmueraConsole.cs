@@ -1497,6 +1497,9 @@ namespace MinorShift.Emuera.GameView
 
 		public void DebugPrint(string str)
 		{
+			// 게임이 DEBUGPRINT 로 남긴 진단을 파일로도 받는다. 디버그 창이
+			// 없는 이 포트에서는 이것이 유일한 출구다.
+			EmDiag.DebugWrite(str);
 			if (!Program.DebugMode)
 				return;
 			dConsoleLog.Append(str);
@@ -1509,6 +1512,7 @@ namespace MinorShift.Emuera.GameView
 
 		public void DebugNewLine()
 		{
+			EmDiag.DebugNewLine();
 			if (!Program.DebugMode)
 				return;
 			dConsoleLog.Append(Environment.NewLine);

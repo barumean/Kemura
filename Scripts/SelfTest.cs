@@ -63,6 +63,7 @@ internal static class SelfTest
             RunEncodingChecks(root);
             RunTextPathChecks();
             RunTextBoxChecks();
+            RunDiagChecks();
             RunAppInfoChecks();
             // ERB 를 실제로 실행해 언어 의미를 검증한다.
             // 엔진 전체를 구동하므로 다른 검사 뒤에 둔다.
@@ -93,6 +94,33 @@ internal static class SelfTest
             ? "[SelfTest] ALL PASS"
             : $"[SelfTest] {failures} FAILED");
         return failures == 0 ? 0 : 1;
+    }
+
+    // ----------------------------------------------------------------------
+    // 진단 로그
+    //
+    // 실기에서만 드러나는 문제를 좁히기 위한 것이다. 게임이 DEBUGPRINT 로
+    // 남긴 진단을 파일로 받는다. 여기서는 파일이 실제로 만들어지고 쓰이는지만
+    // 본다(내용은 게임에 달려 있다).
+    // ----------------------------------------------------------------------
+    static void RunDiagChecks()
+    {
+        EmDiag.Line("SelfTest", "진단 로그 검사");
+        Check(EmDiag.Enabled, "진단 로그 파일을 만들 수 있다");
+        Check(!string.IsNullOrEmpty(EmDiag.Path),
+            $"진단 로그 경로가 정해진다 (실제 '{EmDiag.Path}')");
+        if (EmDiag.Enabled && File.Exists(EmDiag.Path))
+        {
+            var text = File.ReadAllText(EmDiag.Path);
+            Check(text.Contains("진단 로그 검사"),
+                "진단 로그에 실제로 기록된다");
+            Check(text.Contains(AppInfo.Version),
+                "진단 로그 머리에 버전이 남는다 (어느 빌드인지 알 수 있어야 한다)");
+        }
+        else
+        {
+            Check(false, "진단 로그 파일이 존재한다");
+        }
     }
 
     // ----------------------------------------------------------------------

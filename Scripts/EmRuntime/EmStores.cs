@@ -24,8 +24,16 @@ internal static class EmMapStore
     internal static long Create(string name)
     {
         if (name == null) return 0;
-        if (maps.ContainsKey(name)) return 0;
+        if (maps.ContainsKey(name))
+        {
+            EmDiag.Store("MAP_CREATE(이미있음)", name, 0);
+            return 0;
+        }
         maps[name] = new Dictionary<string, string>(StringComparer.Ordinal);
+        // 이름이 어떻게 만들어졌는지가 진단의 핵심이다. 게임은 맵 이름을
+        // FORM 문자열로 조립하므로(@"TALENT_%CATEGORY%_MAP"), 만든 이름과
+        // 찾는 이름이 어긋나면 아무 오류 없이 조용히 실패한다.
+        EmDiag.Store("MAP_CREATE", name, 1);
         return 1;
     }
 
@@ -35,7 +43,11 @@ internal static class EmMapStore
     /// <summary>EM 규격상 항상 1 을 반환한다.</summary>
     internal static long Release(string name)
     {
-        if (name != null) maps.Remove(name);
+        if (name != null)
+        {
+            bool had = maps.Remove(name);
+            EmDiag.Store("MAP_RELEASE", name, had ? 1 : 0);
+        }
         return 1;
     }
 
@@ -171,5 +183,12 @@ internal static class EmMapStore
     }
 
     /// <summary>타이틀 복귀 / RESETDATA 시 호출.</summary>
-    internal static void ClearAll() => maps.Clear();
+    internal static void ClearAll()
+    {
+        // 전부 지우는 시점이 중요하다. 게임이 초기화한 맵을 이 호출이
+        // 나중에 날려버리면 "만들었는데 없다"가 된다.
+        if (maps.Count > 0)
+            EmDiag.Line("Store", $"MAP_CLEARALL: {maps.Count}개 삭제");
+        maps.Clear();
+    }
 }

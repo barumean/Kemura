@@ -14,6 +14,22 @@ namespace MinorShift.Emuera.GameProc
 {
 	internal sealed partial class Process
 	{
+		/// <summary>
+		/// DEBUGPRINT 계열인지. 진단 로그를 위해 비디버그 모드에서도 실행한다.
+		///
+		/// DEBUG_FUNC 플래그 전체를 풀면 안 된다. ASSERT 가 같은 플래그를
+		/// 갖고 있고, 그건 조건이 거짓이면 게임을 멈춘다. 게임이 디버그
+		/// 모드를 전제로 넣어둔 ASSERT 가 살아나면 관측이 대상을 바꾼다.
+		/// 출력만 하는 명령으로 한정한다.
+		/// </summary>
+		static bool IsDebugPrintFamily(FunctionCode code)
+		{
+			return code == FunctionCode.DEBUGPRINT
+				|| code == FunctionCode.DEBUGPRINTL
+				|| code == FunctionCode.DEBUGPRINTFORM
+				|| code == FunctionCode.DEBUGPRINTFORML;
+		}
+
 		private void runScriptProc()
 		{
 			while (true)
@@ -32,7 +48,8 @@ namespace MinorShift.Emuera.GameProc
 					throw new CodeEE(line.ErrMes);
 				else if (func != null)
 				{//1753 InstructionLineを先に持ってきてみる。わずかに速くなった気がしないでもない
-					if (!Program.DebugMode && func.Function.IsDebug())
+					if (!Program.DebugMode && func.Function.IsDebug()
+						&& !IsDebugPrintFamily(func.Function.Code))
 					{//非DebugモードでのDebug系命令。何もしない。（SIF文のためにコメント行扱いにはできない）
 						continue;
 					}
