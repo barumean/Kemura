@@ -112,6 +112,7 @@ internal static class SelfTestErb
 	CALL T_EXISTVAR_KINDS
 	CALL T_TALENT_MAP_REPRO
 	CALL T_DT_COLOPT
+	CALL T_DEBUGPRINT
 	PRINTL DONE
 	QUIT
 
@@ -399,6 +400,19 @@ internal static class SelfTestErb
 	DT_ROW_ADD ""t3""
 	PRINTFORML DTOPTV={DT_CELL_GET(""t3"", 0, ""age"", 1)}
 
+; --- DEBUGPRINT 계열이 비디버그 모드에서도 죽지 않는다 ---
+; 진단 로그를 위해 이 명령을 실행하게 만들었는데, 인수 생성 쪽에 같은 예외를
+; 넣지 않아 인수가 null 인 채로 역참조해서 NullReferenceException 이 났다.
+; 실기에서 게임이 통째로 멈췄다. 상수 인수와 FORM 인수 양쪽을 지나가 본다.
+@T_DEBUGPRINT
+	#DIM L_D = 5
+	DEBUGPRINT 상수 인수
+	DEBUGPRINTL 상수 인수 줄바꿈
+	DEBUGPRINTFORM FORM 인수 {L_D}
+	DEBUGPRINTFORML FORM 인수 줄바꿈 {L_D}
+	; 여기까지 왔으면 네 형태 모두 예외 없이 지나갔다는 뜻이다
+	PRINTFORML DBGP=ok
+
 ; --- MAP_GETKEYS / MAP_TOXML / MAP_FROMXML / DT_TOXML / DT_FROMXML ---
 @T_SERIAL
 	#DIMS L_KEYS, 5
@@ -563,6 +577,8 @@ internal static class SelfTestErb
         // DT_COLUMN_OPTIONS: DEFAULT 키워드가 파싱되고 기본값이 실제로 적용된다
         Expect("DTOPT", "1");
         Expect("DTOPTV", "7");
+        // DEBUGPRINT 네 형태가 비디버그 모드에서 예외 없이 지나간다
+        Expect("DBGP", "ok");
         Expect("EM", "1:2:0");
         // GETMETH / GETMETHS. 없으면 기본값, 종류가 달라도 기본값.
         Expect("GM", "1:9");

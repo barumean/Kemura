@@ -573,6 +573,27 @@ namespace MinorShift.Emuera.GameProc.Function
 		{
 			return ((flag & DEBUG_FUNC) == DEBUG_FUNC);
 		}
+
+		/// <summary>
+		/// DEBUGPRINT 계열인지. 디버그 모드가 아니어도 실행하고 진단 로그로
+		/// 보낸다(Scripts/EmRuntime/EmDiag.cs).
+		///
+		/// DEBUG_FUNC 전체를 풀면 안 된다. ASSERT 가 같은 플래그이고 조건이
+		/// 거짓이면 게임을 멈추므로, 관측이 대상을 바꾼다. 출력만 하는
+		/// 명령으로 한정한다.
+		///
+		/// 이 판정을 여기 둔 이유: 실행 여부(Process.runScriptProc)와 인수
+		/// 생성 여부(ArgumentParser.SetArgumentTo) 두 곳이 같은 기준을 써야
+		/// 한다. 한쪽만 고쳤다가 "명령은 실행되는데 인수가 null" 이 되어
+		/// NullReferenceException 이 났다.
+		/// </summary>
+		internal bool IsDebugPrint()
+		{
+			return code == FunctionCode.DEBUGPRINT
+				|| code == FunctionCode.DEBUGPRINTL
+				|| code == FunctionCode.DEBUGPRINTFORM
+				|| code == FunctionCode.DEBUGPRINTFORML;
+		}
 		internal bool IsTry()
 		{
 			return ((flag & IS_TRY) == IS_TRY);

@@ -364,6 +364,11 @@ namespace MinorShift.Emuera.GameProc.Function
 			}
 			public override void DoInstruction(ExpressionMediator exm, InstructionLine func, ProcessState state)
 			{
+				// 인수가 없을 수 있다. 디버그 명령은 비디버그 모드에서 인수를
+				// 만들지 않는 경로가 있어서, 진단 목적으로 실행만 켜면 여기서
+				// null 을 역참조한다. 진단이 게임을 죽이면 안 된다.
+				if (func.Argument == null)
+					return;
 				string str;
 				if (func.Argument.IsConst)
 					str = func.Argument.ConstStr;

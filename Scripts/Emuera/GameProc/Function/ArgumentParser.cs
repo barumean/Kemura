@@ -19,7 +19,8 @@ namespace MinorShift.Emuera.GameProc.Function
 				return true;
 			if (line.IsError)
 				return false;
-			if (!Program.DebugMode && line.Function.IsDebug())
+			if (!Program.DebugMode && line.Function.IsDebug()
+				&& !line.Function.IsDebugPrint())
 			{//非DebugモードでのDebug系命令。何もしないので引数解析も不要
 				line.Argument = null;
 				return true;
